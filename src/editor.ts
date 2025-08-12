@@ -17,12 +17,15 @@ export function initEditor(): Editor {
   const rectangle = new RectangleTool();
   const eraser = new EraserTool();
 
-
   editor.setTool(pencil);
-
-
-
-
+  const save = document.getElementById("save") as HTMLButtonElement;
+  save.addEventListener("click", () => {
+    const data = canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.href = data;
+    link.download = "canvas.png";
+    link.click();
+  });
 
   return editor;
 }

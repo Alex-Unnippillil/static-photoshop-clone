@@ -1,8 +1,10 @@
 import { initEditor } from "../src/editor";
+import { Editor } from "../src/core/Editor";
 
 describe("editor", () => {
   let canvas: HTMLCanvasElement;
   let ctx: Partial<CanvasRenderingContext2D>;
+  let editor: Editor | undefined;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -34,6 +36,7 @@ describe("editor", () => {
       arc: jest.fn(),
       strokeRect: jest.fn(),
       fillText: jest.fn(),
+      scale: jest.fn(),
     };
 
     canvas.getContext = jest
@@ -53,7 +56,11 @@ describe("editor", () => {
       value: MockImage,
     });
 
-    initEditor();
+    editor = initEditor();
+  });
+
+  afterEach(() => {
+    editor?.destroy();
   });
 
   function dispatch(type: string, x: number, y: number, buttons = 0) {

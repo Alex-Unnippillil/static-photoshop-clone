@@ -8,14 +8,17 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 
 - Pencil tool for freehand drawing
 - Rectangle tool for shape creation
+- Color picker for stroke selection
+- Adjustable line width
 - Undo/redo support
+- Responsive canvas with high-DPI support
 
 ## Planned Features
 
 - Eraser tool
-- Line and circle drawing
+- Line drawing
+- Circle drawing
 - Text insertion
-- Color picker and line width control
 - Load external images onto the canvas
 - Save canvas as PNG
 

@@ -35,30 +35,6 @@ export function initEditor(): Editor {
     editor.redo(),
   );
 
-  const imageLoader = document.getElementById("imageLoader") as
-    | HTMLInputElement
-    | null;
-  imageLoader?.addEventListener("change", (e) => {
-    const file = (e.target as HTMLInputElement).files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.src = reader.result as string;
-      img.onload = () => {
-        editor.ctx.drawImage(img, 0, 0);
-      };
-    };
-    reader.readAsDataURL(file);
-  });
-
-  document.getElementById("save")?.addEventListener("click", () => {
-    const link = document.createElement("a");
-    link.href = editor.canvas.toDataURL("image/png");
-    link.download = "canvas.png";
-    link.click();
-  });
-
   return editor;
 }
 

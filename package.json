@@ -1,0 +1,17 @@
+{
+  "name": "photoshop-clone",
+  "version": "1.0.0",
+  "description": "A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaScript.",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  }
+}

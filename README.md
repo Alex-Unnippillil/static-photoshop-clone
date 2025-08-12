@@ -9,6 +9,7 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 - Pencil tool for freehand drawing
 - Rectangle tool for shape creation
 - Undo/redo support
+- Save canvas as PNG
 
 ## Planned Features
 
@@ -17,7 +18,6 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 - Text insertion
 - Color picker and line width control
 - Load external images onto the canvas
-- Save canvas as PNG
 
 ## Build and Test
 
@@ -29,3 +29,4 @@ npm test
 ```
 
 Open `index.html` in your browser to use the app.
+Click the **Save** button to download your drawing as a PNG file.

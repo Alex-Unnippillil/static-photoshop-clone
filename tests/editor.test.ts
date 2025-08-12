@@ -23,18 +23,19 @@ describe("editor", () => {
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
 
-    ctx = {
-      beginPath: jest.fn(),
-      moveTo: jest.fn(),
-      lineTo: jest.fn(),
-      stroke: jest.fn(),
-      closePath: jest.fn(),
-      clearRect: jest.fn(),
-      drawImage: jest.fn(),
-      arc: jest.fn(),
-      strokeRect: jest.fn(),
-      fillText: jest.fn(),
-    };
+      ctx = {
+        beginPath: jest.fn(),
+        moveTo: jest.fn(),
+        lineTo: jest.fn(),
+        stroke: jest.fn(),
+        closePath: jest.fn(),
+        clearRect: jest.fn(),
+        drawImage: jest.fn(),
+        arc: jest.fn(),
+        strokeRect: jest.fn(),
+        fillText: jest.fn(),
+        scale: jest.fn(),
+      };
 
     canvas.getContext = jest
       .fn()

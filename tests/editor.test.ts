@@ -34,6 +34,7 @@ describe("editor", () => {
       arc: jest.fn(),
       strokeRect: jest.fn(),
       fillText: jest.fn(),
+      scale: jest.fn(),
     };
 
     canvas.getContext = jest
@@ -48,9 +49,27 @@ describe("editor", () => {
       }
     }
 
+    const mockReadAsDataURL = jest.fn(function (this: any) {
+      this.result = "data:image/png;base64,MOCK";
+      this.onload?.({} as ProgressEvent<FileReader>);
+    });
+
+    const FileReaderMock = jest
+      .fn()
+      .mockImplementation(function (this: any) {
+        this.result = null;
+        this.onload = null;
+        this.readAsDataURL = mockReadAsDataURL;
+      });
+
     Object.defineProperty(globalThis, "Image", {
       writable: true,
       value: MockImage,
+    });
+
+    Object.defineProperty(globalThis, "FileReader", {
+      writable: true,
+      value: FileReaderMock,
     });
 
     initEditor();
@@ -81,5 +100,23 @@ describe("editor", () => {
     (document.getElementById("redo") as HTMLButtonElement).click();
     await new Promise((r) => setTimeout(r, 0));
     expect(ctx.drawImage).toHaveBeenCalledTimes(2);
+  });
+
+  it("loads an image file and draws it", async () => {
+    const loader = document.getElementById("imageLoader") as HTMLInputElement;
+    const file = new File(["dummy"], "test.png", { type: "image/png" });
+    Object.defineProperty(loader, "files", {
+      value: [file],
+      writable: false,
+    });
+
+    loader.dispatchEvent(new Event("change"));
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(canvas.toDataURL).toHaveBeenCalled();
+    expect(ctx.drawImage).toHaveBeenCalled();
+    const instances = (globalThis.FileReader as unknown as jest.Mock).mock
+      .instances;
+    expect(instances[0].readAsDataURL).toHaveBeenCalledWith(file);
   });
 });

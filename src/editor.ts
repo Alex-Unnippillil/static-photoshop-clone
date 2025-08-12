@@ -29,6 +29,7 @@ export function initEditor(): Editor {
     editor.redo(),
   );
 
+  // Return the Editor instance so callers can clean up via editor.destroy().
   return editor;
 }
 

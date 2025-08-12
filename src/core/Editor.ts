@@ -102,4 +102,11 @@ export class Editor {
   get lineWidthValue() {
     return parseInt(this.lineWidth.value, 10) || 1;
   }
+
+  destroy() {
+    window.removeEventListener("resize", this.handleResize);
+    this.canvas.removeEventListener("pointerdown", this.handlePointerDown);
+    this.canvas.removeEventListener("pointermove", this.handlePointerMove);
+    this.canvas.removeEventListener("pointerup", this.handlePointerUp);
+  }
 }

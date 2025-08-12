@@ -16,13 +16,11 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 
 ## Planned Features
 
-
 - Text insertion
 - Load external images onto the canvas
 
 ## Usage
 
-Select a tool from the toolbar. Use the **Eraser** button to remove portions of your drawing. Click **Save** to download the current canvas as an image.
 
 ## Build and Test
 
@@ -37,4 +35,11 @@ Open `index.html` in your browser to use the app.
 
 ## Lifecycle
 
-The `Editor` instance returned from `initEditor()` attaches several event listeners. When the editor is no longer needed, call `editor.destroy()` to remove those listeners and clean up resources.
+`initEditor()` returns an object containing the editor instance and a `destroy` function.
+Call this function when the editor is no longer needed to remove all event listeners and release resources.
+
+```ts
+const { editor, destroy } = initEditor();
+// ...use editor...
+destroy(); // cleanup when done
+```

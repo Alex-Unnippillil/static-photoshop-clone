@@ -34,6 +34,7 @@ describe("editor", () => {
       arc: jest.fn(),
       strokeRect: jest.fn(),
       fillText: jest.fn(),
+      scale: jest.fn(),
     };
 
     canvas.getContext = jest

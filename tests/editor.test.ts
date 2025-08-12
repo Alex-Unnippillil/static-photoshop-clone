@@ -34,6 +34,7 @@ describe("editor", () => {
       arc: jest.fn(),
       strokeRect: jest.fn(),
       fillText: jest.fn(),
+      scale: jest.fn(),
     };
 
     canvas.getContext = jest
@@ -81,5 +82,38 @@ describe("editor", () => {
     (document.getElementById("redo") as HTMLButtonElement).click();
     await new Promise((r) => setTimeout(r, 0));
     expect(ctx.drawImage).toHaveBeenCalledTimes(2);
+  });
+
+  it("draws a line", () => {
+    (document.getElementById("line") as HTMLButtonElement).click();
+    dispatch("pointerdown", 0, 0, 1);
+    dispatch("pointerup", 5, 5, 0);
+
+    expect(ctx.beginPath).toHaveBeenCalled();
+    expect(ctx.moveTo).toHaveBeenCalledWith(0, 0);
+    expect(ctx.lineTo).toHaveBeenCalledWith(5, 5);
+    expect(ctx.stroke).toHaveBeenCalled();
+  });
+
+  it("draws a circle", () => {
+    (document.getElementById("circle") as HTMLButtonElement).click();
+    dispatch("pointerdown", 0, 0, 1);
+    dispatch("pointerup", 3, 4, 0);
+
+    expect(ctx.beginPath).toHaveBeenCalled();
+    expect(ctx.arc).toHaveBeenCalledWith(0, 0, 5, 0, Math.PI * 2);
+    expect(ctx.stroke).toHaveBeenCalled();
+  });
+
+  it("draws text", () => {
+    (document.getElementById("text") as HTMLButtonElement).click();
+    const promptSpy = jest
+      .spyOn(window, "prompt")
+      .mockReturnValue("Hello");
+    dispatch("pointerdown", 10, 20, 1);
+
+    expect(promptSpy).toHaveBeenCalled();
+    expect(ctx.fillText).toHaveBeenCalledWith("Hello", 10, 20);
+    promptSpy.mockRestore();
   });
 });

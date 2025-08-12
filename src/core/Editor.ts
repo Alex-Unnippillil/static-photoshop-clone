@@ -3,8 +3,9 @@ import { Tool } from "../tools/Tool";
 export class Editor {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
-  private undoStack: string[] = [];
-  private redoStack: string[] = [];
+  private undoStack: ImageData[] = [];
+  private redoStack: ImageData[] = [];
+  private static readonly MAX_HISTORY = 20;
   private currentTool: Tool | null = null;
   colorPicker: HTMLInputElement;
   lineWidth: HTMLInputElement;
@@ -54,36 +55,33 @@ export class Editor {
   }
 
   private handleResize = () => {
-    const data = this.canvas.toDataURL();
+    const imageData = this.ctx.getImageData(
+      0,
+      0,
+      this.canvas.width,
+      this.canvas.height,
+    );
     this.adjustForPixelRatio();
-    const img = new Image();
-    img.src = data;
-    img.onload = () => {
-      this.ctx.drawImage(
-        img,
-        0,
-        0,
-        this.canvas.clientWidth,
-        this.canvas.clientHeight,
-      );
-    };
+    this.ctx.putImageData(imageData, 0, 0);
   };
 
   saveState() {
-    this.undoStack.push(this.canvas.toDataURL());
-    if (this.undoStack.length > 50) this.undoStack.shift();
+    this.undoStack.push(
+      this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height),
+    );
+    if (this.undoStack.length > Editor.MAX_HISTORY) this.undoStack.shift();
     this.redoStack.length = 0;
   }
 
-  private restoreState(stack: string[], opposite: string[]) {
+  private restoreState(stack: ImageData[], opposite: ImageData[]) {
     if (!stack.length) return;
-    opposite.push(this.canvas.toDataURL());
-    const img = new Image();
-    img.src = stack.pop()!;
-    img.onload = () => {
-      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-      this.ctx.drawImage(img, 0, 0);
-    };
+    opposite.push(
+      this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height),
+    );
+    if (opposite.length > Editor.MAX_HISTORY) opposite.shift();
+    const imageData = stack.pop()!;
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.putImageData(imageData, 0, 0);
   }
 
   undo() {

@@ -1,7 +1,7 @@
 import { Editor } from "../core/Editor";
-import { Tool } from "./Tool";
+import { DrawingTool } from "./DrawingTool";
 
-export class LineTool implements Tool {
+export class LineTool extends DrawingTool {
   private startX = 0;
   private startY = 0;
 
@@ -16,8 +16,7 @@ export class LineTool implements Tool {
 
   onPointerUp(e: PointerEvent, editor: Editor) {
     const ctx = editor.ctx;
-    ctx.lineWidth = editor.lineWidthValue;
-    ctx.strokeStyle = editor.strokeStyle;
+    this.applyStyles(editor);
     ctx.beginPath();
     ctx.moveTo(this.startX, this.startY);
     ctx.lineTo(e.offsetX, e.offsetY);

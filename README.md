@@ -32,3 +32,7 @@ npm test
 ```
 
 Open `index.html` in your browser to use the app.
+
+## Lifecycle
+
+The `Editor` instance returned from `initEditor()` attaches several event listeners. When the editor is no longer needed, call `editor.destroy()` to remove those listeners and clean up resources.

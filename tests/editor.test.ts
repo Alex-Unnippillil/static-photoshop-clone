@@ -1,4 +1,7 @@
 import { initEditor } from "../src/editor";
+import { DrawingTool } from "../src/tools/DrawingTool";
+import { PencilTool } from "../src/tools/PencilTool";
+import { RectangleTool } from "../src/tools/RectangleTool";
 
 describe("editor", () => {
   let canvas: HTMLCanvasElement;
@@ -34,6 +37,7 @@ describe("editor", () => {
       arc: jest.fn(),
       strokeRect: jest.fn(),
       fillText: jest.fn(),
+      scale: jest.fn(),
     };
 
     canvas.getContext = jest
@@ -81,5 +85,12 @@ describe("editor", () => {
     (document.getElementById("redo") as HTMLButtonElement).click();
     await new Promise((r) => setTimeout(r, 0));
     expect(ctx.drawImage).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("tools", () => {
+  it("pencil and rectangle extend DrawingTool", () => {
+    expect(new PencilTool()).toBeInstanceOf(DrawingTool);
+    expect(new RectangleTool()).toBeInstanceOf(DrawingTool);
   });
 });

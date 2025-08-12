@@ -6,6 +6,7 @@ let startY = 0;
 let currentTool = "pencil";
 const undoStack = [];
 const redoStack = [];
+let dpr = window.devicePixelRatio || 1;
 
 function saveState() {
   undoStack.push(canvas.toDataURL());
@@ -19,13 +20,13 @@ function restoreState(stack, oppositeStack) {
     const img = new Image();
     img.src = stack.pop();
     img.onload = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0);
+      ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+      ctx.drawImage(img, 0, 0, canvas.width / dpr, canvas.height / dpr);
     };
   }
 }
 
-function handleMouseDown(e) {
+function handlePointerDown(e) {
   drawing = true;
   startX = e.offsetX;
   startY = e.offsetY;
@@ -47,7 +48,7 @@ function handleMouseDown(e) {
   }
 }
 
-function handleMouseMove(e) {
+function handlePointerMove(e) {
   if (!drawing) return;
   const x = e.offsetX;
   const y = e.offsetY;
@@ -61,7 +62,7 @@ function handleMouseMove(e) {
   }
 }
 
-function handleMouseUp(e) {
+function handlePointerUp(e) {
   if (!drawing) return;
   drawing = false;
   const x = e.offsetX;
@@ -99,8 +100,14 @@ function handleImageLoad(e) {
     const img = new Image();
     img.onload = () => {
       saveState();
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+      ctx.drawImage(
+        img,
+        0,
+        0,
+        canvas.width / dpr,
+        canvas.height / dpr,
+      );
     };
     img.src = evt.target.result as string;
   };
@@ -117,6 +124,14 @@ function handleSave() {
 export function initEditor() {
   canvas = document.getElementById("canvas");
   ctx = canvas.getContext("2d");
+  const resizeCanvas = () => {
+    const rect = canvas.getBoundingClientRect();
+    dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+  };
+  resizeCanvas();
   colorPicker = document.getElementById("colorPicker");
   lineWidth = document.getElementById("lineWidth");
   imageLoader = document.getElementById("imageLoader");
@@ -135,9 +150,9 @@ export function initEditor() {
     },
   );
 
-  canvas.addEventListener("mousedown", handleMouseDown);
-  canvas.addEventListener("mousemove", handleMouseMove);
-  canvas.addEventListener("mouseup", handleMouseUp);
+  canvas.addEventListener("pointerdown", handlePointerDown);
+  canvas.addEventListener("pointermove", handlePointerMove);
+  canvas.addEventListener("pointerup", handlePointerUp);
 
   imageLoader.addEventListener("change", handleImageLoad);
   saveBtn.onclick = handleSave;

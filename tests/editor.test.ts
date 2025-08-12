@@ -26,7 +26,6 @@ describe("editor", () => {
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
 
 
-
     canvas.getContext = jest
       .fn()
       .mockReturnValue(ctx as CanvasRenderingContext2D);
@@ -114,5 +113,20 @@ describe("editor", () => {
     expect(promptSpy).toHaveBeenCalled();
     expect(ctx.fillText).toHaveBeenCalledWith("Hello", 10, 20);
     promptSpy.mockRestore();
+  });
+
+  it("erases using destination-out compositing", () => {
+    // Switch to eraser tool
+    (document.getElementById("eraser") as HTMLButtonElement).click();
+
+    dispatch("pointerdown", 5, 5, 1);
+    dispatch("pointermove", 6, 6, 1);
+
+    expect(ctx.globalCompositeOperation).toBe("destination-out");
+
+    dispatch("pointerup", 6, 6, 0);
+
+    expect(ctx.globalCompositeOperation).toBe("source-over");
+    expect(ctx.stroke).toHaveBeenCalled();
   });
 });

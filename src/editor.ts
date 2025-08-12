@@ -1,6 +1,7 @@
 import { Editor } from "./core/Editor";
 import { PencilTool } from "./tools/PencilTool";
 import { RectangleTool } from "./tools/RectangleTool";
+import { EraserTool } from "./tools/EraserTool";
 
 
 export function initEditor(): Editor {
@@ -14,6 +15,7 @@ export function initEditor(): Editor {
 
   const pencil = new PencilTool();
   const rectangle = new RectangleTool();
+  const eraser = new EraserTool();
 
 
   editor.setTool(pencil);

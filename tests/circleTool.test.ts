@@ -1,7 +1,7 @@
 import { Editor } from "../src/core/Editor";
-import { RectangleTool } from "../src/tools/RectangleTool";
+import { CircleTool } from "../src/tools/CircleTool";
 
-describe("RectangleTool", () => {
+describe("CircleTool", () => {
   let editor: Editor;
   let ctx: Partial<CanvasRenderingContext2D>;
 
@@ -13,9 +13,10 @@ describe("RectangleTool", () => {
     `;
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
     ctx = {
-      strokeRect: jest.fn(),
-      getImageData: jest.fn().mockReturnValue({} as ImageData),
-      putImageData: jest.fn(),
+      beginPath: jest.fn(),
+      arc: jest.fn(),
+      stroke: jest.fn(),
+      closePath: jest.fn(),
       scale: jest.fn(),
     };
     canvas.getContext = jest
@@ -28,10 +29,11 @@ describe("RectangleTool", () => {
     );
   });
 
-  it("draws a rectangle on pointer up", () => {
-    const tool = new RectangleTool();
+  it("draws a circle on pointer up", () => {
+    const tool = new CircleTool();
     tool.onPointerDown({ offsetX: 10, offsetY: 15 } as PointerEvent, editor);
-    tool.onPointerUp({ offsetX: 20, offsetY: 25 } as PointerEvent, editor);
-    expect(ctx.strokeRect).toHaveBeenCalledWith(10, 15, 10, 10);
+    tool.onPointerUp({ offsetX: 13, offsetY: 19 } as PointerEvent, editor);
+    expect(ctx.arc).toHaveBeenCalledWith(10, 15, 5, 0, Math.PI * 2);
+    expect(ctx.stroke).toHaveBeenCalled();
   });
 });

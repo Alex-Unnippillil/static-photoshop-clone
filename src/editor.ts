@@ -1,6 +1,7 @@
 import { Editor } from "./core/Editor";
 import { PencilTool } from "./tools/PencilTool";
 import { RectangleTool } from "./tools/RectangleTool";
+import { EraserTool } from "./tools/EraserTool";
 
 export function initEditor(): Editor {
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -11,6 +12,7 @@ export function initEditor(): Editor {
 
   const pencil = new PencilTool();
   const rectangle = new RectangleTool();
+  const eraser = new EraserTool();
 
   editor.setTool(pencil);
 
@@ -22,6 +24,10 @@ export function initEditor(): Editor {
     editor.setTool(rectangle),
   );
 
+  document.getElementById("eraser")?.addEventListener("click", () =>
+    editor.setTool(eraser),
+  );
+
   document.getElementById("undo")?.addEventListener("click", () =>
     editor.undo(),
   );
@@ -29,7 +35,6 @@ export function initEditor(): Editor {
     editor.redo(),
   );
 
-  // Return the Editor instance so callers can clean up via editor.destroy().
   return editor;
 }
 

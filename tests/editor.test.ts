@@ -26,6 +26,7 @@ describe("editor", () => {
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
 
 
+
     canvas.getContext = jest
       .fn()
       .mockReturnValue(ctx as CanvasRenderingContext2D);

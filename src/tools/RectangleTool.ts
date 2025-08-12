@@ -1,7 +1,7 @@
 import { Editor } from "../core/Editor";
-import { Tool } from "./Tool";
+import { DrawingTool } from "./DrawingTool";
 
-export class RectangleTool implements Tool {
+export class RectangleTool extends DrawingTool {
   private startX = 0;
   private startY = 0;
   private imageData: ImageData | null = null;
@@ -17,8 +17,7 @@ export class RectangleTool implements Tool {
     if (e.buttons !== 1 || !this.imageData) return;
     const ctx = editor.ctx;
     ctx.putImageData(this.imageData, 0, 0);
-    ctx.lineWidth = editor.lineWidthValue;
-    ctx.strokeStyle = editor.strokeStyle;
+
     const x = e.offsetX;
     const y = e.offsetY;
     ctx.strokeRect(this.startX, this.startY, x - this.startX, y - this.startY);
@@ -29,8 +28,7 @@ export class RectangleTool implements Tool {
     if (this.imageData) {
       ctx.putImageData(this.imageData, 0, 0);
     }
-    ctx.lineWidth = editor.lineWidthValue;
-    ctx.strokeStyle = editor.strokeStyle;
+
     const x = e.offsetX;
     const y = e.offsetY;
     ctx.strokeRect(this.startX, this.startY, x - this.startX, y - this.startY);

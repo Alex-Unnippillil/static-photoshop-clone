@@ -1,8 +1,9 @@
-import { initEditor } from "../src/editor";
+import { initEditor, EditorHandle } from "../src/editor";
 
 describe("image operations", () => {
   let canvas: HTMLCanvasElement;
   let ctx: Partial<CanvasRenderingContext2D>;
+  let handle: EditorHandle;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -38,9 +39,13 @@ describe("image operations", () => {
     }
     (global as any).Image = MockImage;
 
-    initEditor();
+    handle = initEditor();
 
     (global as any).readSpy = readSpy;
+  });
+
+  afterEach(() => {
+    handle.destroy();
   });
 
   it("loads an image from input", async () => {

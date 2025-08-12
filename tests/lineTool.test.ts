@@ -1,7 +1,7 @@
 import { Editor } from "../src/core/Editor";
-import { EraserTool } from "../src/tools/EraserTool";
+import { LineTool } from "../src/tools/LineTool";
 
-describe("EraserTool", () => {
+describe("LineTool", () => {
   let editor: Editor;
   let ctx: Partial<CanvasRenderingContext2D>;
 
@@ -9,18 +9,19 @@ describe("EraserTool", () => {
     document.body.innerHTML = `
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
-      <input id="lineWidth" value="10" />
+      <input id="lineWidth" value="2" />
     `;
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+    const imageData = {} as ImageData;
     ctx = {
+      getImageData: jest.fn().mockReturnValue(imageData),
+      putImageData: jest.fn(),
       beginPath: jest.fn(),
       moveTo: jest.fn(),
       lineTo: jest.fn(),
       stroke: jest.fn(),
       closePath: jest.fn(),
       scale: jest.fn(),
-      globalCompositeOperation: "source-over" as GlobalCompositeOperation,
-      lineWidth: 0,
     };
     canvas.getContext = jest
       .fn()
@@ -32,20 +33,22 @@ describe("EraserTool", () => {
     );
   });
 
-  it("uses destination-out compositing to erase", () => {
-    const tool = new EraserTool();
-    tool.onPointerDown({ offsetX: 5, offsetY: 5 } as PointerEvent, editor);
-    expect(ctx.globalCompositeOperation).toBe("destination-out");
+  it("previews line during pointer move", () => {
+    const tool = new LineTool();
+    tool.onPointerDown({ offsetX: 1, offsetY: 2 } as PointerEvent, editor);
+    tool.onPointerMove({
+      offsetX: 3,
+      offsetY: 4,
+      buttons: 1,
+    } as PointerEvent, editor);
 
-    tool.onPointerMove(
-      { offsetX: 10, offsetY: 10, buttons: 1 } as PointerEvent,
-      editor,
-    );
-    expect(ctx.lineTo).toHaveBeenCalledWith(10, 10);
+    expect(ctx.getImageData).toHaveBeenCalled();
+    const image = (ctx.getImageData as jest.Mock).mock.results[0].value;
+    expect(ctx.putImageData).toHaveBeenCalledWith(image, 0, 0);
+    expect(ctx.beginPath).toHaveBeenCalled();
+    expect(ctx.moveTo).toHaveBeenCalledWith(1, 2);
+    expect(ctx.lineTo).toHaveBeenCalledWith(3, 4);
     expect(ctx.stroke).toHaveBeenCalled();
-
-    tool.onPointerUp({} as PointerEvent, editor);
     expect(ctx.closePath).toHaveBeenCalled();
-    expect(ctx.globalCompositeOperation).toBe("source-over");
   });
 });

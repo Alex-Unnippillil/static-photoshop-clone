@@ -15,6 +15,10 @@ describe("RectangleTool", () => {
     ctx = {
       strokeRect: jest.fn(),
       scale: jest.fn(),
+      getImageData: jest
+        .fn()
+        .mockReturnValue({ data: new Uint8ClampedArray(), width: 0, height: 0 } as unknown as ImageData),
+      putImageData: jest.fn(),
     };
     canvas.getContext = jest
       .fn()

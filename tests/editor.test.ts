@@ -24,14 +24,28 @@ describe("editor", () => {
     `;
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
-
+    ctx = {
+      beginPath: jest.fn(),
+      moveTo: jest.fn(),
+      lineTo: jest.fn(),
+      stroke: jest.fn(),
+      arc: jest.fn(),
+      strokeRect: jest.fn(),
+      fillText: jest.fn(),
+      closePath: jest.fn(),
+      clearRect: jest.fn(),
+      putImageData: jest.fn(),
+      getImageData: jest.fn().mockReturnValue({}),
+      drawImage: jest.fn(),
+      scale: jest.fn(),
+    };
 
     canvas.getContext = jest
       .fn()
       .mockReturnValue(ctx as CanvasRenderingContext2D);
     canvas.toDataURL = jest.fn();
 
-
+    editor = initEditor();
   });
 
   function dispatch(type: string, x: number, y: number, buttons = 0) {

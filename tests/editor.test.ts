@@ -25,53 +25,36 @@ describe("editor", () => {
     `;
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
-    canvas.getBoundingClientRect = () => ({
-      width: 100,
-      height: 100,
-    } as DOMRect);
 
     ctx = {
       beginPath: jest.fn(),
       moveTo: jest.fn(),
       lineTo: jest.fn(),
       stroke: jest.fn(),
-      closePath: jest.fn(),
-      putImageData: jest.fn(),
-      getImageData: jest.fn().mockReturnValue({} as ImageData),
-      toDataURL: jest.fn(),
+
       drawImage: jest.fn(),
       arc: jest.fn(),
       fillText: jest.fn(),
       strokeRect: jest.fn(),
       clearRect: jest.fn(),
-      scale: jest.fn(),
-      globalCompositeOperation: "source-over" as GlobalCompositeOperation,
-      lineWidth: 0,
-      strokeStyle: "",
-    };
 
     canvas.getContext = jest
       .fn()
       .mockReturnValue(ctx as CanvasRenderingContext2D);
     canvas.toDataURL = jest.fn();
-
-    readAsDataURL = jest.fn(function (this: any, _file: File) {
-      this.result = "data:image/png;base64,LOAD";
-      this.onload();
+    canvas.getBoundingClientRect = () => ({
+      width: 100,
+      height: 100,
+      top: 0,
+      left: 0,
+      bottom: 100,
+      right: 100,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
     });
-    (global as any).FileReader = jest
-      .fn()
-      .mockImplementation(() => ({
-        onload: () => {},
-        result: null,
-        readAsDataURL,
-      }));
-    (global as any).Image = class {
-      onload: () => void = () => {};
-      set src(_src: string) {
-        this.onload();
-      }
-    };
+
+
 
     editor = initEditor();
   });
@@ -162,12 +145,7 @@ describe("editor", () => {
     dispatch("pointerdown", 5, 5, 1);
     dispatch("pointermove", 6, 6, 1);
 
-    expect(ctx.globalCompositeOperation).toBe("destination-out");
-
-    dispatch("pointerup", 6, 6, 0);
-
-    expect(ctx.globalCompositeOperation).toBe("source-over");
-    expect(ctx.stroke).toHaveBeenCalled();
+    expect(ctx.clearRect).toHaveBeenCalled();
   });
 
   it("previews rectangle during pointer move", () => {

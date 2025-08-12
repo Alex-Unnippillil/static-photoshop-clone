@@ -103,7 +103,11 @@ export class Editor {
     return parseInt(this.lineWidth.value, 10) || 1;
   }
 
-  destroy() {
+  /**
+   * Remove all event listeners registered by the editor.
+   * Should be called before discarding the instance to prevent leaks.
+   */
+  destroy(): void {
     window.removeEventListener("resize", this.handleResize);
     this.canvas.removeEventListener("pointerdown", this.handlePointerDown);
     this.canvas.removeEventListener("pointermove", this.handlePointerMove);

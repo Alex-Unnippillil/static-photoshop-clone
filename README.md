@@ -35,4 +35,11 @@ Open `index.html` in your browser to use the app.
 
 ## Lifecycle
 
-The `Editor` instance returned from `initEditor()` attaches several event listeners. When the editor is no longer needed, call `editor.destroy()` to remove those listeners and clean up resources.
+`initEditor()` returns an object containing the editor instance and a `destroy` function.
+Call this function when the editor is no longer needed to remove all event listeners and release resources.
+
+```ts
+const { editor, destroy } = initEditor();
+// ...use editor...
+destroy(); // cleanup when done
+```

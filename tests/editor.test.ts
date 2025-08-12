@@ -9,16 +9,12 @@ describe("editor", () => {
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
-      <input id="imageLoader" />
       <button id="save"></button>
       <button id="undo"></button>
       <button id="redo"></button>
       <button id="pencil"></button>
       <button id="eraser"></button>
       <button id="rectangle"></button>
-      <button id="line"></button>
-      <button id="circle"></button>
-      <button id="text"></button>
     `;
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -34,6 +30,9 @@ describe("editor", () => {
       arc: jest.fn(),
       strokeRect: jest.fn(),
       fillText: jest.fn(),
+      scale: jest.fn(),
+      save: jest.fn(),
+      restore: jest.fn(),
     };
 
     canvas.getContext = jest

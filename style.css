@@ -16,6 +16,13 @@ body {
   margin: 10px;
 }
 
+#line,
+#circle,
+#text,
+#imageLoader {
+  display: none;
+}
+
 #canvas {
   border: 1px solid #000;
   cursor: crosshair;

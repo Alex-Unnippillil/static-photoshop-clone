@@ -1,12 +1,7 @@
 import { Editor } from "../core/Editor";
-import { Tool } from "./Tool";
+import { DrawingTool } from "./DrawingTool";
 
-function applyStroke(ctx: CanvasRenderingContext2D, editor: Editor) {
-  ctx.lineWidth = editor.lineWidthValue;
-  ctx.strokeStyle = editor.strokeStyle;
-}
 
-export class CircleTool implements Tool {
   private startX = 0;
   private startY = 0;
   private imageData: ImageData | null = null;
@@ -39,10 +34,7 @@ export class CircleTool implements Tool {
 
   onPointerUp(e: PointerEvent, editor: Editor) {
     const ctx = editor.ctx;
-    if (this.imageData) {
-      ctx.putImageData(this.imageData, 0, 0);
-    }
-    applyStroke(ctx, editor);
+
     const dx = e.offsetX - this.startX;
     const dy = e.offsetY - this.startY;
     const radius = Math.sqrt(dx * dx + dy * dy);

@@ -26,16 +26,14 @@ describe("editor", () => {
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
 
 
+
+
     canvas.getContext = jest
       .fn()
       .mockReturnValue(ctx as CanvasRenderingContext2D);
     canvas.toDataURL = jest.fn();
 
-    editor = initEditor();
-  });
 
-  afterEach(() => {
-    editor?.destroy();
   });
 
   function dispatch(type: string, x: number, y: number, buttons = 0) {
@@ -66,5 +64,23 @@ describe("editor", () => {
   it("calls toDataURL when Save is clicked", () => {
     (document.getElementById("save") as HTMLButtonElement).click();
     expect(canvas.toDataURL).toHaveBeenCalledWith("image/png");
+  });
+
+  it("loads an image file and draws it", async () => {
+    const loader = document.getElementById("imageLoader") as HTMLInputElement;
+    const file = new File(["dummy"], "test.png", { type: "image/png" });
+    Object.defineProperty(loader, "files", {
+      value: [file],
+      writable: false,
+    });
+
+    loader.dispatchEvent(new Event("change"));
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(canvas.toDataURL).toHaveBeenCalled();
+    expect(ctx.drawImage).toHaveBeenCalled();
+    const instances = (globalThis.FileReader as unknown as jest.Mock).mock
+      .instances;
+    expect(instances[0].readAsDataURL).toHaveBeenCalledWith(file);
   });
 });

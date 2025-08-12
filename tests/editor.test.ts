@@ -34,6 +34,8 @@ describe("editor", () => {
       arc: jest.fn(),
       strokeRect: jest.fn(),
       fillText: jest.fn(),
+      scale: jest.fn(),
+      globalCompositeOperation: "source-over",
     };
 
     canvas.getContext = jest
@@ -81,5 +83,20 @@ describe("editor", () => {
     (document.getElementById("redo") as HTMLButtonElement).click();
     await new Promise((r) => setTimeout(r, 0));
     expect(ctx.drawImage).toHaveBeenCalledTimes(2);
+  });
+
+  it("erases using destination-out compositing", () => {
+    // Switch to eraser tool
+    (document.getElementById("eraser") as HTMLButtonElement).click();
+
+    dispatch("pointerdown", 5, 5, 1);
+    dispatch("pointermove", 6, 6, 1);
+
+    expect(ctx.globalCompositeOperation).toBe("destination-out");
+
+    dispatch("pointerup", 6, 6, 0);
+
+    expect(ctx.globalCompositeOperation).toBe("source-over");
+    expect(ctx.stroke).toHaveBeenCalled();
   });
 });

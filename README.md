@@ -9,15 +9,19 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 - Pencil tool for freehand drawing
 - Rectangle tool for shape creation
 - Undo/redo support
+- Eraser tool for removing parts of your drawing
 
 ## Planned Features
 
-- Eraser tool
 - Line and circle drawing
 - Text insertion
 - Color picker and line width control
 - Load external images onto the canvas
 - Save canvas as PNG
+
+## Usage
+
+Select a tool from the toolbar. Use the **Eraser** button to remove portions of your drawing.
 
 ## Build and Test
 

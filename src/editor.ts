@@ -22,5 +22,12 @@ import { TextTool } from "./tools/TextTool";
   const circle = new CircleTool();
   const text = new TextTool();
   const eraser = new EraserTool();
+  const imageLoader = document.getElementById("imageLoader") as
+    | HTMLInputElement
+    | null;
+  const saveButton = document.getElementById("save") as
+    | HTMLButtonElement
+    | null;
+
 
 }

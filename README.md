@@ -11,15 +11,12 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 - Color picker for stroke selection
 - Adjustable line width
 - Undo/redo support
-- Eraser tool for removing parts of your drawing
-- Save the canvas as a PNG image
-
-## Planned Features
 
 - Text insertion
-- Load external images onto the canvas
+- Load and save images on the canvas
 
 ## Usage
+
 
 
 ## Build and Test

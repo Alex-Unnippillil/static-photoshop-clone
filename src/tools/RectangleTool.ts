@@ -1,7 +1,7 @@
 import { Editor } from "../core/Editor";
-import { Tool } from "./Tool";
+import { DrawingTool } from "./DrawingTool";
 
-export class RectangleTool implements Tool {
+export class RectangleTool extends DrawingTool {
   private startX = 0;
   private startY = 0;
 
@@ -19,8 +19,7 @@ export class RectangleTool implements Tool {
 
   onPointerUp(e: PointerEvent, editor: Editor) {
     const ctx = editor.ctx;
-    ctx.lineWidth = editor.lineWidthValue;
-    ctx.strokeStyle = editor.strokeStyle;
+    this.applyStyles(editor);
     const x = e.offsetX;
     const y = e.offsetY;
     ctx.strokeRect(this.startX, this.startY, x - this.startX, y - this.startY);

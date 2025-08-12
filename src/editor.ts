@@ -4,24 +4,22 @@ let drawing = false;
 let startX = 0;
 let startY = 0;
 let currentTool = "pencil";
-const undoStack = [];
-const redoStack = [];
+const MAX_HISTORY = 20;
+const undoStack: ImageData[] = [];
+const redoStack: ImageData[] = [];
 
-function saveState() {
-  undoStack.push(canvas.toDataURL());
-  if (undoStack.length > 50) undoStack.shift();
+export function saveState() {
+  undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+  if (undoStack.length > MAX_HISTORY) undoStack.shift();
   redoStack.length = 0;
 }
 
-function restoreState(stack, oppositeStack) {
+function restoreState(stack: ImageData[], oppositeStack: ImageData[]) {
   if (stack.length) {
-    oppositeStack.push(canvas.toDataURL());
-    const img = new Image();
-    img.src = stack.pop();
-    img.onload = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0);
-    };
+    oppositeStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+    if (oppositeStack.length > MAX_HISTORY) oppositeStack.shift();
+    const imgData = stack.pop();
+    if (imgData) ctx.putImageData(imgData, 0, 0);
   }
 }
 
@@ -29,11 +27,8 @@ function handleMouseDown(e) {
   drawing = true;
   startX = e.offsetX;
   startY = e.offsetY;
-  if (currentTool === "pencil" || currentTool === "eraser") {
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-    saveState();
-  } else if (currentTool === "text") {
+
+  if (currentTool === "text") {
     const text = prompt("Enter text:");
     if (text) {
       saveState();
@@ -42,8 +37,13 @@ function handleMouseDown(e) {
       ctx.fillText(text, startX, startY);
     }
     drawing = false;
-  } else {
-    saveState();
+    return;
+  }
+
+  saveState();
+  if (currentTool === "pencil" || currentTool === "eraser") {
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
   }
 }
 
@@ -108,10 +108,21 @@ function handleImageLoad(e) {
 }
 
 function handleSave() {
-  const link = document.createElement("a");
-  link.download = "image.png";
-  link.href = canvas.toDataURL();
-  link.click();
+  const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const offscreen = document.createElement("canvas");
+  offscreen.width = canvas.width;
+  offscreen.height = canvas.height;
+  const offCtx = offscreen.getContext("2d");
+  if (!offCtx) return;
+  offCtx.putImageData(data, 0, 0);
+  offscreen.toBlob((blob) => {
+    if (!blob) return;
+    const link = document.createElement("a");
+    link.download = "image.png";
+    link.href = URL.createObjectURL(blob);
+    link.click();
+    URL.revokeObjectURL(link.href);
+  });
 }
 
 export function initEditor() {

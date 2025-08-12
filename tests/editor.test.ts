@@ -31,6 +31,15 @@ describe("editor", () => {
       closePath: jest.fn(),
       clearRect: jest.fn(),
       drawImage: jest.fn(),
+      getImageData: jest
+        .fn()
+        .mockReturnValue({
+          data: new Uint8ClampedArray(),
+          width: 0,
+          height: 0,
+        } as ImageData),
+      putImageData: jest.fn(),
+      scale: jest.fn(),
       arc: jest.fn(),
       strokeRect: jest.fn(),
       fillText: jest.fn(),
@@ -39,19 +48,7 @@ describe("editor", () => {
     canvas.getContext = jest
       .fn()
       .mockReturnValue(ctx as CanvasRenderingContext2D);
-    canvas.toDataURL = jest.fn().mockReturnValue("data:image/png;base64,TEST");
-
-    class MockImage {
-      onload: () => void = () => {};
-      set src(_src: string) {
-        setTimeout(() => this.onload(), 0);
-      }
-    }
-
-    Object.defineProperty(globalThis, "Image", {
-      writable: true,
-      value: MockImage,
-    });
+    canvas.toDataURL = jest.fn();
 
     initEditor();
   });
@@ -75,11 +72,9 @@ describe("editor", () => {
     expect(ctx.stroke).toHaveBeenCalled();
 
     (document.getElementById("undo") as HTMLButtonElement).click();
-    await new Promise((r) => setTimeout(r, 0));
-    expect(ctx.drawImage).toHaveBeenCalledTimes(1);
+    expect(ctx.putImageData).toHaveBeenCalledTimes(1);
 
     (document.getElementById("redo") as HTMLButtonElement).click();
-    await new Promise((r) => setTimeout(r, 0));
-    expect(ctx.drawImage).toHaveBeenCalledTimes(2);
+    expect(ctx.putImageData).toHaveBeenCalledTimes(2);
   });
 });

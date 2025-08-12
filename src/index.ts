@@ -23,3 +23,9 @@ document.getElementById("rectangle")?.addEventListener("click", () =>
 
 document.getElementById("undo")?.addEventListener("click", () => editor.undo());
 document.getElementById("redo")?.addEventListener("click", () => editor.redo());
+document.getElementById("save")?.addEventListener("click", () => {
+  const link = document.createElement("a");
+  link.href = canvas.toDataURL("image/png");
+  link.download = "image.png";
+  link.click();
+});

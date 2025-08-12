@@ -1,5 +1,7 @@
 # Photoshop Clone
 
+[![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/OWNER/REPO/actions/workflows/ci.yml)
+
 A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaScript.
 
 ## Features

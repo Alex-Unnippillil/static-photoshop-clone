@@ -2,7 +2,7 @@ import { initEditor } from "../src/editor";
 
 describe("editor", () => {
   let canvas: HTMLCanvasElement;
-  let ctx: any;
+  let ctx: Partial<CanvasRenderingContext2D>;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -28,6 +28,7 @@ describe("editor", () => {
       moveTo: jest.fn(),
       lineTo: jest.fn(),
       stroke: jest.fn(),
+      closePath: jest.fn(),
       clearRect: jest.fn(),
       drawImage: jest.fn(),
       arc: jest.fn(),
@@ -35,30 +36,38 @@ describe("editor", () => {
       fillText: jest.fn(),
     };
 
-    canvas.getContext = jest.fn().mockReturnValue(ctx);
+    canvas.getContext = jest
+      .fn()
+      .mockReturnValue(ctx as CanvasRenderingContext2D);
     canvas.toDataURL = jest.fn().mockReturnValue("data:image/png;base64,TEST");
 
-    (global as any).Image = class {
+    class MockImage {
       onload: () => void = () => {};
       set src(_src: string) {
         setTimeout(() => this.onload(), 0);
       }
-    };
+    }
+
+    Object.defineProperty(globalThis, "Image", {
+      writable: true,
+      value: MockImage,
+    });
 
     initEditor();
   });
 
-  function dispatch(type: string, x: number, y: number) {
+  function dispatch(type: string, x: number, y: number, buttons = 0) {
     const event = new MouseEvent(type, { bubbles: true } as MouseEventInit);
     Object.defineProperty(event, "offsetX", { value: x });
     Object.defineProperty(event, "offsetY", { value: y });
+    Object.defineProperty(event, "buttons", { value: buttons });
     canvas.dispatchEvent(event);
   }
 
   it("draws and supports undo/redo", async () => {
-    dispatch("mousedown", 0, 0);
-    dispatch("mousemove", 10, 10);
-    dispatch("mouseup", 10, 10);
+    dispatch("pointerdown", 0, 0, 1);
+    dispatch("pointermove", 10, 10, 1);
+    dispatch("pointerup", 10, 10, 0);
 
     expect(ctx.beginPath).toHaveBeenCalled();
     expect(ctx.moveTo).toHaveBeenCalledWith(0, 0);

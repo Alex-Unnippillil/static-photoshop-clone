@@ -25,28 +25,6 @@ describe("editor", () => {
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
 
-    ctx = {
-      beginPath: jest.fn(),
-      moveTo: jest.fn(),
-      lineTo: jest.fn(),
-      stroke: jest.fn(),
-      closePath: jest.fn(),
-      clearRect: jest.fn(),
-      drawImage: jest.fn(),
-      getImageData: jest
-        .fn()
-        .mockReturnValue({
-          data: new Uint8ClampedArray(),
-          width: 0,
-          height: 0,
-        } as ImageData),
-      putImageData: jest.fn(),
-      scale: jest.fn(),
-      arc: jest.fn(),
-      strokeRect: jest.fn(),
-      fillText: jest.fn(),
-      scale: jest.fn(),
-    };
 
     canvas.getContext = jest
       .fn()

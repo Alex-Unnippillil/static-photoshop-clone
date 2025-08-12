@@ -1,29 +1,11 @@
-let canvas, ctx, colorPicker, lineWidth, imageLoader, saveBtn;
+import { Editor } from './core/Editor.js';
+
+let canvas, editor, ctx, colorPicker, lineWidth, imageLoader, saveBtn;
 const toolButtons = {};
 let drawing = false;
 let startX = 0;
 let startY = 0;
 let currentTool = 'pencil';
-const undoStack = [];
-const redoStack = [];
-
-function saveState() {
-  undoStack.push(canvas.toDataURL());
-  if (undoStack.length > 50) undoStack.shift();
-  redoStack.length = 0;
-}
-
-function restoreState(stack, oppositeStack) {
-  if (stack.length) {
-    oppositeStack.push(canvas.toDataURL());
-    const img = new Image();
-    img.src = stack.pop();
-    img.onload = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0);
-    };
-  }
-}
 
 function handleMouseDown(e) {
   drawing = true;
@@ -32,18 +14,18 @@ function handleMouseDown(e) {
   if (currentTool === 'pencil' || currentTool === 'eraser') {
     ctx.beginPath();
     ctx.moveTo(startX, startY);
-    saveState();
+    editor.saveState();
   } else if (currentTool === 'text') {
     const text = prompt('Enter text:');
     if (text) {
-      saveState();
+      editor.saveState();
       ctx.fillStyle = colorPicker.value;
       ctx.font = `${lineWidth.value * 5}px sans-serif`;
       ctx.fillText(text, startX, startY);
     }
     drawing = false;
   } else {
-    saveState();
+    editor.saveState();
   }
 }
 
@@ -97,7 +79,7 @@ function handleImageLoad(e) {
   reader.onload = evt => {
     const img = new Image();
     img.onload = () => {
-      saveState();
+      editor.saveState();
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     };
@@ -115,14 +97,15 @@ function handleSave() {
 
 export function initEditor() {
   canvas = document.getElementById('canvas');
-  ctx = canvas.getContext('2d');
+  editor = new Editor(canvas);
+  ctx = editor.ctx;
   colorPicker = document.getElementById('colorPicker');
   lineWidth = document.getElementById('lineWidth');
   imageLoader = document.getElementById('imageLoader');
   saveBtn = document.getElementById('save');
 
-  document.getElementById('undo').onclick = () => restoreState(undoStack, redoStack);
-  document.getElementById('redo').onclick = () => restoreState(redoStack, undoStack);
+  document.getElementById('undo').onclick = () => editor.undo();
+  document.getElementById('redo').onclick = () => editor.redo();
 
   ['pencil', 'eraser', 'rectangle', 'line', 'circle', 'text'].forEach(tool => {
     const btn = document.getElementById(tool);
@@ -136,4 +119,6 @@ export function initEditor() {
 
   imageLoader.addEventListener('change', handleImageLoad);
   saveBtn.onclick = handleSave;
+  // store initial empty state for undo support
+  editor.saveState();
 }

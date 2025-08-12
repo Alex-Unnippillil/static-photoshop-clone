@@ -20,7 +20,7 @@ export class Editor {
     this.ctx = ctx;
     this.colorPicker = colorPicker;
     this.lineWidth = lineWidth;
-    this.adjustForPixelRatio();
+    this.resizeCanvas();
     window.addEventListener("resize", this.handleResize);
 
     this.canvas.addEventListener("pointerdown", this.handlePointerDown);
@@ -45,26 +45,31 @@ export class Editor {
     this.currentTool?.onPointerUp(e, this);
   };
 
-  private adjustForPixelRatio() {
+  private resizeCanvas() {
     const dpr = window.devicePixelRatio || 1;
     const rect = this.canvas.getBoundingClientRect();
     this.canvas.width = rect.width * dpr;
     this.canvas.height = rect.height * dpr;
-    this.ctx.scale(dpr, dpr);
+    if (typeof (this.ctx as any).setTransform === "function") {
+      (this.ctx as any).setTransform(dpr, 0, 0, dpr, 0, 0);
+    } else if (typeof (this.ctx as any).scale === "function") {
+      (this.ctx as any).scale(dpr, dpr);
+    }
   }
 
   private handleResize = () => {
     const data = this.canvas.toDataURL();
-    this.adjustForPixelRatio();
+    this.resizeCanvas();
     const img = new Image();
     img.src = data;
     img.onload = () => {
+      const dpr = window.devicePixelRatio || 1;
       this.ctx.drawImage(
         img,
         0,
         0,
-        this.canvas.clientWidth,
-        this.canvas.clientHeight,
+        this.canvas.width / dpr,
+        this.canvas.height / dpr,
       );
     };
   };

@@ -11,17 +11,18 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 - Color picker for stroke selection
 - Adjustable line width
 - Undo/redo support
-- Eraser tool for removing parts of your drawing
 
 ## Planned Features
 
-
+- Eraser tool for removing parts of your drawing
+- Line tool for straight lines
+- Circle tool for perfect curves
 - Text insertion
-- Load external images onto the canvas
+- Load and save images on the canvas
 
 ## Usage
 
-Select a tool from the toolbar. Use the **Eraser** button to remove portions of your drawing.
+Select a tool from the toolbar to begin drawing.
 
 ## Build and Test
 

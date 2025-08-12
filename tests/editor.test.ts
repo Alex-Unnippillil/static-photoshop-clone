@@ -23,6 +23,7 @@ describe("editor integration", () => {
       lineTo: jest.fn(),
       stroke: jest.fn(),
 
+
     canvas.getContext = jest
       .fn()
       .mockReturnValue(ctx as CanvasRenderingContext2D);

@@ -5,30 +5,7 @@ describe("RectangleTool", () => {
   let editor: Editor;
   let ctx: Partial<CanvasRenderingContext2D>;
 
-  beforeEach(() => {
-    document.body.innerHTML = `
-      <canvas id="canvas"></canvas>
-      <input id="colorPicker" value="#000000" />
-      <input id="lineWidth" value="2" />
-    `;
-    const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-    ctx = {
-      strokeRect: jest.fn(),
-      getImageData: jest.fn().mockReturnValue({} as ImageData),
-      putImageData: jest.fn(),
-      scale: jest.fn(),
-      getImageData: jest.fn().mockReturnValue({} as ImageData),
-      putImageData: jest.fn(),
-    };
-    canvas.getContext = jest
-      .fn()
-      .mockReturnValue(ctx as CanvasRenderingContext2D);
-    editor = new Editor(
-      canvas,
-      document.getElementById("colorPicker") as HTMLInputElement,
-      document.getElementById("lineWidth") as HTMLInputElement,
-    );
-  });
+
 
   it("draws a rectangle on pointer up", () => {
     const tool = new RectangleTool();

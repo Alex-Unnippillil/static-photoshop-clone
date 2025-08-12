@@ -21,7 +21,10 @@
     <button id="redo">Redo</button>
     <button id="save">Save</button>
   </div>
-  <canvas id="canvas" width="800" height="600"></canvas>
-  <script src="script.js"></script>
-</body>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <script type="module">
+      import { initEditor } from './src/editor.js';
+      initEditor();
+    </script>
+  </body>
 </html>

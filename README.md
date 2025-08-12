@@ -12,6 +12,7 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 - Adjustable line width
 - Undo/redo support
 - Eraser tool for removing parts of your drawing
+- Save the canvas as a PNG image
 
 ## Planned Features
 
@@ -20,7 +21,6 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 
 ## Usage
 
-Select a tool from the toolbar. Click the **Eraser** button to activate a brush that erases by drawing with `destination-out` compositing, letting you scrub away portions of your image.
 
 ## Build and Test
 

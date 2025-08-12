@@ -23,5 +23,4 @@ import { TextTool } from "./tools/TextTool";
   const text = new TextTool();
   const eraser = new EraserTool();
 
-
 }

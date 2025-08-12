@@ -20,6 +20,8 @@ export class Editor {
     this.ctx = ctx;
     this.colorPicker = colorPicker;
     this.lineWidth = lineWidth;
+    this.adjustForPixelRatio();
+    window.addEventListener("resize", this.handleResize);
 
     this.canvas.addEventListener("pointerdown", this.handlePointerDown);
     this.canvas.addEventListener("pointermove", this.handlePointerMove);
@@ -41,6 +43,30 @@ export class Editor {
 
   private handlePointerUp = (e: PointerEvent) => {
     this.currentTool?.onPointerUp(e, this);
+  };
+
+  private adjustForPixelRatio() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = this.canvas.getBoundingClientRect();
+    this.canvas.width = rect.width * dpr;
+    this.canvas.height = rect.height * dpr;
+    this.ctx.scale(dpr, dpr);
+  }
+
+  private handleResize = () => {
+    const data = this.canvas.toDataURL();
+    this.adjustForPixelRatio();
+    const img = new Image();
+    img.src = data;
+    img.onload = () => {
+      this.ctx.drawImage(
+        img,
+        0,
+        0,
+        this.canvas.clientWidth,
+        this.canvas.clientHeight,
+      );
+    };
   };
 
   saveState() {

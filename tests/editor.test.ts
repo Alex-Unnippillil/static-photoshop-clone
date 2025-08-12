@@ -34,6 +34,9 @@ describe("editor", () => {
       arc: jest.fn(),
       strokeRect: jest.fn(),
       fillText: jest.fn(),
+      getImageData: jest.fn().mockReturnValue({} as ImageData),
+      putImageData: jest.fn(),
+      scale: jest.fn(),
     };
 
     canvas.getContext = jest
@@ -81,5 +84,16 @@ describe("editor", () => {
     (document.getElementById("redo") as HTMLButtonElement).click();
     await new Promise((r) => setTimeout(r, 0));
     expect(ctx.drawImage).toHaveBeenCalledTimes(2);
+  });
+
+  it("previews rectangle during pointer move", () => {
+    (document.getElementById("rectangle") as HTMLButtonElement).click();
+    dispatch("pointerdown", 1, 1, 1);
+    dispatch("pointermove", 3, 3, 1);
+
+    expect(ctx.getImageData).toHaveBeenCalled();
+    const imageData = (ctx.getImageData as jest.Mock).mock.results[0].value;
+    expect(ctx.putImageData).toHaveBeenCalledWith(imageData, 0, 0);
+    expect(ctx.strokeRect).toHaveBeenCalledWith(1, 1, 2, 2);
   });
 });

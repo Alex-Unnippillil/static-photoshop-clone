@@ -15,3 +15,4 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 - Save canvas as PNG
 
 Open `index.html` in your browser to use the app.
+To save your artwork, click the **Save** button to download the canvas as a PNG image.

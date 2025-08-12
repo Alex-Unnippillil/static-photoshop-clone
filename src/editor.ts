@@ -2,6 +2,9 @@ import { Editor } from "./core/Editor";
 import { PencilTool } from "./tools/PencilTool";
 import { RectangleTool } from "./tools/RectangleTool";
 import { EraserTool } from "./tools/EraserTool";
+import { LineTool } from "./tools/LineTool";
+import { CircleTool } from "./tools/CircleTool";
+import { TextTool } from "./tools/TextTool";
 
 export interface EditorHandle {
   editor: Editor;
@@ -19,10 +22,4 @@ export function initEditor(): EditorHandle {
   const rectangle = new RectangleTool();
   const eraser = new EraserTool();
 
-  editor.setTool(pencil);
-
-  return {
-    editor,
-    destroy: () => editor.destroy(),
-  };
 }

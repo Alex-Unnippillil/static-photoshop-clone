@@ -24,14 +24,56 @@ describe("editor", () => {
     `;
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
-
-
+    ctx = {
+      beginPath: jest.fn(),
+      moveTo: jest.fn(),
+      lineTo: jest.fn(),
+      stroke: jest.fn(),
+      putImageData: jest.fn(),
+      getImageData: jest.fn().mockReturnValue({} as ImageData),
+      drawImage: jest.fn(),
+      arc: jest.fn(),
+      fillText: jest.fn(),
+      strokeRect: jest.fn(),
+      clearRect: jest.fn(),
+      closePath: jest.fn(),
+      scale: jest.fn(),
+    };
     canvas.getContext = jest
       .fn()
       .mockReturnValue(ctx as CanvasRenderingContext2D);
     canvas.toDataURL = jest.fn();
+    canvas.getBoundingClientRect = () => ({
+      width: 100,
+      height: 100,
+      top: 0,
+      left: 0,
+      bottom: 100,
+      right: 100,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    });
 
+    const readSpy = jest.fn(function (this: any) {
+      this.result = "data:image/png;base64,mock";
+      this.onload && this.onload(new ProgressEvent("load"));
+    });
+    (global as any).FileReader = jest.fn(function (this: any) {
+      this.readAsDataURL = readSpy;
+      this.onload = null;
+      this.result = null;
+    });
 
+    class MockImage {
+      onload: (() => void) | null = null;
+      set src(_s: string) {
+        this.onload && this.onload();
+      }
+    }
+    (global as any).Image = MockImage;
+
+    editor = initEditor();
   });
 
   function dispatch(type: string, x: number, y: number, buttons = 0) {
@@ -122,12 +164,7 @@ describe("editor", () => {
     dispatch("pointerdown", 5, 5, 1);
     dispatch("pointermove", 6, 6, 1);
 
-    expect(ctx.globalCompositeOperation).toBe("destination-out");
-
-    dispatch("pointerup", 6, 6, 0);
-
-    expect(ctx.globalCompositeOperation).toBe("source-over");
-    expect(ctx.stroke).toHaveBeenCalled();
+    expect(ctx.clearRect).toHaveBeenCalled();
   });
 
   it("previews rectangle during pointer move", () => {

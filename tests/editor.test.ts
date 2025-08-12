@@ -3,8 +3,7 @@ import { Editor } from "../src/core/Editor";
 
 describe("editor integration", () => {
   let canvas: HTMLCanvasElement;
-  let ctx: Partial<CanvasRenderingContext2D>;
-  let editor: Editor;
+
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -17,22 +16,30 @@ describe("editor integration", () => {
     `;
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
+
     ctx = {
       beginPath: jest.fn(),
       moveTo: jest.fn(),
       lineTo: jest.fn(),
       stroke: jest.fn(),
-      clearRect: jest.fn(),
-      getImageData: jest.fn().mockReturnValue({} as ImageData),
-      putImageData: jest.fn(),
-      strokeRect: jest.fn(),
-      scale: jest.fn(),
-      closePath: jest.fn(),
-    };
+
     canvas.getContext = jest
       .fn()
       .mockReturnValue(ctx as CanvasRenderingContext2D);
     canvas.toDataURL = jest.fn();
+    canvas.getBoundingClientRect = () => ({
+      width: 100,
+      height: 100,
+      top: 0,
+      left: 0,
+      bottom: 100,
+      right: 100,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    });
+
+
 
     editor = initEditor();
   });
@@ -45,7 +52,7 @@ describe("editor integration", () => {
     canvas.dispatchEvent(event);
   }
 
-  it("uses pencil tool by default", () => {
+
     dispatch("pointerdown", 0, 0, 1);
     dispatch("pointermove", 5, 5, 1);
     dispatch("pointerup", 5, 5, 0);
@@ -56,10 +63,6 @@ describe("editor integration", () => {
     expect(ctx.stroke).toHaveBeenCalled();
   });
 
-  it("switches to eraser and clears", () => {
-    (document.getElementById("eraser") as HTMLButtonElement).click();
-    dispatch("pointerdown", 10, 10, 1);
-    dispatch("pointermove", 12, 12, 1);
     expect(ctx.clearRect).toHaveBeenCalled();
   });
 

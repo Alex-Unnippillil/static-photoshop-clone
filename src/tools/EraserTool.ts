@@ -17,7 +17,5 @@ export class EraserTool implements Tool {
     this.erase(e.offsetX, e.offsetY, editor);
   }
 
-  onPointerUp(_e: PointerEvent, _editor: Editor) {
-    // no operation
-  }
+
 }

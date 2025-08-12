@@ -1,5 +1,5 @@
 let canvas, ctx, colorPicker, lineWidth, imageLoader, saveBtn;
-const toolButtons = {};
+const toolButtons: Record<string, HTMLButtonElement> = {};
 let drawing = false;
 let startX = 0;
 let startY = 0;
@@ -129,11 +129,13 @@ export function initEditor() {
 
   ["pencil", "eraser", "rectangle", "line", "circle", "text"].forEach(
     (tool) => {
-      const btn = document.getElementById(tool);
+      const btn = document.getElementById(tool) as HTMLButtonElement;
       toolButtons[tool] = btn;
-      btn.onclick = () => (currentTool = tool);
+      btn.onclick = () => setTool(tool);
     },
   );
+
+  setTool("pencil");
 
   canvas.addEventListener("mousedown", handleMouseDown);
   canvas.addEventListener("mousemove", handleMouseMove);
@@ -141,4 +143,33 @@ export function initEditor() {
 
   imageLoader.addEventListener("change", handleImageLoad);
   saveBtn.onclick = handleSave;
+
+  document.addEventListener("keydown", handleKeyDown);
+}
+
+function setTool(tool: string) {
+  currentTool = tool;
+  Object.values(toolButtons).forEach((btn) => btn.classList.remove("active"));
+  const btn = toolButtons[tool];
+  if (btn) btn.classList.add("active");
+}
+
+function handleKeyDown(e: KeyboardEvent) {
+  const key = e.key.toLowerCase();
+  if (e.ctrlKey && key === "z") {
+    e.preventDefault();
+    restoreState(undoStack, redoStack);
+    return;
+  }
+
+  const keyMap: Record<string, string> = {
+    p: "pencil",
+    e: "eraser",
+    r: "rectangle",
+    l: "line",
+    c: "circle",
+    t: "text",
+  };
+  const tool = keyMap[key];
+  if (tool) setTool(tool);
 }

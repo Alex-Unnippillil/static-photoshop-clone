@@ -1,4 +1,5 @@
 import { initEditor } from "../src/editor";
+import { Editor } from "../src/core/Editor";
 
 describe("image operations", () => {
   let canvas: HTMLCanvasElement;
@@ -13,7 +14,11 @@ describe("image operations", () => {
       <button id="save"></button>
     `;
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
-    ctx = { drawImage: jest.fn(), scale: jest.fn() };
+    ctx = {
+      drawImage: jest.fn(),
+      scale: jest.fn(),
+      getImageData: jest.fn().mockReturnValue({}),
+    };
     canvas.getContext = jest
       .fn()
       .mockReturnValue(ctx as CanvasRenderingContext2D);
@@ -38,9 +43,11 @@ describe("image operations", () => {
     }
     (global as any).Image = MockImage;
 
+    const saveSpy = jest.spyOn(Editor.prototype, "saveState");
     initEditor();
 
     (global as any).readSpy = readSpy;
+    (global as any).saveSpy = saveSpy;
   });
 
   it("loads an image from input", async () => {
@@ -51,6 +58,7 @@ describe("image operations", () => {
     await new Promise((r) => setTimeout(r, 0));
     expect((global as any).readSpy).toHaveBeenCalled();
     expect(ctx.drawImage).toHaveBeenCalled();
+    expect((global as any).saveSpy).toHaveBeenCalled();
   });
 
   it("saves the canvas as an image", () => {

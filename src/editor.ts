@@ -20,6 +20,30 @@ export function initEditor(): Editor {
 
   editor.setTool(pencil);
 
+  const imageLoader = document.getElementById("imageLoader") as HTMLInputElement;
+  if (imageLoader) {
+    imageLoader.addEventListener("change", () => {
+      const file = imageLoader.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          editor.saveState();
+          editor.ctx.drawImage(
+            img,
+            0,
+            0,
+            editor.canvas.width,
+            editor.canvas.height,
+          );
+        };
+        img.src = reader.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
 
 
 

@@ -3,8 +3,9 @@ import { Editor } from "../src/core/Editor";
 
 describe("editor", () => {
   let canvas: HTMLCanvasElement;
-  let ctx: Partial<CanvasRenderingContext2D>;
-  let editor: Editor | undefined;
+  let ctx: any;
+  let editor: Editor;
+  let readAsDataURL: jest.Mock;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -24,21 +25,19 @@ describe("editor", () => {
     `;
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
+
     ctx = {
       beginPath: jest.fn(),
       moveTo: jest.fn(),
       lineTo: jest.fn(),
       stroke: jest.fn(),
-      putImageData: jest.fn(),
-      getImageData: jest.fn().mockReturnValue({} as ImageData),
+
       drawImage: jest.fn(),
       arc: jest.fn(),
       fillText: jest.fn(),
       strokeRect: jest.fn(),
       clearRect: jest.fn(),
-      closePath: jest.fn(),
-      scale: jest.fn(),
-    };
+
     canvas.getContext = jest
       .fn()
       .mockReturnValue(ctx as CanvasRenderingContext2D);
@@ -55,23 +54,7 @@ describe("editor", () => {
       toJSON: () => {},
     });
 
-    const readSpy = jest.fn(function (this: any) {
-      this.result = "data:image/png;base64,mock";
-      this.onload && this.onload(new ProgressEvent("load"));
-    });
-    (global as any).FileReader = jest.fn(function (this: any) {
-      this.readAsDataURL = readSpy;
-      this.onload = null;
-      this.result = null;
-    });
 
-    class MockImage {
-      onload: (() => void) | null = null;
-      set src(_s: string) {
-        this.onload && this.onload();
-      }
-    }
-    (global as any).Image = MockImage;
 
     editor = initEditor();
   });
@@ -119,9 +102,8 @@ describe("editor", () => {
 
     expect(canvas.toDataURL).toHaveBeenCalled();
     expect(ctx.drawImage).toHaveBeenCalled();
-    const instances = (globalThis.FileReader as unknown as jest.Mock).mock
-      .instances;
-    expect(instances[0].readAsDataURL).toHaveBeenCalledWith(file);
+    // ensure the file reader was invoked to load the image
+    expect(readAsDataURL).toHaveBeenCalledWith(file);
   });
 
   it("draws a line", () => {
@@ -158,7 +140,6 @@ describe("editor", () => {
   });
 
   it("erases using destination-out compositing", () => {
-    // Switch to eraser tool
     (document.getElementById("eraser") as HTMLButtonElement).click();
 
     dispatch("pointerdown", 5, 5, 1);

@@ -15,13 +15,12 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 
 ## Planned Features
 
-
 - Text insertion
 - Load external images onto the canvas
 
 ## Usage
 
-Select a tool from the toolbar. Use the **Eraser** button to remove portions of your drawing.
+Select a tool from the toolbar. Click the **Eraser** button to activate a brush that erases by drawing with `destination-out` compositing, letting you scrub away portions of your image.
 
 ## Build and Test
 

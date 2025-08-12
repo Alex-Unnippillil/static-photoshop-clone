@@ -13,8 +13,14 @@ describe("EraserTool", () => {
     `;
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
     ctx = {
-      clearRect: jest.fn(),
+      beginPath: jest.fn(),
+      moveTo: jest.fn(),
+      lineTo: jest.fn(),
+      stroke: jest.fn(),
+      closePath: jest.fn(),
       scale: jest.fn(),
+      globalCompositeOperation: "source-over" as GlobalCompositeOperation,
+      lineWidth: 0,
     };
     canvas.getContext = jest
       .fn()
@@ -26,18 +32,20 @@ describe("EraserTool", () => {
     );
   });
 
-  it("clears the area under the cursor", () => {
+  it("uses destination-out compositing to erase", () => {
     const tool = new EraserTool();
-    tool.onPointerDown({ offsetX: 15, offsetY: 15 } as PointerEvent, editor);
-    expect(ctx.clearRect).toHaveBeenCalledWith(10, 10, 10, 10);
-  });
+    tool.onPointerDown({ offsetX: 5, offsetY: 5 } as PointerEvent, editor);
+    expect(ctx.globalCompositeOperation).toBe("destination-out");
 
-  it("erases on pointer move when pressed", () => {
-    const tool = new EraserTool();
     tool.onPointerMove(
-      { offsetX: 20, offsetY: 20, buttons: 1 } as PointerEvent,
+      { offsetX: 10, offsetY: 10, buttons: 1 } as PointerEvent,
       editor,
     );
-    expect(ctx.clearRect).toHaveBeenCalledWith(15, 15, 10, 10);
+    expect(ctx.lineTo).toHaveBeenCalledWith(10, 10);
+    expect(ctx.stroke).toHaveBeenCalled();
+
+    tool.onPointerUp({} as PointerEvent, editor);
+    expect(ctx.closePath).toHaveBeenCalled();
+    expect(ctx.globalCompositeOperation).toBe("source-over");
   });
 });

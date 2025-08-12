@@ -1,8 +1,10 @@
 import { initEditor } from "../src/editor";
+import { Editor } from "../src/core/Editor";
 
 describe("editor", () => {
   let canvas: HTMLCanvasElement;
   let ctx: Partial<CanvasRenderingContext2D>;
+  let editor: Editor | undefined;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -23,38 +25,17 @@ describe("editor", () => {
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
 
-    ctx = {
-      beginPath: jest.fn(),
-      moveTo: jest.fn(),
-      lineTo: jest.fn(),
-      stroke: jest.fn(),
-      closePath: jest.fn(),
-      clearRect: jest.fn(),
-      drawImage: jest.fn(),
-      arc: jest.fn(),
-      strokeRect: jest.fn(),
-      fillText: jest.fn(),
-      scale: jest.fn(),
-    };
 
     canvas.getContext = jest
       .fn()
       .mockReturnValue(ctx as CanvasRenderingContext2D);
-    canvas.toDataURL = jest.fn().mockReturnValue("data:image/png;base64,TEST");
+    canvas.toDataURL = jest.fn();
 
-    class MockImage {
-      onload: () => void = () => {};
-      set src(_src: string) {
-        setTimeout(() => this.onload(), 0);
-      }
-    }
+    editor = initEditor();
+  });
 
-    Object.defineProperty(globalThis, "Image", {
-      writable: true,
-      value: MockImage,
-    });
-
-    initEditor();
+  afterEach(() => {
+    editor?.destroy();
   });
 
   function dispatch(type: string, x: number, y: number, buttons = 0) {
@@ -76,12 +57,10 @@ describe("editor", () => {
     expect(ctx.stroke).toHaveBeenCalled();
 
     (document.getElementById("undo") as HTMLButtonElement).click();
-    await new Promise((r) => setTimeout(r, 0));
-    expect(ctx.drawImage).toHaveBeenCalledTimes(1);
+    expect(ctx.putImageData).toHaveBeenCalledTimes(1);
 
     (document.getElementById("redo") as HTMLButtonElement).click();
-    await new Promise((r) => setTimeout(r, 0));
-    expect(ctx.drawImage).toHaveBeenCalledTimes(2);
+    expect(ctx.putImageData).toHaveBeenCalledTimes(2);
   });
 
   it("calls toDataURL when Save is clicked", () => {

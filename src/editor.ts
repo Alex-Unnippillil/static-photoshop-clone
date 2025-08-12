@@ -1,4 +1,4 @@
-let canvas, ctx, colorPicker, lineWidth, imageLoader, saveBtn;
+let canvas, ctx, colorPicker, lineWidth, imageLoader, saveBtn, clearAutosaveBtn;
 const toolButtons = {};
 let drawing = false;
 let startX = 0;
@@ -6,6 +6,16 @@ let startY = 0;
 let currentTool = "pencil";
 const undoStack = [];
 const redoStack = [];
+const AUTOSAVE_KEY = "autosave";
+
+function autosave() {
+  try {
+    localStorage.setItem(AUTOSAVE_KEY, canvas.toDataURL());
+  } catch (e) {
+    // Ignore write errors (e.g., storage full)
+    console.error("Autosave failed", e);
+  }
+}
 
 function saveState() {
   undoStack.push(canvas.toDataURL());
@@ -21,6 +31,7 @@ function restoreState(stack, oppositeStack) {
     img.onload = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0);
+      autosave();
     };
   }
 }
@@ -40,6 +51,7 @@ function handleMouseDown(e) {
       ctx.fillStyle = colorPicker.value;
       ctx.font = `${lineWidth.value * 5}px sans-serif`;
       ctx.fillText(text, startX, startY);
+      autosave();
     }
     drawing = false;
   } else {
@@ -89,6 +101,7 @@ function handleMouseUp(e) {
       break;
     }
   }
+  autosave();
 }
 
 function handleImageLoad(e) {
@@ -101,6 +114,7 @@ function handleImageLoad(e) {
       saveState();
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      autosave();
     };
     img.src = evt.target.result as string;
   };
@@ -121,6 +135,7 @@ export function initEditor() {
   lineWidth = document.getElementById("lineWidth");
   imageLoader = document.getElementById("imageLoader");
   saveBtn = document.getElementById("save");
+  clearAutosaveBtn = document.getElementById("clearAutosave");
 
   document.getElementById("undo").onclick = () =>
     restoreState(undoStack, redoStack);
@@ -141,4 +156,18 @@ export function initEditor() {
 
   imageLoader.addEventListener("change", handleImageLoad);
   saveBtn.onclick = handleSave;
+  clearAutosaveBtn.onclick = () => {
+    localStorage.removeItem(AUTOSAVE_KEY);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  };
+
+  const saved = localStorage.getItem(AUTOSAVE_KEY);
+  if (saved) {
+    const img = new Image();
+    img.onload = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+    };
+    img.src = saved;
+  }
 }

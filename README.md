@@ -13,3 +13,13 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 - Save canvas as PNG
 
 Open `index.html` in your browser to use the app.
+
+## Keyboard Shortcuts
+
+- **P**: Pencil
+- **E**: Eraser
+- **R**: Rectangle
+- **L**: Line
+- **C**: Circle
+- **T**: Text
+- **Ctrl+Z**: Undo

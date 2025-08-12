@@ -17,7 +17,7 @@ export class RectangleTool extends DrawingTool {
     if (e.buttons !== 1 || !this.imageData) return;
     const ctx = editor.ctx;
     ctx.putImageData(this.imageData, 0, 0);
-    this.applyStyles(editor);
+
     const x = e.offsetX;
     const y = e.offsetY;
     ctx.strokeRect(this.startX, this.startY, x - this.startX, y - this.startY);
@@ -28,7 +28,7 @@ export class RectangleTool extends DrawingTool {
     if (this.imageData) {
       ctx.putImageData(this.imageData, 0, 0);
     }
-    this.applyStyles(editor);
+
     const x = e.offsetX;
     const y = e.offsetY;
     ctx.strokeRect(this.startX, this.startY, x - this.startX, y - this.startY);

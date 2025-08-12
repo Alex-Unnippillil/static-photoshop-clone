@@ -11,7 +11,7 @@ export class PencilTool extends DrawingTool {
   onPointerMove(e: PointerEvent, editor: Editor) {
     if (e.buttons !== 1) return;
     const ctx = editor.ctx;
-    this.applyStyles(editor);
+
     ctx.lineTo(e.offsetX, e.offsetY);
     ctx.stroke();
   }

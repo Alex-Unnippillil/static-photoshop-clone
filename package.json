@@ -31,6 +31,16 @@
         "useESM": true
       }
     },
-    "extensionsToTreatAsEsm": [".ts"]
+    "extensionsToTreatAsEsm": [".ts"],
+    "collectCoverage": true,
+    "collectCoverageFrom": ["src/**/*.ts"],
+    "coverageThreshold": {
+      "global": {
+        "branches": 20,
+        "functions": 60,
+        "lines": 70,
+        "statements": 70
+      }
+    }
   }
 }

@@ -8,16 +8,16 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 
 - Pencil tool for freehand drawing
 - Rectangle tool for shape creation
+- Color picker for stroke selection
+- Adjustable line width
 - Undo/redo support
 - Eraser tool for removing parts of your drawing
 
 ## Planned Features
 
-- Line and circle drawing
+
 - Text insertion
-- Color picker and line width control
 - Load external images onto the canvas
-- Save canvas as PNG
 
 ## Usage
 
@@ -33,3 +33,7 @@ npm test
 ```
 
 Open `index.html` in your browser to use the app.
+
+## Lifecycle
+
+The `Editor` instance returned from `initEditor()` attaches several event listeners. When the editor is no longer needed, call `editor.destroy()` to remove those listeners and clean up resources.

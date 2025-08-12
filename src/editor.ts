@@ -14,6 +14,17 @@ import { TextTool } from "./tools/TextTool";
   const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
 
+  const pencilBtn = document.getElementById("pencil") as HTMLButtonElement;
+  const eraserBtn = document.getElementById("eraser") as HTMLButtonElement;
+  const rectangleBtn = document.getElementById("rectangle") as HTMLButtonElement;
+  const lineBtn = document.getElementById("line") as HTMLButtonElement;
+  const circleBtn = document.getElementById("circle") as HTMLButtonElement;
+  const textBtn = document.getElementById("text") as HTMLButtonElement;
+  const undoBtn = document.getElementById("undo") as HTMLButtonElement;
+  const redoBtn = document.getElementById("redo") as HTMLButtonElement;
+  const saveBtn = document.getElementById("save") as HTMLButtonElement;
+  const imageLoader = document.getElementById("imageLoader") as HTMLInputElement;
+
   const editor = new Editor(canvas, colorPicker, lineWidth);
 
   const pencil = new PencilTool();
@@ -22,12 +33,5 @@ import { TextTool } from "./tools/TextTool";
   const circle = new CircleTool();
   const text = new TextTool();
   const eraser = new EraserTool();
-  const imageLoader = document.getElementById("imageLoader") as
-    | HTMLInputElement
-    | null;
-  const saveButton = document.getElementById("save") as
-    | HTMLButtonElement
-    | null;
-
 
 }

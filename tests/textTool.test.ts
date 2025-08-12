@@ -1,7 +1,7 @@
 import { Editor } from "../src/core/Editor";
-import { RectangleTool } from "../src/tools/RectangleTool";
+import { TextTool } from "../src/tools/TextTool";
 
-describe("RectangleTool", () => {
+describe("TextTool", () => {
   let editor: Editor;
   let ctx: Partial<CanvasRenderingContext2D>;
 
@@ -12,12 +12,9 @@ describe("RectangleTool", () => {
       <input id="lineWidth" value="2" />
     `;
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-    const imageData = {} as ImageData;
     ctx = {
-      strokeRect: jest.fn(),
+      fillText: jest.fn(),
       scale: jest.fn(),
-      getImageData: jest.fn().mockReturnValue(imageData),
-      putImageData: jest.fn(),
     };
     canvas.getContext = jest
       .fn()
@@ -29,10 +26,12 @@ describe("RectangleTool", () => {
     );
   });
 
-  it("draws a rectangle on pointer up", () => {
-    const tool = new RectangleTool();
-    tool.onPointerDown({ offsetX: 10, offsetY: 15 } as PointerEvent, editor);
-    tool.onPointerUp({ offsetX: 20, offsetY: 25 } as PointerEvent, editor);
-    expect(ctx.strokeRect).toHaveBeenCalledWith(10, 15, 10, 10);
+  it("renders prompted text", () => {
+    const tool = new TextTool();
+    const promptSpy = jest.spyOn(window, "prompt").mockReturnValue("Hi");
+    tool.onPointerDown({ offsetX: 5, offsetY: 6 } as PointerEvent, editor);
+    expect(promptSpy).toHaveBeenCalled();
+    expect(ctx.fillText).toHaveBeenCalledWith("Hi", 5, 6);
+    promptSpy.mockRestore();
   });
 });

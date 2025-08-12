@@ -1,7 +1,7 @@
 import { Editor } from "../src/core/Editor";
-import { RectangleTool } from "../src/tools/RectangleTool";
+import { LineTool } from "../src/tools/LineTool";
 
-describe("RectangleTool", () => {
+describe("LineTool", () => {
   let editor: Editor;
   let ctx: Partial<CanvasRenderingContext2D>;
 
@@ -12,12 +12,13 @@ describe("RectangleTool", () => {
       <input id="lineWidth" value="2" />
     `;
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-    const imageData = {} as ImageData;
     ctx = {
-      strokeRect: jest.fn(),
+      beginPath: jest.fn(),
+      moveTo: jest.fn(),
+      lineTo: jest.fn(),
+      stroke: jest.fn(),
+      closePath: jest.fn(),
       scale: jest.fn(),
-      getImageData: jest.fn().mockReturnValue(imageData),
-      putImageData: jest.fn(),
     };
     canvas.getContext = jest
       .fn()
@@ -29,10 +30,14 @@ describe("RectangleTool", () => {
     );
   });
 
-  it("draws a rectangle on pointer up", () => {
-    const tool = new RectangleTool();
-    tool.onPointerDown({ offsetX: 10, offsetY: 15 } as PointerEvent, editor);
-    tool.onPointerUp({ offsetX: 20, offsetY: 25 } as PointerEvent, editor);
-    expect(ctx.strokeRect).toHaveBeenCalledWith(10, 15, 10, 10);
+  it("draws a line on pointer up", () => {
+    const tool = new LineTool();
+    tool.onPointerDown({ offsetX: 1, offsetY: 2 } as PointerEvent, editor);
+    tool.onPointerUp({ offsetX: 3, offsetY: 4 } as PointerEvent, editor);
+    expect(ctx.beginPath).toHaveBeenCalled();
+    expect(ctx.moveTo).toHaveBeenCalledWith(1, 2);
+    expect(ctx.lineTo).toHaveBeenCalledWith(3, 4);
+    expect(ctx.stroke).toHaveBeenCalled();
+    expect(ctx.closePath).toHaveBeenCalled();
   });
 });

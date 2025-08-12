@@ -3,8 +3,11 @@ import { Tool } from "../tools/Tool";
 export class Editor {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
-  private undoStack: string[] = [];
-  private redoStack: string[] = [];
+  // History stacks store full ImageData snapshots.
+  // Each pixel uses 4 bytes, so large canvases with deep history can consume
+  // significant memory.
+  private undoStack: ImageData[] = [];
+  private redoStack: ImageData[] = [];
   private currentTool: Tool | null = null;
   colorPicker: HTMLInputElement;
   lineWidth: HTMLInputElement;
@@ -44,20 +47,22 @@ export class Editor {
   };
 
   saveState() {
-    this.undoStack.push(this.canvas.toDataURL());
-    if (this.undoStack.length > 50) this.undoStack.shift();
+    this.undoStack.push(
+      this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height),
+    );
+    // Limit history length to mitigate memory usage from storing ImageData.
+    if (this.undoStack.length > 20) this.undoStack.shift();
     this.redoStack.length = 0;
   }
 
-  private restoreState(stack: string[], opposite: string[]) {
+  private restoreState(stack: ImageData[], opposite: ImageData[]) {
     if (!stack.length) return;
-    opposite.push(this.canvas.toDataURL());
-    const img = new Image();
-    img.src = stack.pop()!;
-    img.onload = () => {
-      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-      this.ctx.drawImage(img, 0, 0);
-    };
+    opposite.push(
+      this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height),
+    );
+    const img = stack.pop()!;
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.putImageData(img, 0, 0);
   }
 
   undo() {

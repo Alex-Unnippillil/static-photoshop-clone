@@ -34,6 +34,7 @@ describe("editor", () => {
       arc: jest.fn(),
       strokeRect: jest.fn(),
       fillText: jest.fn(),
+      scale: jest.fn(),
     };
 
     canvas.getContext = jest
@@ -81,5 +82,10 @@ describe("editor", () => {
     (document.getElementById("redo") as HTMLButtonElement).click();
     await new Promise((r) => setTimeout(r, 0));
     expect(ctx.drawImage).toHaveBeenCalledTimes(2);
+  });
+
+  it("calls toDataURL when Save is clicked", () => {
+    (document.getElementById("save") as HTMLButtonElement).click();
+    expect(canvas.toDataURL).toHaveBeenCalledWith("image/png");
   });
 });

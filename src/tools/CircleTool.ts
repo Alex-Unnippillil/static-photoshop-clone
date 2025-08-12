@@ -1,7 +1,7 @@
 import { Editor } from "../core/Editor";
-import { Tool } from "./Tool";
+import { DrawingTool } from "./DrawingTool";
 
-export class CircleTool implements Tool {
+export class CircleTool extends DrawingTool {
   private startX = 0;
   private startY = 0;
 
@@ -16,8 +16,7 @@ export class CircleTool implements Tool {
 
   onPointerUp(e: PointerEvent, editor: Editor) {
     const ctx = editor.ctx;
-    ctx.lineWidth = editor.lineWidthValue;
-    ctx.strokeStyle = editor.strokeStyle;
+    this.applyStroke(editor);
     const dx = e.offsetX - this.startX;
     const dy = e.offsetY - this.startY;
     const radius = Math.sqrt(dx * dx + dy * dy);

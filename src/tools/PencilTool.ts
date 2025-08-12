@@ -1,7 +1,7 @@
 import { Editor } from "../core/Editor";
-import { Tool } from "./Tool";
+import { DrawingTool } from "./DrawingTool";
 
-export class PencilTool implements Tool {
+export class PencilTool extends DrawingTool {
   onPointerDown(e: PointerEvent, editor: Editor) {
     const ctx = editor.ctx;
     ctx.beginPath();
@@ -11,8 +11,7 @@ export class PencilTool implements Tool {
   onPointerMove(e: PointerEvent, editor: Editor) {
     if (e.buttons !== 1) return;
     const ctx = editor.ctx;
-    ctx.lineWidth = editor.lineWidthValue;
-    ctx.strokeStyle = editor.strokeStyle;
+    this.applyStroke(editor);
     ctx.lineTo(e.offsetX, e.offsetY);
     ctx.stroke();
   }

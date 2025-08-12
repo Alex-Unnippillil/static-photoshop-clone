@@ -6,12 +6,26 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 
 ## Features
 
-- Pencil and eraser tools
-- Rectangle, line, and circle drawing
+- Pencil tool for freehand drawing
+- Rectangle tool for shape creation
+- Undo/redo support
+
+## Planned Features
+
+- Eraser tool
+- Line and circle drawing
 - Text insertion
 - Color picker and line width control
-- Undo/redo support
 - Load external images onto the canvas
 - Save canvas as PNG
+
+## Build and Test
+
+Run the following commands to compile the project and execute tests:
+
+```bash
+npm run build
+npm test
+```
 
 Open `index.html` in your browser to use the app.

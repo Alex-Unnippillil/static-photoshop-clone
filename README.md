@@ -11,7 +11,6 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 - Color picker for stroke selection
 - Adjustable line width
 - Undo/redo support
-- Responsive canvas with high-DPI support
 
 ## Planned Features
 
@@ -20,7 +19,6 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 - Circle drawing
 - Text insertion
 - Load external images onto the canvas
-- Save canvas as PNG
 
 ## Build and Test
 

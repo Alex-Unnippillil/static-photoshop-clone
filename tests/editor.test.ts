@@ -26,7 +26,6 @@ describe("editor", () => {
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
 
 
-
     canvas.getContext = jest
       .fn()
       .mockReturnValue(ctx as CanvasRenderingContext2D);
@@ -62,5 +61,10 @@ describe("editor", () => {
 
     (document.getElementById("redo") as HTMLButtonElement).click();
     expect(ctx.putImageData).toHaveBeenCalledTimes(2);
+  });
+
+  it("calls toDataURL when Save is clicked", () => {
+    (document.getElementById("save") as HTMLButtonElement).click();
+    expect(canvas.toDataURL).toHaveBeenCalledWith("image/png");
   });
 });

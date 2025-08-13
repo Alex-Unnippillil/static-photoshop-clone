@@ -6,30 +6,34 @@ describe("EraserTool", () => {
   let ctx: Partial<CanvasRenderingContext2D>;
 
   beforeEach(() => {
-    document.body.innerHTML = `
-      <canvas id="canvas"></canvas>
-      <input id="colorPicker" value="#000000" />
-      <input id="lineWidth" value="10" />
-    `;
+      document.body.innerHTML = `
+        <canvas id="canvas"></canvas>
+        <input id="colorPicker" value="#000000" />
+        <input id="lineWidth" value="10" />
+        <input id="fillMode" type="checkbox" />
+      `;
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
     ctx = {
-      beginPath: jest.fn(),
-      moveTo: jest.fn(),
-      lineTo: jest.fn(),
-      stroke: jest.fn(),
-      closePath: jest.fn(),
-      scale: jest.fn(),
-      globalCompositeOperation: "source-over" as GlobalCompositeOperation,
-      lineWidth: 0,
+        beginPath: jest.fn(),
+        moveTo: jest.fn(),
+        lineTo: jest.fn(),
+        stroke: jest.fn(),
+        closePath: jest.fn(),
+        scale: jest.fn(),
+        setTransform: jest.fn(),
+        clearRect: jest.fn(),
+        globalCompositeOperation: "source-over" as GlobalCompositeOperation,
+        lineWidth: 0,
     };
     canvas.getContext = jest
       .fn()
       .mockReturnValue(ctx as CanvasRenderingContext2D);
     editor = new Editor(
       canvas,
-      document.getElementById("colorPicker") as HTMLInputElement,
-      document.getElementById("lineWidth") as HTMLInputElement,
-    );
+        document.getElementById("colorPicker") as HTMLInputElement,
+        document.getElementById("lineWidth") as HTMLInputElement,
+        document.getElementById("fillMode") as HTMLInputElement,
+      );
   });
 
   it("uses destination-out compositing to erase", () => {

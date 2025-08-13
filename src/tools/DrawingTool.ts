@@ -2,8 +2,10 @@ import { Editor } from "../core/Editor";
 import { Tool } from "./Tool";
 
 export abstract class DrawingTool implements Tool {
-
-    const ctx = editor.ctx;
+  protected applyStroke(
+    ctx: CanvasRenderingContext2D,
+    editor: Editor,
+  ): void {
     ctx.lineWidth = editor.lineWidthValue;
     ctx.strokeStyle = editor.strokeStyle;
   }

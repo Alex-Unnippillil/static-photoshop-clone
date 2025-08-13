@@ -2,19 +2,20 @@ import { initEditor, EditorHandle } from "../src/editor";
 
 describe("image operations", () => {
   let canvas: HTMLCanvasElement;
-  let ctx: Partial<CanvasRenderingContext2D>;
+    let ctx: Partial<CanvasRenderingContext2D>;
   let handle: EditorHandle;
 
   beforeEach(() => {
     document.body.innerHTML = `
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
-      <input id="lineWidth" value="2" />
-      <input id="imageLoader" type="file" />
-      <button id="save"></button>
+        <input id="lineWidth" value="2" />
+        <input id="fillMode" type="checkbox" />
+        <input id="imageLoader" type="file" />
+        <button id="save"></button>
     `;
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
-    ctx = { drawImage: jest.fn(), scale: jest.fn() };
+      ctx = { drawImage: jest.fn(), scale: jest.fn(), setTransform: jest.fn() };
     canvas.getContext = jest
       .fn()
       .mockReturnValue(ctx as CanvasRenderingContext2D);

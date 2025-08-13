@@ -6,31 +6,34 @@ describe("LineTool", () => {
   let ctx: Partial<CanvasRenderingContext2D>;
 
   beforeEach(() => {
-    document.body.innerHTML = `
-      <canvas id="canvas"></canvas>
-      <input id="colorPicker" value="#000000" />
-      <input id="lineWidth" value="2" />
-    `;
+      document.body.innerHTML = `
+        <canvas id="canvas"></canvas>
+        <input id="colorPicker" value="#000000" />
+        <input id="lineWidth" value="2" />
+        <input id="fillMode" type="checkbox" />
+      `;
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
     const imageData = {} as ImageData;
     ctx = {
       getImageData: jest.fn().mockReturnValue(imageData),
       putImageData: jest.fn(),
-      beginPath: jest.fn(),
-      moveTo: jest.fn(),
-      lineTo: jest.fn(),
-      stroke: jest.fn(),
-      closePath: jest.fn(),
-      scale: jest.fn(),
+        beginPath: jest.fn(),
+        moveTo: jest.fn(),
+        lineTo: jest.fn(),
+        stroke: jest.fn(),
+        closePath: jest.fn(),
+        scale: jest.fn(),
+        setTransform: jest.fn(),
     };
     canvas.getContext = jest
       .fn()
       .mockReturnValue(ctx as CanvasRenderingContext2D);
     editor = new Editor(
       canvas,
-      document.getElementById("colorPicker") as HTMLInputElement,
-      document.getElementById("lineWidth") as HTMLInputElement,
-    );
+        document.getElementById("colorPicker") as HTMLInputElement,
+        document.getElementById("lineWidth") as HTMLInputElement,
+        document.getElementById("fillMode") as HTMLInputElement,
+      );
   });
 
   it("previews line during pointer move", () => {

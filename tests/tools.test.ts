@@ -9,32 +9,38 @@ describe("additional tools", () => {
   let ctx: Partial<CanvasRenderingContext2D>;
   let editor: Editor;
 
-  beforeEach(() => {
-    document.body.innerHTML = `
-      <canvas id="canvas"></canvas>
-      <input id="colorPicker" value="#000000" />
-      <input id="lineWidth" value="2" />
-    `;
-    canvas = document.getElementById("canvas") as HTMLCanvasElement;
-    ctx = {
-      beginPath: jest.fn(),
-      moveTo: jest.fn(),
-      lineTo: jest.fn(),
-      stroke: jest.fn(),
-      arc: jest.fn(),
-      fillText: jest.fn(),
-      closePath: jest.fn(),
-      scale: jest.fn(),
-    };
-    canvas.getContext = jest
-      .fn()
-      .mockReturnValue(ctx as CanvasRenderingContext2D);
-    editor = new Editor(
-      canvas,
-      document.getElementById("colorPicker") as HTMLInputElement,
-      document.getElementById("lineWidth") as HTMLInputElement,
-    );
-  });
+    beforeEach(() => {
+      document.body.innerHTML = `
+        <canvas id="canvas"></canvas>
+        <input id="colorPicker" value="#000000" />
+        <input id="lineWidth" value="2" />
+        <input id="fillMode" type="checkbox" />
+      `;
+      canvas = document.getElementById("canvas") as HTMLCanvasElement;
+      const imageData = {} as ImageData;
+      ctx = {
+        beginPath: jest.fn(),
+        moveTo: jest.fn(),
+        lineTo: jest.fn(),
+        stroke: jest.fn(),
+        arc: jest.fn(),
+        fillText: jest.fn(),
+        closePath: jest.fn(),
+        scale: jest.fn(),
+        setTransform: jest.fn(),
+        getImageData: jest.fn().mockReturnValue(imageData),
+        putImageData: jest.fn(),
+      };
+      canvas.getContext = jest
+        .fn()
+        .mockReturnValue(ctx as CanvasRenderingContext2D);
+      editor = new Editor(
+        canvas,
+        document.getElementById("colorPicker") as HTMLInputElement,
+        document.getElementById("lineWidth") as HTMLInputElement,
+        document.getElementById("fillMode") as HTMLInputElement,
+      );
+    });
 
   it("pencil draws lines", () => {
     const tool = new PencilTool();

@@ -35,4 +35,5 @@ export class EraserTool implements Tool {
     ctx.closePath?.();
     ctx.globalCompositeOperation = "source-over";
   }
+
 }

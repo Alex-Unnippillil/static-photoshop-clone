@@ -7,8 +7,7 @@ import { Tool } from "./Tool";
  * rendering context. Concrete tools must implement the pointer handlers.
  */
 export abstract class DrawingTool implements Tool {
-  protected applyStroke(editor: Editor): void {
-    const ctx = editor.ctx;
+
     ctx.lineWidth = editor.lineWidthValue;
     ctx.strokeStyle = editor.strokeStyle;
   }

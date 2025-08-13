@@ -5,7 +5,7 @@ import { RectangleTool } from "../src/tools/RectangleTool";
 
 describe("editor integration", () => {
   let canvas: HTMLCanvasElement;
-  let ctx: Partial<CanvasRenderingContext2D>;
+  let contexts: Array<Partial<CanvasRenderingContext2D>> = [];
   let editor: Editor;
 
   beforeEach(() => {
@@ -27,23 +27,28 @@ describe("editor integration", () => {
       height: 100,
     } as ImageData;
 
-    ctx = {
-      beginPath: jest.fn(),
-      moveTo: jest.fn(),
-      lineTo: jest.fn(),
-      stroke: jest.fn(),
-      closePath: jest.fn(),
-      clearRect: jest.fn(),
-      getImageData: jest.fn(() => mockImage),
-      putImageData: jest.fn(),
-      strokeRect: jest.fn(),
-      setTransform: jest.fn(),
-      scale: jest.fn(),
-    };
+    contexts = [];
+    jest
+      .spyOn(HTMLCanvasElement.prototype, "getContext")
+      .mockImplementation(() => {
+        const ctx = {
+          beginPath: jest.fn(),
+          moveTo: jest.fn(),
+          lineTo: jest.fn(),
+          stroke: jest.fn(),
+          closePath: jest.fn(),
+          clearRect: jest.fn(),
+          getImageData: jest.fn(() => mockImage),
+          putImageData: jest.fn(),
+          strokeRect: jest.fn(),
+          drawImage: jest.fn(),
+          setTransform: jest.fn(),
+          scale: jest.fn(),
+        } as Partial<CanvasRenderingContext2D>;
+        contexts.push(ctx);
+        return ctx as CanvasRenderingContext2D;
+      });
 
-    canvas.getContext = jest
-      .fn()
-      .mockReturnValue(ctx as CanvasRenderingContext2D);
     canvas.toDataURL = jest.fn();
     canvas.getBoundingClientRect = () => ({
       width: 100,
@@ -87,6 +92,7 @@ describe("editor integration", () => {
 
   afterEach(() => {
     editor.destroy();
+    jest.restoreAllMocks();
   });
 
   function dispatch(type: string, x: number, y: number, buttons = 0) {
@@ -103,34 +109,45 @@ describe("editor integration", () => {
     dispatch("pointermove", 5, 5, 1);
     dispatch("pointerup", 5, 5, 0);
 
-    expect(ctx.beginPath).toHaveBeenCalled();
-    expect(ctx.moveTo).toHaveBeenCalledWith(0, 0);
-    expect(ctx.lineTo).toHaveBeenCalledWith(5, 5);
-    expect(ctx.stroke).toHaveBeenCalled();
+    const layerCtx = contexts[1];
+    const mainCtx = contexts[0];
 
+    expect(layerCtx.beginPath).toHaveBeenCalled();
+    expect(layerCtx.moveTo).toHaveBeenCalledWith(0, 0);
+    expect(layerCtx.lineTo).toHaveBeenCalledWith(5, 5);
+    expect(layerCtx.stroke).toHaveBeenCalled();
+
+    const clearBeforeUndo = (mainCtx.clearRect as jest.Mock).mock.calls.length;
     (document.getElementById("undo") as HTMLButtonElement).click();
-    expect(ctx.clearRect).toHaveBeenCalledTimes(1);
-    expect(ctx.putImageData).toHaveBeenCalledTimes(1);
+    expect((mainCtx.clearRect as jest.Mock).mock.calls.length).toBe(
+      clearBeforeUndo + 2,
+    );
+    expect(mainCtx.putImageData).toHaveBeenCalledTimes(1);
 
+    const clearBeforeRedo = (mainCtx.clearRect as jest.Mock).mock.calls.length;
     (document.getElementById("redo") as HTMLButtonElement).click();
-    expect(ctx.clearRect).toHaveBeenCalledTimes(2);
-    expect(ctx.putImageData).toHaveBeenCalledTimes(2);
+    expect((mainCtx.clearRect as jest.Mock).mock.calls.length).toBe(
+      clearBeforeRedo + 2,
+    );
+    expect(mainCtx.putImageData).toHaveBeenCalledTimes(2);
   });
 
   it("uses eraser tool to clear", () => {
     (document.getElementById("eraser") as HTMLButtonElement).click();
     dispatch("pointerdown", 2, 2, 1);
     dispatch("pointermove", 4, 4, 1);
-    expect(ctx.clearRect).toHaveBeenCalled();
+    const layerCtx = contexts[1];
+    expect(layerCtx.clearRect).toHaveBeenCalled();
   });
 
   it("previews rectangle during pointer move", () => {
     (document.getElementById("rectangle") as HTMLButtonElement).click();
     dispatch("pointerdown", 1, 1, 1);
     dispatch("pointermove", 3, 4, 1);
-    expect(ctx.getImageData).toHaveBeenCalled();
-    expect(ctx.putImageData).toHaveBeenCalled();
-    expect(ctx.strokeRect).toHaveBeenCalledWith(1, 1, 2, 3);
+    const layerCtx = contexts[1];
+    expect(layerCtx.getImageData).toHaveBeenCalled();
+    expect(layerCtx.putImageData).toHaveBeenCalled();
+    expect(layerCtx.strokeRect).toHaveBeenCalledWith(1, 1, 2, 3);
   });
 });
 

@@ -1,6 +1,7 @@
 import { Editor } from "./core/Editor";
 import { PencilTool } from "./tools/PencilTool";
 
+
 export function initEditor() {
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
   const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
@@ -8,8 +9,5 @@ export function initEditor() {
 
   const editor = new Editor(canvas, colorPicker, lineWidth);
   editor.setTool(new PencilTool());
-
-  return {
-    destroy: () => editor.destroy(),
-  };
 }
+

@@ -16,19 +16,23 @@ export class EraserTool implements Tool {
     );
   }
 
-  onPointerMove(e: PointerEvent, editor: Editor) {
-    if (e.buttons !== 1) return;
+    onPointerMove(e: PointerEvent, editor: Editor) {
+      if (e.buttons !== 1) return;
+      const ctx = editor.ctx;
+      ctx.lineWidth = editor.lineWidthValue;
+      ctx.lineTo?.(e.offsetX, e.offsetY);
+      ctx.stroke?.();
+      ctx.clearRect(
+        e.offsetX - editor.lineWidthValue / 2,
+        e.offsetY - editor.lineWidthValue / 2,
+        editor.lineWidthValue,
+        editor.lineWidthValue,
+      );
+    }
+
+  onPointerUp(_e: PointerEvent, editor: Editor) {
     const ctx = editor.ctx;
-    ctx.lineWidth = editor.lineWidthValue;
-    ctx.lineTo?.(e.offsetX, e.offsetY);
-    ctx.stroke?.();
-    ctx.clearRect(
-      e.offsetX - editor.lineWidthValue / 2,
-      e.offsetY - editor.lineWidthValue / 2,
-      editor.lineWidthValue,
-      editor.lineWidthValue,
-    );
+    ctx.closePath?.();
+    ctx.globalCompositeOperation = "source-over";
   }
-
-
 }

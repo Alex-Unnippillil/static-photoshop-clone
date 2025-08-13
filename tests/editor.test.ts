@@ -1,9 +1,12 @@
-import { initEditor } from "../src/editor";
 import { Editor } from "../src/core/Editor";
+import { PencilTool } from "../src/tools/PencilTool";
+import { EraserTool } from "../src/tools/EraserTool";
+import { RectangleTool } from "../src/tools/RectangleTool";
 
 describe("editor integration", () => {
   let canvas: HTMLCanvasElement;
-
+  let ctx: Partial<CanvasRenderingContext2D>;
+  let editor: Editor;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -13,16 +16,30 @@ describe("editor integration", () => {
       <button id="pencil"></button>
       <button id="eraser"></button>
       <button id="rectangle"></button>
+      <button id="undo"></button>
+      <button id="redo"></button>
     `;
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
+    const mockImage = {
+      data: new Uint8ClampedArray(),
+      width: 100,
+      height: 100,
+    } as ImageData;
 
     ctx = {
       beginPath: jest.fn(),
       moveTo: jest.fn(),
       lineTo: jest.fn(),
       stroke: jest.fn(),
-
+      closePath: jest.fn(),
+      clearRect: jest.fn(),
+      getImageData: jest.fn(() => mockImage),
+      putImageData: jest.fn(),
+      strokeRect: jest.fn(),
+      setTransform: jest.fn(),
+      scale: jest.fn(),
+    };
 
     canvas.getContext = jest
       .fn()
@@ -40,9 +57,36 @@ describe("editor integration", () => {
       toJSON: () => {},
     });
 
+    editor = new Editor(
+      canvas,
+      document.getElementById("colorPicker") as HTMLInputElement,
+      document.getElementById("lineWidth") as HTMLInputElement,
+    );
 
+    (document.getElementById("pencil") as HTMLButtonElement).addEventListener(
+      "click",
+      () => editor.setTool(new PencilTool()),
+    );
+    (document.getElementById("eraser") as HTMLButtonElement).addEventListener(
+      "click",
+      () => editor.setTool(new EraserTool()),
+    );
+    (document.getElementById("rectangle") as HTMLButtonElement).addEventListener(
+      "click",
+      () => editor.setTool(new RectangleTool()),
+    );
+    (document.getElementById("undo") as HTMLButtonElement).addEventListener(
+      "click",
+      () => editor.undo(),
+    );
+    (document.getElementById("redo") as HTMLButtonElement).addEventListener(
+      "click",
+      () => editor.redo(),
+    );
+  });
 
-    editor = initEditor();
+  afterEach(() => {
+    editor.destroy();
   });
 
   function dispatch(type: string, x: number, y: number, buttons = 0) {
@@ -53,7 +97,8 @@ describe("editor integration", () => {
     canvas.dispatchEvent(event);
   }
 
-
+  it("draws with pencil tool and supports undo/redo", () => {
+    (document.getElementById("pencil") as HTMLButtonElement).click();
     dispatch("pointerdown", 0, 0, 1);
     dispatch("pointermove", 5, 5, 1);
     dispatch("pointerup", 5, 5, 0);
@@ -62,17 +107,30 @@ describe("editor integration", () => {
     expect(ctx.moveTo).toHaveBeenCalledWith(0, 0);
     expect(ctx.lineTo).toHaveBeenCalledWith(5, 5);
     expect(ctx.stroke).toHaveBeenCalled();
+
+    (document.getElementById("undo") as HTMLButtonElement).click();
+    expect(ctx.clearRect).toHaveBeenCalledTimes(1);
+    expect(ctx.putImageData).toHaveBeenCalledTimes(1);
+
+    (document.getElementById("redo") as HTMLButtonElement).click();
+    expect(ctx.clearRect).toHaveBeenCalledTimes(2);
+    expect(ctx.putImageData).toHaveBeenCalledTimes(2);
   });
 
+  it("uses eraser tool to clear", () => {
+    (document.getElementById("eraser") as HTMLButtonElement).click();
+    dispatch("pointerdown", 2, 2, 1);
+    dispatch("pointermove", 4, 4, 1);
     expect(ctx.clearRect).toHaveBeenCalled();
   });
 
   it("previews rectangle during pointer move", () => {
     (document.getElementById("rectangle") as HTMLButtonElement).click();
     dispatch("pointerdown", 1, 1, 1);
-    dispatch("pointermove", 3, 3, 1);
+    dispatch("pointermove", 3, 4, 1);
     expect(ctx.getImageData).toHaveBeenCalled();
     expect(ctx.putImageData).toHaveBeenCalled();
-    expect(ctx.strokeRect).toHaveBeenCalledWith(1, 1, 2, 2);
+    expect(ctx.strokeRect).toHaveBeenCalledWith(1, 1, 2, 3);
   });
 });
+

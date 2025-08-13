@@ -10,17 +10,13 @@ describe("EraserTool", () => {
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="10" />
+      <input id="fillMode" type="checkbox" />
     `;
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
     ctx = {
-      beginPath: jest.fn(),
-      moveTo: jest.fn(),
-      lineTo: jest.fn(),
-      stroke: jest.fn(),
-      closePath: jest.fn(),
+      clearRect: jest.fn(),
       scale: jest.fn(),
-      globalCompositeOperation: "source-over" as GlobalCompositeOperation,
-      lineWidth: 0,
+      setTransform: jest.fn(),
     };
     canvas.getContext = jest
       .fn()
@@ -29,23 +25,18 @@ describe("EraserTool", () => {
       canvas,
       document.getElementById("colorPicker") as HTMLInputElement,
       document.getElementById("lineWidth") as HTMLInputElement,
+      document.getElementById("fillMode") as HTMLInputElement,
     );
   });
 
-  it("uses destination-out compositing to erase", () => {
+  it("clears rectangles to erase", () => {
     const tool = new EraserTool();
     tool.onPointerDown({ offsetX: 5, offsetY: 5 } as PointerEvent, editor);
-    expect(ctx.globalCompositeOperation).toBe("destination-out");
-
+    expect(ctx.clearRect).toHaveBeenCalled();
     tool.onPointerMove(
       { offsetX: 10, offsetY: 10, buttons: 1 } as PointerEvent,
       editor,
     );
-    expect(ctx.lineTo).toHaveBeenCalledWith(10, 10);
-    expect(ctx.stroke).toHaveBeenCalled();
-
-    tool.onPointerUp({} as PointerEvent, editor);
-    expect(ctx.closePath).toHaveBeenCalled();
-    expect(ctx.globalCompositeOperation).toBe("source-over");
+    expect(ctx.clearRect).toHaveBeenCalledTimes(2);
   });
 });

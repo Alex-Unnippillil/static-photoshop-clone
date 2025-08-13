@@ -2,7 +2,7 @@ import { Editor } from "../core/Editor";
 import { Tool } from "./Tool";
 
 export class TextTool implements Tool {
-  onPointerDown(e: PointerEvent, editor: Editor) {
+  onPointerDown(e: PointerEvent, editor: Editor): void {
     const text = prompt("Enter text:") ?? "";
     if (!text) return;
     const ctx = editor.ctx;
@@ -11,12 +11,12 @@ export class TextTool implements Tool {
     ctx.fillText(text, e.offsetX, e.offsetY);
   }
 
-  onPointerMove(_e: PointerEvent, _editor: Editor) {
-    // No operation
+  onPointerMove(_e: PointerEvent, _editor: Editor): void {
+    // no-op
   }
 
-  onPointerUp(_e: PointerEvent, _editor: Editor) {
-    // No operation
+  onPointerUp(_e: PointerEvent, _editor: Editor): void {
+    // no-op
   }
 }
 

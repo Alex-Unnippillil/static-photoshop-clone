@@ -6,32 +6,43 @@ export class RectangleTool extends DrawingTool {
   private startY = 0;
   private imageData: ImageData | null = null;
 
-  onPointerDown(e: PointerEvent, editor: Editor) {
+  onPointerDown(e: PointerEvent, editor: Editor): void {
     this.startX = e.offsetX;
     this.startY = e.offsetY;
     const ctx = editor.ctx;
     this.imageData = ctx.getImageData(0, 0, editor.canvas.width, editor.canvas.height);
   }
 
-  onPointerMove(e: PointerEvent, editor: Editor) {
+  onPointerMove(e: PointerEvent, editor: Editor): void {
     if (e.buttons !== 1 || !this.imageData) return;
     const ctx = editor.ctx;
     ctx.putImageData(this.imageData, 0, 0);
-
+    this.applyStroke(editor);
     const x = e.offsetX;
     const y = e.offsetY;
-    ctx.strokeRect(this.startX, this.startY, x - this.startX, y - this.startY);
+    const w = x - this.startX;
+    const h = y - this.startY;
+    ctx.strokeRect(this.startX, this.startY, w, h);
+    if (editor.fill) {
+      ctx.fillRect(this.startX, this.startY, w, h);
+    }
   }
 
-  onPointerUp(e: PointerEvent, editor: Editor) {
+  onPointerUp(e: PointerEvent, editor: Editor): void {
     const ctx = editor.ctx;
     if (this.imageData) {
       ctx.putImageData(this.imageData, 0, 0);
     }
-
+    this.applyStroke(editor);
     const x = e.offsetX;
     const y = e.offsetY;
-    ctx.strokeRect(this.startX, this.startY, x - this.startX, y - this.startY);
+    const w = x - this.startX;
+    const h = y - this.startY;
+    ctx.strokeRect(this.startX, this.startY, w, h);
+    if (editor.fill) {
+      ctx.fillRect(this.startX, this.startY, w, h);
+    }
     this.imageData = null;
   }
 }
+

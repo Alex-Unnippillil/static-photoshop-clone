@@ -2,33 +2,23 @@ import { Editor } from "../core/Editor";
 import { Tool } from "./Tool";
 
 export class EraserTool implements Tool {
-  onPointerDown(e: PointerEvent, editor: Editor) {
-    const ctx = editor.ctx;
-    ctx.globalCompositeOperation = "destination-out";
-    ctx.lineWidth = editor.lineWidthValue;
-    ctx.beginPath?.();
-    ctx.moveTo?.(e.offsetX, e.offsetY);
-    ctx.clearRect(
-      e.offsetX - editor.lineWidthValue / 2,
-      e.offsetY - editor.lineWidthValue / 2,
-      editor.lineWidthValue,
-      editor.lineWidthValue,
-    );
+  onPointerDown(e: PointerEvent, editor: Editor): void {
+    this.erase(e, editor);
   }
 
-  onPointerMove(e: PointerEvent, editor: Editor) {
+  onPointerMove(e: PointerEvent, editor: Editor): void {
     if (e.buttons !== 1) return;
-    const ctx = editor.ctx;
-    ctx.lineWidth = editor.lineWidthValue;
-    ctx.lineTo?.(e.offsetX, e.offsetY);
-    ctx.stroke?.();
-    ctx.clearRect(
-      e.offsetX - editor.lineWidthValue / 2,
-      e.offsetY - editor.lineWidthValue / 2,
-      editor.lineWidthValue,
-      editor.lineWidthValue,
-    );
+    this.erase(e, editor);
   }
 
+  onPointerUp(_e: PointerEvent, _editor: Editor): void {
+    // no-op
+  }
 
+  private erase(e: PointerEvent, editor: Editor): void {
+    const ctx = editor.ctx;
+    const size = editor.lineWidthValue;
+    ctx.clearRect(e.offsetX - size / 2, e.offsetY - size / 2, size, size);
+  }
 }
+

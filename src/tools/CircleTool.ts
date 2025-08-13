@@ -29,6 +29,9 @@ export class CircleTool extends DrawingTool {
     ctx.beginPath();
     ctx.arc(this.startX, this.startY, radius, 0, Math.PI * 2);
     ctx.stroke();
+    if (editor.fill) {
+      ctx.fill();
+    }
     ctx.closePath();
   }
 
@@ -41,6 +44,9 @@ export class CircleTool extends DrawingTool {
     ctx.beginPath();
     ctx.arc(this.startX, this.startY, radius, 0, Math.PI * 2);
     ctx.stroke();
+    if (editor.fill) {
+      ctx.fill();
+    }
     ctx.closePath();
     this.imageData = null;
   }

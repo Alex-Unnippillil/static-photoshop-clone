@@ -10,6 +10,7 @@ describe("CircleTool", () => {
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
+      <input id="fillMode" type="checkbox" />
     `;
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
     const imageData = {} as ImageData;
@@ -19,6 +20,7 @@ describe("CircleTool", () => {
       beginPath: jest.fn(),
       arc: jest.fn(),
       stroke: jest.fn(),
+      fill: jest.fn(),
       closePath: jest.fn(),
       scale: jest.fn(),
     };
@@ -29,6 +31,7 @@ describe("CircleTool", () => {
       canvas,
       document.getElementById("colorPicker") as HTMLInputElement,
       document.getElementById("lineWidth") as HTMLInputElement,
+      document.getElementById("fillMode") as HTMLInputElement,
     );
   });
 
@@ -51,5 +54,13 @@ describe("CircleTool", () => {
     expect(ctx.arc).toHaveBeenCalledWith(2, 3, radius, 0, Math.PI * 2);
     expect(ctx.stroke).toHaveBeenCalled();
     expect(ctx.closePath).toHaveBeenCalled();
+  });
+
+  it("fills circle on pointer up when fill mode is active", () => {
+    const tool = new CircleTool();
+    (document.getElementById("fillMode") as HTMLInputElement).checked = true;
+    tool.onPointerDown({ offsetX: 1, offsetY: 1 } as PointerEvent, editor);
+    tool.onPointerUp({ offsetX: 4, offsetY: 5 } as PointerEvent, editor);
+    expect(ctx.fill).toHaveBeenCalled();
   });
 });

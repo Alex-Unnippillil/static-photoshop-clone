@@ -2,6 +2,7 @@ import { Editor } from "../src/core/Editor";
 import { PencilTool } from "../src/tools/PencilTool";
 import { EraserTool } from "../src/tools/EraserTool";
 import { RectangleTool } from "../src/tools/RectangleTool";
+import { CircleTool } from "../src/tools/CircleTool";
 
 describe("editor integration", () => {
   let canvas: HTMLCanvasElement;
@@ -16,8 +17,10 @@ describe("editor integration", () => {
       <button id="pencil"></button>
       <button id="eraser"></button>
       <button id="rectangle"></button>
+      <button id="circle"></button>
       <button id="undo"></button>
       <button id="redo"></button>
+      <input id="fillMode" type="checkbox" />
     `;
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -37,6 +40,8 @@ describe("editor integration", () => {
       getImageData: jest.fn(() => mockImage),
       putImageData: jest.fn(),
       strokeRect: jest.fn(),
+      fillRect: jest.fn(),
+      fill: jest.fn(),
       setTransform: jest.fn(),
       scale: jest.fn(),
     };
@@ -61,6 +66,7 @@ describe("editor integration", () => {
       canvas,
       document.getElementById("colorPicker") as HTMLInputElement,
       document.getElementById("lineWidth") as HTMLInputElement,
+      document.getElementById("fillMode") as HTMLInputElement,
     );
 
     (document.getElementById("pencil") as HTMLButtonElement).addEventListener(
@@ -74,6 +80,10 @@ describe("editor integration", () => {
     (document.getElementById("rectangle") as HTMLButtonElement).addEventListener(
       "click",
       () => editor.setTool(new RectangleTool()),
+    );
+    (document.getElementById("circle") as HTMLButtonElement).addEventListener(
+      "click",
+      () => editor.setTool(new CircleTool()),
     );
     (document.getElementById("undo") as HTMLButtonElement).addEventListener(
       "click",
@@ -131,6 +141,22 @@ describe("editor integration", () => {
     expect(ctx.getImageData).toHaveBeenCalled();
     expect(ctx.putImageData).toHaveBeenCalled();
     expect(ctx.strokeRect).toHaveBeenCalledWith(1, 1, 2, 3);
+  });
+
+  it("fills rectangle when fill mode is on", () => {
+    (document.getElementById("fillMode") as HTMLInputElement).checked = true;
+    (document.getElementById("rectangle") as HTMLButtonElement).click();
+    dispatch("pointerdown", 1, 1, 1);
+    dispatch("pointermove", 3, 4, 1);
+    expect(ctx.fillRect).toHaveBeenCalledWith(1, 1, 2, 3);
+  });
+
+  it("fills circle when fill mode is on", () => {
+    (document.getElementById("fillMode") as HTMLInputElement).checked = true;
+    (document.getElementById("circle") as HTMLButtonElement).click();
+    dispatch("pointerdown", 2, 3, 1);
+    dispatch("pointerup", 5, 7, 0);
+    expect(ctx.fill).toHaveBeenCalled();
   });
 });
 

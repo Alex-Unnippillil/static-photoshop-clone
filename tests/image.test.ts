@@ -12,6 +12,7 @@ describe("image operations", () => {
       <input id="lineWidth" value="2" />
       <input id="imageLoader" type="file" />
       <button id="save"></button>
+      <input id="fillMode" type="checkbox" />
     `;
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
     ctx = { drawImage: jest.fn(), scale: jest.fn() };

@@ -29,17 +29,24 @@ export class CircleTool extends DrawingTool {
     ctx.beginPath();
     ctx.arc(this.startX, this.startY, radius, 0, Math.PI * 2);
     ctx.stroke();
+    if (editor.fill) {
+      ctx.fill();
+    }
     ctx.closePath();
   }
 
   onPointerUp(e: PointerEvent, editor: Editor): void {
     const ctx = editor.ctx;
+    this.applyStroke(editor.ctx, editor);
     const dx = e.offsetX - this.startX;
     const dy = e.offsetY - this.startY;
     const radius = Math.sqrt(dx * dx + dy * dy);
     ctx.beginPath();
     ctx.arc(this.startX, this.startY, radius, 0, Math.PI * 2);
     ctx.stroke();
+    if (editor.fill) {
+      ctx.fill();
+    }
     ctx.closePath();
     this.imageData = null;
   }

@@ -33,6 +33,7 @@ export class CircleTool extends DrawingTool {
   }
 
   onPointerUp(e: PointerEvent, editor: Editor): void {
+    this.applyStroke(editor.ctx, editor);
     const ctx = editor.ctx;
     const dx = e.offsetX - this.startX;
     const dy = e.offsetY - this.startY;

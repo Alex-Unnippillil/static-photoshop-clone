@@ -7,6 +7,7 @@ describe("save button", () => {
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
       <button id="save"></button>
+      <input id="fillMode" type="checkbox" />
     `;
 
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;

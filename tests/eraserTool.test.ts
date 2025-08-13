@@ -10,6 +10,7 @@ describe("EraserTool", () => {
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="10" />
+      <input id="fillMode" type="checkbox" />
     `;
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
     ctx = {
@@ -31,6 +32,7 @@ describe("EraserTool", () => {
       canvas,
       document.getElementById("colorPicker") as HTMLInputElement,
       document.getElementById("lineWidth") as HTMLInputElement,
+      document.getElementById("fillMode") as HTMLInputElement,
     );
   });
 

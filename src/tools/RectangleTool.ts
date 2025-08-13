@@ -21,7 +21,12 @@ export class RectangleTool extends DrawingTool {
 
     const x = e.offsetX;
     const y = e.offsetY;
-    ctx.strokeRect(this.startX, this.startY, x - this.startX, y - this.startY);
+    const w = x - this.startX;
+    const h = y - this.startY;
+    if (editor.fill) {
+      ctx.fillRect(this.startX, this.startY, w, h);
+    }
+    ctx.strokeRect(this.startX, this.startY, w, h);
   }
 
   onPointerUp(e: PointerEvent, editor: Editor) {
@@ -33,7 +38,12 @@ export class RectangleTool extends DrawingTool {
     this.applyStroke(editor.ctx, editor);
     const x = e.offsetX;
     const y = e.offsetY;
-    ctx.strokeRect(this.startX, this.startY, x - this.startX, y - this.startY);
+    const w = x - this.startX;
+    const h = y - this.startY;
+    if (editor.fill) {
+      ctx.fillRect(this.startX, this.startY, w, h);
+    }
+    ctx.strokeRect(this.startX, this.startY, w, h);
     this.imageData = null;
   }
 }

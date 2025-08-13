@@ -14,6 +14,7 @@ describe("additional tools", () => {
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
+      <input id="fillMode" type="checkbox" />
     `;
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
     ctx = {
@@ -24,7 +25,11 @@ describe("additional tools", () => {
       arc: jest.fn(),
       fillText: jest.fn(),
       closePath: jest.fn(),
+      fill: jest.fn(),
       scale: jest.fn(),
+      setTransform: jest.fn(),
+      getImageData: jest.fn().mockReturnValue({} as ImageData),
+      putImageData: jest.fn(),
     };
     canvas.getContext = jest
       .fn()
@@ -33,6 +38,7 @@ describe("additional tools", () => {
       canvas,
       document.getElementById("colorPicker") as HTMLInputElement,
       document.getElementById("lineWidth") as HTMLInputElement,
+      document.getElementById("fillMode") as HTMLInputElement,
     );
   });
 
@@ -62,6 +68,14 @@ describe("additional tools", () => {
     tool.onPointerDown({ offsetX: 0, offsetY: 0 } as PointerEvent, editor);
     tool.onPointerUp({ offsetX: 3, offsetY: 4 } as PointerEvent, editor);
     expect(ctx.arc).toHaveBeenCalledWith(0, 0, 5, 0, Math.PI * 2);
+  });
+
+  it("circle tool fills when enabled", () => {
+    (document.getElementById("fillMode") as HTMLInputElement).checked = true;
+    const tool = new CircleTool();
+    tool.onPointerDown({ offsetX: 0, offsetY: 0 } as PointerEvent, editor);
+    tool.onPointerUp({ offsetX: 3, offsetY: 4 } as PointerEvent, editor);
+    expect(ctx.fill).toHaveBeenCalled();
   });
 
   it("text tool draws text", () => {

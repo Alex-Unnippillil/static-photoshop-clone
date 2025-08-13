@@ -30,7 +30,6 @@
       "ts-jest": {
         "useESM": true
       }
-    },
-
+    }
   }
 }

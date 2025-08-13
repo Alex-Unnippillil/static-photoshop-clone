@@ -10,12 +10,14 @@ export class CircleTool extends DrawingTool {
     this.startX = e.offsetX;
     this.startY = e.offsetY;
     const ctx = editor.ctx;
-    this.imageData = ctx.getImageData(
-      0,
-      0,
-      editor.canvas.width,
-      editor.canvas.height,
-    );
+    if (typeof ctx.getImageData === "function") {
+      this.imageData = ctx.getImageData(
+        0,
+        0,
+        editor.canvas.width,
+        editor.canvas.height,
+      );
+    }
   }
 
   onPointerMove(e: PointerEvent, editor: Editor): void {

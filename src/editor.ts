@@ -1,6 +1,6 @@
 import { Editor } from "./core/Editor";
+import { Shortcuts } from "./core/Shortcuts";
 import { PencilTool } from "./tools/PencilTool";
-
 
 export function initEditor() {
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -9,5 +9,14 @@ export function initEditor() {
 
   const editor = new Editor(canvas, colorPicker, lineWidth);
   editor.setTool(new PencilTool());
+  const shortcuts = new Shortcuts(editor);
+
+  return {
+    editor,
+    destroy() {
+      shortcuts.dispose();
+      editor.destroy();
+    },
+  };
 }
 

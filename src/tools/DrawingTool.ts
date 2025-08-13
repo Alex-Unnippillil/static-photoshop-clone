@@ -8,6 +8,18 @@ import { Tool } from "./Tool";
  */
 export abstract class DrawingTool implements Tool {
 
+  /**
+   * Apply the current editor stroke settings to the provided context.
+   *
+   * This synchronizes the drawing context with the user's selected
+   * line width and stroke color prior to performing any drawing
+   * operations. Tools that extend this class should call this before
+   * issuing stroke commands on the context.
+   */
+  protected applyStroke(
+    ctx: CanvasRenderingContext2D,
+    editor: Editor,
+  ): void {
     ctx.lineWidth = editor.lineWidthValue;
     ctx.strokeStyle = editor.strokeStyle;
   }

@@ -4,6 +4,7 @@ import { DrawingTool } from "./DrawingTool";
 export class PencilTool extends DrawingTool {
   onPointerDown(e: PointerEvent, editor: Editor) {
     const ctx = editor.ctx;
+    this.applyStroke(ctx, editor);
     ctx.beginPath();
     ctx.moveTo(e.offsetX, e.offsetY);
   }
@@ -11,7 +12,7 @@ export class PencilTool extends DrawingTool {
   onPointerMove(e: PointerEvent, editor: Editor) {
     if (e.buttons !== 1) return;
     const ctx = editor.ctx;
-
+    this.applyStroke(ctx, editor);
     ctx.lineTo(e.offsetX, e.offsetY);
     ctx.stroke();
   }

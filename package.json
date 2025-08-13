@@ -31,8 +31,6 @@
         "useESM": true
       }
     },
-    "extensionsToTreatAsEsm": [".ts"],
-
-      }
-    }
+    "extensionsToTreatAsEsm": [".ts"]
   }
+}

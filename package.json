@@ -31,7 +31,6 @@
         "useESM": true
       }
     },
-    "extensionsToTreatAsEsm": [".ts"],
-    "testMatch": ["**/tests/eraserTool.test.ts"]
+
   }
 }

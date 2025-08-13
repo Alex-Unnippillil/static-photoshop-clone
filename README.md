@@ -15,6 +15,17 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 - Adjustable line width
 - Undo/redo support
 
+### Keyboard Shortcuts
+
+- `P`: Pencil
+- `R`: Rectangle
+- `L`: Line
+- `C`: Circle
+- `T`: Text
+- `E`: Eraser
+- `Ctrl+Z`: Undo
+- `Ctrl+Shift+Z`: Redo
+
 
 ## Usage
 

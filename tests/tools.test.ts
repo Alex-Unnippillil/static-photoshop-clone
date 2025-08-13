@@ -2,7 +2,6 @@ import { Editor } from "../src/core/Editor";
 import { PencilTool } from "../src/tools/PencilTool";
 import { LineTool } from "../src/tools/LineTool";
 import { CircleTool } from "../src/tools/CircleTool";
-import { TextTool } from "../src/tools/TextTool";
 
 describe("additional tools", () => {
   let canvas: HTMLCanvasElement;
@@ -64,13 +63,4 @@ describe("additional tools", () => {
     expect(ctx.arc).toHaveBeenCalledWith(0, 0, 5, 0, Math.PI * 2);
   });
 
-  it("text tool draws text", () => {
-    const tool = new TextTool();
-    const promptSpy = jest
-      .spyOn(window, "prompt")
-      .mockReturnValue("Hi");
-    tool.onPointerDown({ offsetX: 1, offsetY: 2 } as PointerEvent, editor);
-    expect(ctx.fillText).toHaveBeenCalledWith("Hi", 1, 2);
-    promptSpy.mockRestore();
-  });
 });

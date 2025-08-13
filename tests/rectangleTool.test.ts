@@ -4,7 +4,7 @@ import { DrawingTool } from "../src/tools/DrawingTool";
 
 describe("RectangleTool", () => {
   let editor: Editor;
-  let ctx: Partial<CanvasRenderingContext2D>;
+  let contexts: Array<Partial<CanvasRenderingContext2D>> = [];
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -20,22 +20,27 @@ describe("RectangleTool", () => {
       height: 100,
     } as ImageData;
 
-    ctx = {
-      getImageData: jest.fn(() => mockImage),
-      putImageData: jest.fn(),
-      strokeRect: jest.fn(),
-      clearRect: jest.fn(),
-      beginPath: jest.fn(),
-      moveTo: jest.fn(),
-      lineTo: jest.fn(),
-      stroke: jest.fn(),
-      setTransform: jest.fn(),
-      scale: jest.fn(),
-    };
+    contexts = [];
+    jest
+      .spyOn(HTMLCanvasElement.prototype, "getContext")
+      .mockImplementation(() => {
+        const ctx = {
+          getImageData: jest.fn(() => mockImage),
+          putImageData: jest.fn(),
+          strokeRect: jest.fn(),
+          clearRect: jest.fn(),
+          beginPath: jest.fn(),
+          moveTo: jest.fn(),
+          lineTo: jest.fn(),
+          stroke: jest.fn(),
+          drawImage: jest.fn(),
+          setTransform: jest.fn(),
+          scale: jest.fn(),
+        } as Partial<CanvasRenderingContext2D>;
+        contexts.push(ctx);
+        return ctx as CanvasRenderingContext2D;
+      });
 
-    canvas.getContext = jest
-      .fn()
-      .mockReturnValue(ctx as CanvasRenderingContext2D);
     canvas.toDataURL = jest.fn();
     canvas.getBoundingClientRect = () => ({
       width: 100,
@@ -58,6 +63,7 @@ describe("RectangleTool", () => {
 
   afterEach(() => {
     editor.destroy();
+    jest.restoreAllMocks();
   });
 
   it("draws a rectangle on pointer up", () => {
@@ -65,7 +71,8 @@ describe("RectangleTool", () => {
     expect(tool).toBeInstanceOf(DrawingTool);
     tool.onPointerDown({ offsetX: 10, offsetY: 15 } as PointerEvent, editor);
     tool.onPointerUp({ offsetX: 20, offsetY: 25 } as PointerEvent, editor);
-    expect(ctx.strokeRect).toHaveBeenCalledWith(10, 15, 10, 10);
+    const layerCtx = contexts[1];
+    expect(layerCtx.strokeRect).toHaveBeenCalledWith(10, 15, 10, 10);
   });
 });
 

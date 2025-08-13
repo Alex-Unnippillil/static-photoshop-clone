@@ -1,5 +1,5 @@
 import { initEditor } from "./editor";
 
-const handle = initEditor();
-window.addEventListener("beforeunload", handle.destroy);
+const editor = initEditor();
+window.addEventListener("beforeunload", () => editor.destroy());
 

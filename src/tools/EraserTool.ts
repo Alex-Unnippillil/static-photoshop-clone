@@ -29,9 +29,7 @@ export class EraserTool implements Tool {
       editor.lineWidthValue,
     );
   }
-  onPointerUp(_e: PointerEvent, editor: Editor) {
-    const ctx = editor.ctx;
-    ctx.globalCompositeOperation = "source-over";
-    ctx.closePath?.();
+
+  
   }
 }

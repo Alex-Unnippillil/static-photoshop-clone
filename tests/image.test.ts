@@ -14,7 +14,11 @@ describe("image operations", () => {
       <button id="save"></button>
     `;
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
-    ctx = { drawImage: jest.fn(), scale: jest.fn() };
+    ctx = {
+      drawImage: jest.fn(),
+      scale: jest.fn(),
+      setTransform: jest.fn(),
+    };
     canvas.getContext = jest
       .fn()
       .mockReturnValue(ctx as CanvasRenderingContext2D);

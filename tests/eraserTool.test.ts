@@ -19,6 +19,8 @@ describe("EraserTool", () => {
       stroke: jest.fn(),
       closePath: jest.fn(),
       scale: jest.fn(),
+      setTransform: jest.fn(),
+      clearRect: jest.fn(),
       globalCompositeOperation: "source-over" as GlobalCompositeOperation,
       lineWidth: 0,
     };
@@ -46,6 +48,15 @@ describe("EraserTool", () => {
 
     tool.onPointerUp({} as PointerEvent, editor);
     expect(ctx.closePath).toHaveBeenCalled();
+    expect(ctx.globalCompositeOperation).toBe("source-over");
+  });
+
+  it("restores compositing mode on pointer up", () => {
+    const tool = new EraserTool();
+    tool.onPointerDown({ offsetX: 0, offsetY: 0 } as PointerEvent, editor);
+    expect(ctx.globalCompositeOperation).toBe("destination-out");
+
+    tool.onPointerUp({} as PointerEvent, editor);
     expect(ctx.globalCompositeOperation).toBe("source-over");
   });
 });

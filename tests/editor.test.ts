@@ -13,6 +13,7 @@ describe("editor integration", () => {
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
+      <input id="fillMode" type="checkbox" />
       <button id="pencil"></button>
       <button id="eraser"></button>
       <button id="rectangle"></button>
@@ -37,6 +38,7 @@ describe("editor integration", () => {
       getImageData: jest.fn(() => mockImage),
       putImageData: jest.fn(),
       strokeRect: jest.fn(),
+      fillRect: jest.fn(),
       setTransform: jest.fn(),
       scale: jest.fn(),
     };
@@ -61,6 +63,7 @@ describe("editor integration", () => {
       canvas,
       document.getElementById("colorPicker") as HTMLInputElement,
       document.getElementById("lineWidth") as HTMLInputElement,
+      document.getElementById("fillMode") as HTMLInputElement,
     );
 
     (document.getElementById("pencil") as HTMLButtonElement).addEventListener(
@@ -131,6 +134,23 @@ describe("editor integration", () => {
     expect(ctx.getImageData).toHaveBeenCalled();
     expect(ctx.putImageData).toHaveBeenCalled();
     expect(ctx.strokeRect).toHaveBeenCalledWith(1, 1, 2, 3);
+  });
+
+  it("fills rectangle when fill mode is enabled", () => {
+    (document.getElementById("rectangle") as HTMLButtonElement).click();
+    (document.getElementById("fillMode") as HTMLInputElement).checked = true;
+    dispatch("pointerdown", 1, 1, 1);
+    dispatch("pointerup", 3, 4, 0);
+    expect(ctx.fillRect).toHaveBeenCalledWith(1, 1, 2, 3);
+  });
+
+  it("exposes fill and fillStyle getters", () => {
+    const fill = document.getElementById("fillMode") as HTMLInputElement;
+    const color = document.getElementById("colorPicker") as HTMLInputElement;
+    fill.checked = true;
+    color.value = "#123456";
+    expect(editor.fill).toBe(true);
+    expect(editor.fillStyle).toBe("#123456");
   });
 });
 

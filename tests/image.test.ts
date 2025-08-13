@@ -1,15 +1,17 @@
-import { initEditor, EditorHandle } from "../src/editor";
+import { initEditor } from "../src/editor";
+import { Editor } from "../src/core/Editor";
 
 describe("image operations", () => {
   let canvas: HTMLCanvasElement;
   let ctx: Partial<CanvasRenderingContext2D>;
-  let handle: EditorHandle;
+  let editor: Editor;
 
   beforeEach(() => {
     document.body.innerHTML = `
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
+      <input id="fillMode" type="checkbox" />
       <input id="imageLoader" type="file" />
       <button id="save"></button>
     `;
@@ -39,13 +41,13 @@ describe("image operations", () => {
     }
     (global as any).Image = MockImage;
 
-    handle = initEditor();
+    editor = initEditor();
 
     (global as any).readSpy = readSpy;
   });
 
   afterEach(() => {
-    handle.destroy();
+    editor.destroy();
   });
 
   it("loads an image from input", async () => {

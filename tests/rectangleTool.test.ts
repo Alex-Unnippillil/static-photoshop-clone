@@ -11,6 +11,7 @@ describe("RectangleTool", () => {
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
+      <input id="fillMode" type="checkbox" />
     `;
 
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -24,6 +25,7 @@ describe("RectangleTool", () => {
       getImageData: jest.fn(() => mockImage),
       putImageData: jest.fn(),
       strokeRect: jest.fn(),
+      fillRect: jest.fn(),
       clearRect: jest.fn(),
       beginPath: jest.fn(),
       moveTo: jest.fn(),
@@ -53,6 +55,7 @@ describe("RectangleTool", () => {
       canvas,
       document.getElementById("colorPicker") as HTMLInputElement,
       document.getElementById("lineWidth") as HTMLInputElement,
+      document.getElementById("fillMode") as HTMLInputElement,
     );
   });
 
@@ -66,6 +69,14 @@ describe("RectangleTool", () => {
     tool.onPointerDown({ offsetX: 10, offsetY: 15 } as PointerEvent, editor);
     tool.onPointerUp({ offsetX: 20, offsetY: 25 } as PointerEvent, editor);
     expect(ctx.strokeRect).toHaveBeenCalledWith(10, 15, 10, 10);
+  });
+
+  it("fills rectangle when fill mode is enabled", () => {
+    const tool = new RectangleTool();
+    (document.getElementById("fillMode") as HTMLInputElement).checked = true;
+    tool.onPointerDown({ offsetX: 10, offsetY: 15 } as PointerEvent, editor);
+    tool.onPointerUp({ offsetX: 20, offsetY: 25 } as PointerEvent, editor);
+    expect(ctx.fillRect).toHaveBeenCalledWith(10, 15, 10, 10);
   });
 });
 

@@ -8,11 +8,13 @@ export class Editor {
   private currentTool: Tool | null = null;
   colorPicker: HTMLInputElement;
   lineWidth: HTMLInputElement;
+  fillMode: HTMLInputElement;
 
   constructor(
     canvas: HTMLCanvasElement,
     colorPicker: HTMLInputElement,
     lineWidth: HTMLInputElement,
+    fillMode: HTMLInputElement,
   ) {
     this.canvas = canvas;
     const ctx = canvas.getContext("2d");
@@ -20,6 +22,7 @@ export class Editor {
     this.ctx = ctx;
     this.colorPicker = colorPicker;
     this.lineWidth = lineWidth;
+    this.fillMode = fillMode;
     this.adjustForPixelRatio();
     window.addEventListener("resize", this.handleResize);
 
@@ -97,6 +100,14 @@ export class Editor {
   }
 
   get strokeStyle() {
+    return this.colorPicker.value;
+  }
+
+  get fill() {
+    return this.fillMode.checked;
+  }
+
+  get fillStyle() {
     return this.colorPicker.value;
   }
 

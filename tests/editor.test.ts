@@ -1,32 +1,37 @@
-import { initEditor } from "../src/editor";
-import { Editor } from "../src/core/Editor";
+import { initEditor, EditorHandle } from "../src/editor";
 
 describe("editor integration", () => {
   let canvas: HTMLCanvasElement;
-
+  let ctx: any;
+  let handle: EditorHandle;
 
   beforeEach(() => {
     document.body.innerHTML = `
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
+      <input id="fillMode" type="checkbox" />
       <button id="pencil"></button>
       <button id="eraser"></button>
       <button id="rectangle"></button>
     `;
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
-
+    const imageData = {} as ImageData;
     ctx = {
       beginPath: jest.fn(),
       moveTo: jest.fn(),
       lineTo: jest.fn(),
       stroke: jest.fn(),
-
-
-    canvas.getContext = jest
-      .fn()
-      .mockReturnValue(ctx as CanvasRenderingContext2D);
+      closePath: jest.fn(),
+      clearRect: jest.fn(),
+      getImageData: jest.fn().mockReturnValue(imageData),
+      putImageData: jest.fn(),
+      strokeRect: jest.fn(),
+      setTransform: jest.fn(),
+      scale: jest.fn(),
+    };
+    canvas.getContext = jest.fn().mockReturnValue(ctx);
     canvas.toDataURL = jest.fn();
     canvas.getBoundingClientRect = () => ({
       width: 100,
@@ -40,9 +45,11 @@ describe("editor integration", () => {
       toJSON: () => {},
     });
 
+    handle = initEditor();
+  });
 
-
-    editor = initEditor();
+  afterEach(() => {
+    handle.destroy();
   });
 
   function dispatch(type: string, x: number, y: number, buttons = 0) {
@@ -53,18 +60,14 @@ describe("editor integration", () => {
     canvas.dispatchEvent(event);
   }
 
-
+  it("draws with pencil by default", () => {
     dispatch("pointerdown", 0, 0, 1);
     dispatch("pointermove", 5, 5, 1);
     dispatch("pointerup", 5, 5, 0);
-
     expect(ctx.beginPath).toHaveBeenCalled();
     expect(ctx.moveTo).toHaveBeenCalledWith(0, 0);
     expect(ctx.lineTo).toHaveBeenCalledWith(5, 5);
     expect(ctx.stroke).toHaveBeenCalled();
-  });
-
-    expect(ctx.clearRect).toHaveBeenCalled();
   });
 
   it("previews rectangle during pointer move", () => {

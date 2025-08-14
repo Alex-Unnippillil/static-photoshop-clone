@@ -1,0 +1,88 @@
+import { initEditor, EditorHandle } from "../src/editor";
+import { PencilTool } from "../src/tools/PencilTool";
+import { EraserTool } from "../src/tools/EraserTool";
+import { RectangleTool } from "../src/tools/RectangleTool";
+import { LineTool } from "../src/tools/LineTool";
+import { CircleTool } from "../src/tools/CircleTool";
+import { TextTool } from "../src/tools/TextTool";
+
+describe("toolbar controls", () => {
+  let handle: EditorHandle;
+  let canvas: HTMLCanvasElement;
+  let ctx: Partial<CanvasRenderingContext2D>;
+
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <canvas id="canvas"></canvas>
+      <input id="colorPicker" value="#000000" />
+      <input id="lineWidth" value="2" />
+      <input id="fillMode" type="checkbox" />
+      <button id="pencil"></button>
+      <button id="eraser"></button>
+      <button id="rectangle"></button>
+      <button id="line"></button>
+      <button id="circle"></button>
+      <button id="text"></button>
+      <button id="undo"></button>
+      <button id="redo"></button>
+    `;
+
+    canvas = document.getElementById("canvas") as HTMLCanvasElement;
+    ctx = {
+      setTransform: jest.fn(),
+      scale: jest.fn(),
+      getImageData: jest.fn(),
+      putImageData: jest.fn(),
+      clearRect: jest.fn(),
+    };
+    canvas.getContext = jest.fn().mockReturnValue(ctx as CanvasRenderingContext2D);
+    canvas.getBoundingClientRect = () => ({
+      width: 100,
+      height: 100,
+      top: 0,
+      left: 0,
+      bottom: 100,
+      right: 100,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    });
+
+    handle = initEditor();
+  });
+
+  afterEach(() => {
+    handle.destroy();
+  });
+
+  it("switches tools when buttons are clicked", () => {
+    const spy = jest.spyOn(handle.editor, "setTool");
+    (document.getElementById("pencil") as HTMLButtonElement).click();
+    expect(spy.mock.calls[0][0]).toBeInstanceOf(PencilTool);
+
+    (document.getElementById("eraser") as HTMLButtonElement).click();
+    expect(spy.mock.calls[1][0]).toBeInstanceOf(EraserTool);
+
+    (document.getElementById("rectangle") as HTMLButtonElement).click();
+    expect(spy.mock.calls[2][0]).toBeInstanceOf(RectangleTool);
+
+    (document.getElementById("line") as HTMLButtonElement).click();
+    expect(spy.mock.calls[3][0]).toBeInstanceOf(LineTool);
+
+    (document.getElementById("circle") as HTMLButtonElement).click();
+    expect(spy.mock.calls[4][0]).toBeInstanceOf(CircleTool);
+
+    (document.getElementById("text") as HTMLButtonElement).click();
+    expect(spy.mock.calls[5][0]).toBeInstanceOf(TextTool);
+  });
+
+  it("triggers undo and redo when buttons are clicked", () => {
+    const undo = jest.spyOn(handle.editor, "undo").mockImplementation(() => {});
+    const redo = jest.spyOn(handle.editor, "redo").mockImplementation(() => {});
+    (document.getElementById("undo") as HTMLButtonElement).click();
+    expect(undo).toHaveBeenCalled();
+    (document.getElementById("redo") as HTMLButtonElement).click();
+    expect(redo).toHaveBeenCalled();
+  });
+});
+

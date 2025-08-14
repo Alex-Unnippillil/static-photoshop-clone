@@ -136,9 +136,14 @@ describe("editor toolbar controls", () => {
   });
 
   it("writes text with text tool", () => {
-    window.prompt = jest.fn().mockReturnValue("hi");
     (document.getElementById("text") as HTMLButtonElement).click();
     dispatch("pointerdown", 10, 10, 1);
+    const textarea = document.querySelector("textarea") as HTMLTextAreaElement;
+    textarea.value = "hi";
+    textarea.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Enter", bubbles: true })
+    );
     expect(ctx.fillText).toHaveBeenCalledWith("hi", 10, 10);
+    expect(document.querySelector("textarea")).toBeNull();
   });
 });

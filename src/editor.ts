@@ -44,12 +44,6 @@ export function initEditor(): EditorHandle {
   });
 
 
-  });
-
-  return {
-    editor,
-    destroy() {
-
       shortcuts.destroy();
       editor.destroy();
     },

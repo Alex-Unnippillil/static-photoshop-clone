@@ -7,7 +7,14 @@ import { Tool } from "./Tool";
  * rendering context. Concrete tools must implement the pointer handlers.
  */
 export abstract class DrawingTool implements Tool {
-
+  /**
+   * Apply the current editor stroke and fill settings to a rendering context.
+   * This ensures drawing tools respect the selected line width and colors.
+   */
+  protected applyStroke(
+    ctx: CanvasRenderingContext2D,
+    editor: Editor,
+  ): void {
     ctx.lineWidth = editor.lineWidthValue;
     ctx.strokeStyle = editor.strokeStyle;
     ctx.fillStyle = editor.fillStyle;

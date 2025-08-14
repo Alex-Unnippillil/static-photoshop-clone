@@ -10,6 +10,7 @@ describe("image operations", () => {
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
+      <input id="fillMode" type="checkbox" />
       <input id="imageLoader" type="file" />
       <button id="save"></button>
     `;

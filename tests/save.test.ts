@@ -6,6 +6,7 @@ describe("save button", () => {
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
+      <input id="fillMode" type="checkbox" />
       <button id="save"></button>
     `;
 
@@ -29,10 +30,12 @@ describe("save button", () => {
     const anchor = { href: "", download: "", click } as any;
     jest.spyOn(document, "createElement").mockReturnValue(anchor);
 
-    initEditor();
+    const handle = initEditor();
 
     (document.getElementById("save") as HTMLButtonElement).click();
     expect(canvas.toDataURL).toHaveBeenCalledWith("image/png");
     expect(click).toHaveBeenCalled();
+
+    handle.destroy();
   });
 });

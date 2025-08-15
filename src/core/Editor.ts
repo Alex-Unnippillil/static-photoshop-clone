@@ -14,7 +14,13 @@ export class Editor {
     canvas: HTMLCanvasElement,
     colorPicker: HTMLInputElement,
     lineWidth: HTMLInputElement,
-    fillMode: HTMLInputElement,
+    fillMode: HTMLInputElement = Object.assign(
+      document.createElement("input"),
+      {
+        type: "checkbox",
+        checked: false,
+      },
+    ) as HTMLInputElement,
   ) {
     this.canvas = canvas;
     const ctx = canvas.getContext("2d");

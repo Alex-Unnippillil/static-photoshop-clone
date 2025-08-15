@@ -6,9 +6,7 @@ import { Tool } from "./Tool";
  * editor's current stroke and fill settings to a rendering context.
  */
 export abstract class DrawingTool implements Tool {
-  /**
 
-   */
   protected applyStroke(
     ctx: CanvasRenderingContext2D,
     editor: Editor,

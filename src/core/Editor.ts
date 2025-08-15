@@ -14,13 +14,7 @@ export class Editor {
     canvas: HTMLCanvasElement,
     colorPicker: HTMLInputElement,
     lineWidth: HTMLInputElement,
-    fillMode: HTMLInputElement = Object.assign(
-      document.createElement("input"),
-      {
-        type: "checkbox",
-        checked: false,
-      },
-    ) as HTMLInputElement,
+
   ) {
     this.canvas = canvas;
     const ctx = canvas.getContext("2d");
@@ -60,8 +54,8 @@ export class Editor {
     const rect = this.canvas.getBoundingClientRect();
     this.canvas.width = rect.width * dpr;
     this.canvas.height = rect.height * dpr;
-    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
-    this.ctx.scale(dpr, dpr);
+    (this.ctx as any).setTransform?.(1, 0, 0, 1, 0, 0);
+    (this.ctx as any).scale?.(dpr, dpr);
   }
 
   private handleResize = () => {

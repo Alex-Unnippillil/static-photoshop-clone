@@ -36,10 +36,12 @@ describe("save button", () => {
     const anchor = { href: "", download: "", click } as any;
     jest.spyOn(document, "createElement").mockReturnValue(anchor);
 
-    initEditor();
+    const handle = initEditor();
 
     (document.getElementById("save") as HTMLButtonElement).click();
     expect(canvas.toDataURL).toHaveBeenCalledWith("image/png");
     expect(click).toHaveBeenCalled();
+
+    handle.destroy();
   });
 });

@@ -69,13 +69,33 @@ describe("additional tools", () => {
     expect(ctx.arc).toHaveBeenCalledWith(0, 0, 5, 0, Math.PI * 2);
   });
 
-  it("text tool draws text", () => {
+  it("text tool commits text on Enter", () => {
     const tool = new TextTool();
-    const promptSpy = jest
-      .spyOn(window, "prompt")
-      .mockReturnValue("Hi");
     tool.onPointerDown({ offsetX: 1, offsetY: 2 } as PointerEvent, editor);
+    const textarea = document.querySelector("textarea") as HTMLTextAreaElement;
+    textarea.value = "Hi";
+    textarea.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
     expect(ctx.fillText).toHaveBeenCalledWith("Hi", 1, 2);
-    promptSpy.mockRestore();
+    expect(document.querySelector("textarea")).toBeNull();
+  });
+
+  it("text tool commits text on blur", () => {
+    const tool = new TextTool();
+    tool.onPointerDown({ offsetX: 1, offsetY: 2 } as PointerEvent, editor);
+    const textarea = document.querySelector("textarea") as HTMLTextAreaElement;
+    textarea.value = "Blur";
+    textarea.dispatchEvent(new Event("blur"));
+    expect(ctx.fillText).toHaveBeenCalledWith("Blur", 1, 2);
+    expect(document.querySelector("textarea")).toBeNull();
+  });
+
+  it("text tool cancels on Escape", () => {
+    const tool = new TextTool();
+    tool.onPointerDown({ offsetX: 1, offsetY: 2 } as PointerEvent, editor);
+    const textarea = document.querySelector("textarea") as HTMLTextAreaElement;
+    textarea.value = "Hi";
+    textarea.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    expect(ctx.fillText).not.toHaveBeenCalled();
+    expect(document.querySelector("textarea")).toBeNull();
   });
 });

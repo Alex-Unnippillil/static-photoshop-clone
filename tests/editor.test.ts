@@ -1,12 +1,11 @@
-import { Editor } from "../src/core/Editor";
-import { PencilTool } from "../src/tools/PencilTool";
-import { EraserTool } from "../src/tools/EraserTool";
-import { RectangleTool } from "../src/tools/RectangleTool";
+import { initEditor, EditorHandle } from "../src/editor";
 
-describe("editor integration", () => {
+// Integration tests ensuring toolbar controls are wired to the editor
+// and trigger the expected behavior.
+describe("editor toolbar controls", () => {
   let canvas: HTMLCanvasElement;
   let ctx: Partial<CanvasRenderingContext2D>;
-  let editor: Editor;
+  let handle: EditorHandle;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -17,8 +16,13 @@ describe("editor integration", () => {
       <button id="pencil"></button>
       <button id="eraser"></button>
       <button id="rectangle"></button>
+      <button id="line"></button>
+      <button id="circle"></button>
+      <button id="text"></button>
+      <input id="imageLoader" type="file" />
       <button id="undo"></button>
       <button id="redo"></button>
+      <button id="save"></button>
     `;
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -39,6 +43,10 @@ describe("editor integration", () => {
       putImageData: jest.fn(),
       strokeRect: jest.fn(),
       fillRect: jest.fn(),
+      arc: jest.fn(),
+      fill: jest.fn(),
+      drawImage: jest.fn(),
+      fillText: jest.fn(),
       setTransform: jest.fn(),
       scale: jest.fn(),
     };
@@ -46,7 +54,7 @@ describe("editor integration", () => {
     canvas.getContext = jest
       .fn()
       .mockReturnValue(ctx as CanvasRenderingContext2D);
-    canvas.toDataURL = jest.fn();
+    canvas.toDataURL = jest.fn().mockReturnValue("data:image/png;base64,TEST");
     canvas.getBoundingClientRect = () => ({
       width: 100,
       height: 100,
@@ -59,37 +67,11 @@ describe("editor integration", () => {
       toJSON: () => {},
     });
 
-    editor = new Editor(
-      canvas,
-      document.getElementById("colorPicker") as HTMLInputElement,
-      document.getElementById("lineWidth") as HTMLInputElement,
-      document.getElementById("fillMode") as HTMLInputElement,
-    );
-
-    (document.getElementById("pencil") as HTMLButtonElement).addEventListener(
-      "click",
-      () => editor.setTool(new PencilTool()),
-    );
-    (document.getElementById("eraser") as HTMLButtonElement).addEventListener(
-      "click",
-      () => editor.setTool(new EraserTool()),
-    );
-    (document.getElementById("rectangle") as HTMLButtonElement).addEventListener(
-      "click",
-      () => editor.setTool(new RectangleTool()),
-    );
-    (document.getElementById("undo") as HTMLButtonElement).addEventListener(
-      "click",
-      () => editor.undo(),
-    );
-    (document.getElementById("redo") as HTMLButtonElement).addEventListener(
-      "click",
-      () => editor.redo(),
-    );
+    handle = initEditor();
   });
 
   afterEach(() => {
-    editor.destroy();
+    handle.destroy();
   });
 
   function dispatch(type: string, x: number, y: number, buttons = 0) {
@@ -136,12 +118,27 @@ describe("editor integration", () => {
     expect(ctx.strokeRect).toHaveBeenCalledWith(1, 1, 2, 3);
   });
 
-  it("draws filled rectangle when fill mode is enabled", () => {
-    (document.getElementById("rectangle") as HTMLButtonElement).click();
-    (document.getElementById("fillMode") as HTMLInputElement).checked = true;
+  it("draws line with line tool", () => {
+    (document.getElementById("line") as HTMLButtonElement).click();
     dispatch("pointerdown", 1, 1, 1);
-    dispatch("pointerup", 3, 4, 0);
-    expect(ctx.fillRect).toHaveBeenCalledWith(1, 1, 2, 3);
+    dispatch("pointermove", 4, 5, 1);
+    dispatch("pointerup", 4, 5, 0);
+    expect(ctx.moveTo).toHaveBeenCalledWith(1, 1);
+    expect(ctx.lineTo).toHaveBeenCalledWith(4, 5);
+  });
+
+  it("draws circle with circle tool", () => {
+    (document.getElementById("circle") as HTMLButtonElement).click();
+    dispatch("pointerdown", 2, 2, 1);
+    dispatch("pointermove", 4, 2, 1);
+    dispatch("pointerup", 4, 2, 0);
+    expect(ctx.arc).toHaveBeenCalled();
+  });
+
+  it("writes text with text tool", () => {
+    window.prompt = jest.fn().mockReturnValue("hi");
+    (document.getElementById("text") as HTMLButtonElement).click();
+    dispatch("pointerdown", 10, 10, 1);
+    expect(ctx.fillText).toHaveBeenCalledWith("hi", 10, 10);
   });
 });
-

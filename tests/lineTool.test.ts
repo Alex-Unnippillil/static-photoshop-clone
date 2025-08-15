@@ -10,6 +10,7 @@ describe("LineTool", () => {
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
+      <input id="fillMode" type="checkbox" />
     `;
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
     const imageData = {} as ImageData;
@@ -22,6 +23,7 @@ describe("LineTool", () => {
       stroke: jest.fn(),
       closePath: jest.fn(),
       scale: jest.fn(),
+      setTransform: jest.fn(),
     };
     canvas.getContext = jest
       .fn()
@@ -30,6 +32,7 @@ describe("LineTool", () => {
       canvas,
       document.getElementById("colorPicker") as HTMLInputElement,
       document.getElementById("lineWidth") as HTMLInputElement,
+      document.getElementById("fillMode") as HTMLInputElement,
     );
   });
 

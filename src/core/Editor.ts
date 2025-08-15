@@ -32,6 +32,7 @@ export class Editor {
   }
 
   setTool(tool: Tool) {
+    this.currentTool?.destroy?.();
     this.currentTool = tool;
   }
 
@@ -120,6 +121,7 @@ export class Editor {
    * Should be called before discarding the instance to prevent leaks.
    */
   destroy(): void {
+    this.currentTool?.destroy?.();
     window.removeEventListener("resize", this.handleResize);
     this.canvas.removeEventListener("pointerdown", this.handlePointerDown);
     this.canvas.removeEventListener("pointermove", this.handlePointerMove);

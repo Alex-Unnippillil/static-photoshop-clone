@@ -33,6 +33,7 @@ export class LineTool extends DrawingTool {
   onPointerUp(e: PointerEvent, editor: Editor): void {
     this.applyStroke(editor.ctx, editor);
     const ctx = editor.ctx;
+
     ctx.beginPath();
     ctx.moveTo(this.startX, this.startY);
     ctx.lineTo(e.offsetX, e.offsetY);

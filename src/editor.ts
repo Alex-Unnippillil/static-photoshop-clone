@@ -12,7 +12,7 @@ export interface EditorHandle {
   destroy: () => void;
 }
 
-export function initEditor(): EditorHandle {
+
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
   const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
@@ -31,22 +31,6 @@ export function initEditor(): EditorHandle {
 
   const editor = new Editor(canvas, colorPicker, lineWidth, fillMode);
   editor.setTool(new PencilTool());
-  const shortcuts = new Shortcuts(editor);
 
-
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-
-    };
-    reader.readAsDataURL(file);
-  });
-
-
-      shortcuts.destroy();
-      editor.destroy();
-    },
-  };
 }
 

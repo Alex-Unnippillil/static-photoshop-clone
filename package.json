@@ -22,13 +22,13 @@
     "ts-jest": "^29.2.3",
     "jest-environment-jsdom": "^29.7.0"
   },
-  "jest": {
-    "preset": "ts-jest",
-    "testEnvironment": "jsdom",
-    "globals": {
-      "ts-jest": {
-        "useESM": true
+    "jest": {
+      "preset": "ts-jest",
+      "testEnvironment": "jsdom",
+      "globals": {
+        "ts-jest": {
+          "useESM": true
+        }
       }
     }
   }
-}

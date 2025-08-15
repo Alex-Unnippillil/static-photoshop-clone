@@ -2,12 +2,15 @@ import { Editor } from "../core/Editor";
 import { Tool } from "./Tool";
 
 /**
- * Base class for tools that draw using the canvas stroke style and width.
- * It provides a helper to apply the editor's current settings to the
- * rendering context. Concrete tools must implement the pointer handlers.
+ * Base class for drawing tools. It exposes a helper that applies the
+ * editor's current stroke and fill settings to a rendering context.
  */
 export abstract class DrawingTool implements Tool {
-  protected applyStroke(ctx: CanvasRenderingContext2D, editor: Editor): void {
+
+  protected applyStroke(
+    ctx: CanvasRenderingContext2D,
+    editor: Editor,
+  ): void {
     ctx.lineWidth = editor.lineWidthValue;
     ctx.strokeStyle = editor.strokeStyle;
     ctx.fillStyle = editor.fillStyle;
@@ -17,3 +20,4 @@ export abstract class DrawingTool implements Tool {
   abstract onPointerMove(e: PointerEvent, editor: Editor): void;
   abstract onPointerUp(e: PointerEvent, editor: Editor): void;
 }
+

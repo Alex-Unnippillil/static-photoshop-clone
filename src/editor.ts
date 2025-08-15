@@ -12,41 +12,36 @@ export interface EditorHandle {
   destroy: () => void;
 }
 
-export function initEditor(): EditorHandle {
+
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
   const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
-  const fillMode = document.getElementById("fillMode") as HTMLInputElement;
-
-  const pencilBtn = document.getElementById("pencil") as HTMLButtonElement;
-  const eraserBtn = document.getElementById("eraser") as HTMLButtonElement;
-  const rectBtn = document.getElementById("rectangle") as HTMLButtonElement;
-  const lineBtn = document.getElementById("line") as HTMLButtonElement;
-  const circleBtn = document.getElementById("circle") as HTMLButtonElement;
-  const textBtn = document.getElementById("text") as HTMLButtonElement;
-  const undoBtn = document.getElementById("undo") as HTMLButtonElement;
-  const redoBtn = document.getElementById("redo") as HTMLButtonElement;
-  const imageLoader = document.getElementById("imageLoader") as HTMLInputElement;
-  const saveBtn = document.getElementById("save") as HTMLButtonElement;
-
-  const editor = new Editor(canvas, colorPicker, lineWidth, fillMode);
-  editor.setTool(new PencilTool());
-  const shortcuts = new Shortcuts(editor);
 
 
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
+  // Tool selection handlers
+  const pencilHandler = () => editor.setTool(new PencilTool());
+  const eraserHandler = () => editor.setTool(new EraserTool());
+  const rectHandler = () => editor.setTool(new RectangleTool());
+  const lineHandler = () => editor.setTool(new LineTool());
+  const circleHandler = () => editor.setTool(new CircleTool());
+  const textHandler = () => editor.setTool(new TextTool());
+  pencilBtn?.addEventListener("click", pencilHandler);
+  eraserBtn?.addEventListener("click", eraserHandler);
+  rectBtn?.addEventListener("click", rectHandler);
+  lineBtn?.addEventListener("click", lineHandler);
+  circleBtn?.addEventListener("click", circleHandler);
+  textBtn?.addEventListener("click", textHandler);
 
-    };
-    reader.readAsDataURL(file);
-  });
 
-
-      shortcuts.destroy();
-      editor.destroy();
-    },
+  // Save handler
+  const saveHandler = () => {
+    const dataUrl = canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.download = "canvas.png";
+    link.click();
   };
+  saveBtn?.addEventListener("click", saveHandler);
+
 }
 

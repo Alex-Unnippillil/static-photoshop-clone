@@ -14,7 +14,7 @@ export class Editor {
     canvas: HTMLCanvasElement,
     colorPicker: HTMLInputElement,
     lineWidth: HTMLInputElement,
-    fillMode: HTMLInputElement = document.createElement("input"),
+
   ) {
     this.canvas = canvas;
     const ctx = canvas.getContext("2d");

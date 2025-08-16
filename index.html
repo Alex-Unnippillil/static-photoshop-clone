@@ -21,8 +21,15 @@
       <button id="undo">Undo</button>
       <button id="redo">Redo</button>
       <button id="save">Save</button>
+      <label>
+        Layer 2 Opacity
+        <input type="range" id="layer2Opacity" min="0" max="100" value="100" />
+      </label>
     </div>
-    <canvas id="canvas"></canvas>
+    <div id="canvasContainer">
+      <canvas id="canvas"></canvas>
+      <canvas id="layer2"></canvas>
+    </div>
     <script type="module" src="dist/index.js"></script>
   </body>
 </html>

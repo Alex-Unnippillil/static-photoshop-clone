@@ -16,9 +16,10 @@ describe("image operations", () => {
     `;
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
 
-    canvas.getContext = jest
-      .fn()
-      .mockReturnValue(ctx as CanvasRenderingContext2D);
+    ctx = {
+      drawImage: jest.fn(),
+    } as Partial<CanvasRenderingContext2D>;
+    canvas.getContext = jest.fn().mockReturnValue(ctx as CanvasRenderingContext2D);
     canvas.toDataURL = jest.fn().mockReturnValue("data:img/png;base64,SAVE");
 
     const readSpy = jest.fn().mockImplementation(function (this: MockFileReader) {
@@ -30,6 +31,7 @@ describe("image operations", () => {
       onload: () => void = () => {};
       readAsDataURL = readSpy;
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (global as any).FileReader = MockFileReader;
 
     class MockImage {
@@ -38,10 +40,12 @@ describe("image operations", () => {
         setTimeout(() => this.onload(), 0);
       }
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (global as any).Image = MockImage;
 
     handle = initEditor();
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (global as any).readSpy = readSpy;
   });
 
@@ -55,13 +59,16 @@ describe("image operations", () => {
     Object.defineProperty(loader, "files", { value: [file], configurable: true });
     loader.dispatchEvent(new Event("change"));
     await new Promise((r) => setTimeout(r, 0));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((global as any).readSpy).toHaveBeenCalled();
     expect(ctx.drawImage).toHaveBeenCalled();
   });
 
   it("saves the canvas as an image", () => {
     const click = jest.fn();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const anchor = { href: "", download: "", click } as any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     jest.spyOn(document, "createElement").mockReturnValue(anchor);
     const save = document.getElementById("save") as HTMLButtonElement;
     save.click();

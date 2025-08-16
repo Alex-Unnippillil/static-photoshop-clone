@@ -54,7 +54,9 @@ export class Editor {
     const rect = this.canvas.getBoundingClientRect();
     this.canvas.width = rect.width * dpr;
     this.canvas.height = rect.height * dpr;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (this.ctx as any).setTransform?.(1, 0, 0, 1, 0, 0);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (this.ctx as any).scale?.(dpr, dpr);
   }
 

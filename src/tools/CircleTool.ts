@@ -9,6 +9,7 @@ export class CircleTool extends DrawingTool {
   onPointerDown(e: PointerEvent, editor: Editor): void {
     this.startX = e.offsetX;
     this.startY = e.offsetY;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const ctx = editor.ctx as any;
     this.imageData = ctx.getImageData
       ? ctx.getImageData(0, 0, editor.canvas.width, editor.canvas.height)
@@ -17,6 +18,7 @@ export class CircleTool extends DrawingTool {
 
   onPointerMove(e: PointerEvent, editor: Editor): void {
     if (e.buttons !== 1 || !this.imageData) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const ctx = editor.ctx as any;
     ctx.putImageData?.(this.imageData, 0, 0);
     this.applyStroke(editor.ctx, editor);

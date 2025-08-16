@@ -8,21 +8,65 @@
   </head>
   <body>
     <div id="toolbar">
-      <input type="color" id="colorPicker" value="#000000" />
-      <input type="range" id="lineWidth" min="1" max="50" value="5" />
-      <input type="checkbox" id="fillMode" />
-      <button id="pencil">Pencil</button>
-      <button id="eraser">Eraser</button>
-      <button id="rectangle">Rectangle</button>
-      <button id="line">Line</button>
-      <button id="circle">Circle</button>
-      <button id="text">Text</button>
-      <input type="file" id="imageLoader" accept="image/*" />
-      <button id="undo">Undo</button>
-      <button id="redo">Redo</button>
-      <button id="save">Save</button>
+      <div class="group">
+        <label for="colorPicker">Color:</label>
+        <input
+          type="color"
+          id="colorPicker"
+          value="#000000"
+          title="Select drawing color"
+        />
+        <label for="lineWidth">Brush Size:</label>
+        <input
+          type="range"
+          id="lineWidth"
+          min="1"
+          max="50"
+          value="5"
+          title="Brush size"
+        />
+        <label for="fillMode" title="Fill shapes with color">
+          <input type="checkbox" id="fillMode" />
+          Fill
+        </label>
+      </div>
+      <div class="group">
+        <button id="pencil" class="tool-button" title="Pencil (Shortcut: P)">
+          Pencil
+        </button>
+        <button id="eraser" class="tool-button" title="Eraser (Shortcut: E)">
+          Eraser
+        </button>
+        <button
+          id="rectangle"
+          class="tool-button"
+          title="Rectangle (Shortcut: R)"
+        >
+          Rectangle
+        </button>
+        <button id="line" class="tool-button" title="Line (Shortcut: L)">
+          Line
+        </button>
+        <button id="circle" class="tool-button" title="Circle (Shortcut: C)">
+          Circle
+        </button>
+        <button id="text" class="tool-button" title="Text (Shortcut: T)">
+          Text
+        </button>
+      </div>
+      <div class="group">
+        <input
+          type="file"
+          id="imageLoader"
+          accept="image/*"
+          title="Load background image"
+        />
+        <button id="undo" title="Undo (Ctrl+Z)">Undo</button>
+        <button id="redo" title="Redo (Ctrl+Shift+Z)">Redo</button>
+        <button id="save" title="Save image">Save</button>
+      </div>
     </div>
-    <canvas id="canvas"></canvas>
+    <canvas id="canvas" title="Drawing canvas"></canvas>
     <script type="module" src="dist/index.js"></script>
   </body>
 </html>

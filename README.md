@@ -30,13 +30,35 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 ## Usage
 
 
+## Installing Dependencies
 
-## Build and Test
+Install the project dependencies using npm:
 
-Run the following commands to compile the project and execute tests:
+```bash
+npm ci
+```
+
+## Building
+
+Compile the project assets:
 
 ```bash
 npm run build
+```
+
+## Linting
+
+Check the code style with:
+
+```bash
+npm run lint
+```
+
+## Running Tests
+
+Execute the test suite:
+
+```bash
 npm test
 ```
 

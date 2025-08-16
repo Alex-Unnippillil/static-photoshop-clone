@@ -32,6 +32,7 @@ export class Editor {
   }
 
   setTool(tool: Tool) {
+    this.currentTool?.destroy?.();
     this.currentTool = tool;
   }
 
@@ -53,8 +54,8 @@ export class Editor {
     const rect = this.canvas.getBoundingClientRect();
     this.canvas.width = rect.width * dpr;
     this.canvas.height = rect.height * dpr;
-    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
-    this.ctx.scale(dpr, dpr);
+    (this.ctx as any).setTransform?.(1, 0, 0, 1, 0, 0);
+    (this.ctx as any).scale?.(dpr, dpr);
   }
 
   private handleResize = () => {
@@ -120,6 +121,7 @@ export class Editor {
    * Should be called before discarding the instance to prevent leaks.
    */
   destroy(): void {
+    this.currentTool?.destroy?.();
     window.removeEventListener("resize", this.handleResize);
     this.canvas.removeEventListener("pointerdown", this.handlePointerDown);
     this.canvas.removeEventListener("pointermove", this.handlePointerMove);

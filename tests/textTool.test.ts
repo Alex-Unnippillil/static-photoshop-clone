@@ -17,6 +17,8 @@ describe("TextTool", () => {
     `;
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
+    (canvas as any).setPointerCapture = jest.fn();
+    (canvas as any).releasePointerCapture = jest.fn();
     const container = document.getElementById("container") as HTMLElement;
 
     ctx = {

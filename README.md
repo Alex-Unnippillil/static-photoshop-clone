@@ -1,6 +1,6 @@
 # Photoshop Clone
 
-[![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/OWNER/REPO/actions/workflows/ci.yml)
+[![CI](https://github.com/openai/photoshop-clone/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/openai/photoshop-clone/actions/workflows/ci.yml)
 
 A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaScript.
 
@@ -67,6 +67,10 @@ npm test
 ```
 
 Open `index.html` in your browser to use the app.
+
+## Deployment
+
+Build the project and publish the `dist` directory to the `gh-pages` branch to deploy on GitHub Pages.
 
 ## Lifecycle
 

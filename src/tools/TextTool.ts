@@ -1,30 +1,14 @@
 import { Editor } from "../core/Editor";
 import { Tool } from "./Tool";
 
-    const textarea = document.createElement("textarea");
+
+
     const x = e.offsetX;
     const y = e.offsetY;
-    textarea.style.position = "absolute";
 
 
-
-
-    const commit = () => {
-      if (!this.textarea) return;
-      const text = this.textarea.value;
-      if (text) {
-        const ctx = editor.ctx;
-        ctx.fillStyle = editor.strokeStyle;
-        ctx.font = `${editor.lineWidthValue * 4}px sans-serif`;
-
-      }
-      this.cleanup();
-    };
-
-    const cancel = () => this.cleanup();
 
     this.blurListener = commit;
-
     this.keydownListener = (ev: KeyboardEvent) => {
       if (ev.key === "Enter") {
         ev.preventDefault();
@@ -35,10 +19,11 @@ import { Tool } from "./Tool";
       }
     };
 
+    textarea.addEventListener("blur", this.blurListener);
+    textarea.addEventListener("keydown", this.keydownListener);
 
-    if (this.textarea && document.activeElement !== this.textarea) {
-      this.cleanup();
     }
+    this.cleanup();
   }
 
   destroy(): void {
@@ -60,3 +45,4 @@ import { Tool } from "./Tool";
   }
 
 }
+

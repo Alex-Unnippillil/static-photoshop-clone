@@ -39,24 +39,16 @@ export class Shortcuts {
 
     switch (e.key.toLowerCase()) {
       case "p":
-        editor.setTool(new PencilTool());
-        break;
-      case "r":
-        editor.setTool(new RectangleTool());
-        break;
-      case "l":
-        editor.setTool(new LineTool());
-        break;
-      case "c":
-        editor.setTool(new CircleTool());
-        break;
-      case "t":
-        editor.setTool(new TextTool());
-        break;
-      case "e":
-        editor.setTool(new EraserTool());
+
         break;
     }
+  }
+
+  private activate(id: string) {
+    const buttons = document.querySelectorAll("#toolbar .tool-button");
+    buttons.forEach((b) => b.classList.remove("active"));
+    const btn = document.getElementById(id);
+    btn?.classList.add("active");
   }
 
   destroy() {

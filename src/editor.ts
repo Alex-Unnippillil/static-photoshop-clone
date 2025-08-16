@@ -6,6 +6,7 @@ import { RectangleTool } from "./tools/RectangleTool";
 import { LineTool } from "./tools/LineTool";
 import { CircleTool } from "./tools/CircleTool";
 import { TextTool } from "./tools/TextTool";
+import { Tool } from "./tools/Tool";
 
 
 
@@ -13,63 +14,64 @@ import { TextTool } from "./tools/TextTool";
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
   const fillMode = document.getElementById("fillMode") as HTMLInputElement;
 
-
+  const editor = new Editor(canvas, colorPicker, lineWidth, fillMode);
+  const shortcuts = new Shortcuts(editor);
 
   const listeners: Array<() => void> = [];
+  const toolButtons: HTMLButtonElement[] = [];
 
-  function addListener<K extends keyof HTMLElementEventMap>(
+  const addListener = <K extends keyof HTMLElementEventMap>(
     el: HTMLElement | null,
     type: K,
-    handler: (this: HTMLElement, ev: HTMLElementEventMap[K]) => void,
-  ) {
+    handler: (ev: HTMLElementEventMap[K]) => void,
+  ) => {
     if (!el) return;
     el.addEventListener(type, handler as EventListener);
     listeners.push(() => el.removeEventListener(type, handler as EventListener));
-  }
+  };
 
+  const setActive = (btn: HTMLButtonElement) => {
+    toolButtons.forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+  };
 
-
-  addListener(saveBtn, "click", () => saveAs("image/png", "canvas.png"));
-  addListener(saveJpegBtn, "click", () => saveAs("image/jpeg", "canvas.jpg"));
-
-  function loadImage(src: string) {
-    const img = new Image();
-    img.onload = () => {
-      editor.ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  const registerTool = (id: string, ToolCtor: new () => Tool) => {
+    const btn = document.getElementById(id) as HTMLButtonElement | null;
+    if (!btn) return;
+    toolButtons.push(btn);
+    const handler = () => {
+      editor.setTool(new ToolCtor());
+      setActive(btn);
     };
-    img.src = src;
-  }
+    addListener(btn, "click", handler);
+  };
 
-  addListener(imageLoader, "change", (e: Event) => {
-    const file = (e.target as HTMLInputElement).files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      loadImage(result);
-    };
-    reader.readAsDataURL(file);
-  });
+  registerTool("pencil", PencilTool);
+  registerTool("eraser", EraserTool);
+  registerTool("rectangle", RectangleTool);
+  registerTool("line", LineTool);
+  registerTool("circle", CircleTool);
+  registerTool("text", TextTool);
 
-  // Support drag & drop image loading
-  addListener(canvas, "dragover", (e: DragEvent) => {
-    e.preventDefault();
-  });
-  addListener(canvas, "drop", (e: DragEvent) => {
-    e.preventDefault();
-    const file = e.dataTransfer?.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      loadImage(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  });
+  const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
+  const undoHandler = () => editor.undo();
+  addListener(undoBtn, "click", undoHandler);
 
-  return {
-    editor,
-    destroy: () => {
-      listeners.forEach((fn) => fn());
+  const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
+  const redoHandler = () => editor.redo();
+  addListener(redoBtn, "click", redoHandler);
+
+  const saveBtn = document.getElementById("save") as HTMLButtonElement | null;
+  const saveHandler = () => {
+    const data = canvas.toDataURL("image/png");
+    const a = document.createElement("a");
+    a.href = data;
+    a.download = "canvas.png";
+    a.click();
+  };
+  addListener(saveBtn, "click", saveHandler);
+
+
       shortcuts.destroy();
       editor.destroy();
     },

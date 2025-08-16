@@ -20,17 +20,12 @@ describe("image operations", () => {
     `;
 
 
+
     const readSpy = jest.fn().mockImplementation(function (this: MockFileReader) {
       this.result = "data:image/png;base64,LOAD";
       this.onload();
     });
-      class MockFileReader {
-        result: string | ArrayBuffer | null = null;
-        onload: () => void = () => {};
-        readAsDataURL = readSpy;
-      }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (global as any).FileReader = MockFileReader;
+
 
       class MockImage {
         onload: () => void = () => {};
@@ -38,13 +33,7 @@ describe("image operations", () => {
           setTimeout(() => this.onload(), 0);
         }
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (global as any).Image = MockImage;
 
-    handle = initEditor();
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (global as any).readSpy = readSpy;
   });
 
   afterEach(() => {
@@ -66,6 +55,7 @@ describe("image operations", () => {
     const click = jest.fn();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const anchor = { href: "", download: "", click } as any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     jest.spyOn(document, "createElement").mockReturnValue(anchor);
     const save = document.getElementById("save") as HTMLButtonElement;
     save.click();

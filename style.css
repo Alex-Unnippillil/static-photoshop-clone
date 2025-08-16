@@ -17,12 +17,25 @@ body {
 #toolbar {
   display: flex;
   flex-wrap: wrap;
+  gap: 16px;
+  padding: 8px;
+  background: #f5f5f5;
+}
+
+#toolbar .group {
+  display: flex;
+  align-items: center;
   gap: 8px;
-  margin: 10px;
+}
+
+.tool-button.active {
+  background: #e0e0e0;
+  outline: 2px solid #007bff;
 }
 
 
   flex: 1;
+  display: block;
 }
 
 

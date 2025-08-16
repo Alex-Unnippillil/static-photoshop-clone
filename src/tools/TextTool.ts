@@ -12,6 +12,9 @@ import { Tool } from "./Tool";
     const x = e.offsetX;
     const y = e.offsetY;
 
+    const x = e.offsetX;
+    const y = e.offsetY;
+
     const commit = () => {
       if (!this.textarea) return;
       const text = this.textarea.value;
@@ -24,11 +27,10 @@ import { Tool } from "./Tool";
       this.cleanup();
     };
 
-    const cancel = () => {
-      this.cleanup();
-    };
+    const cancel = () => this.cleanup();
 
     this.blurListener = commit;
+
     this.keydownListener = (ev: KeyboardEvent) => {
       if (ev.key === "Enter") {
         ev.preventDefault();
@@ -38,12 +40,6 @@ import { Tool } from "./Tool";
         cancel();
       }
     };
-
-
-    textarea.addEventListener("blur", this.blurListener);
-    textarea.addEventListener("keydown", this.keydownListener);
-    this.textarea = textarea;
-  }
 
 
     if (this.textarea && document.activeElement !== this.textarea) {
@@ -67,13 +63,5 @@ import { Tool } from "./Tool";
     this.textarea = null;
     this.blurListener = null;
     this.keydownListener = null;
-  }
-
-  private hexToRgb(hex: string): string {
-    const v = hex.replace("#", "");
-    const r = parseInt(v.substring(0, 2), 16);
-    const g = parseInt(v.substring(2, 4), 16);
-    const b = parseInt(v.substring(4, 6), 16);
-    return `rgb(${r}, ${g}, ${b})`;
   }
 }

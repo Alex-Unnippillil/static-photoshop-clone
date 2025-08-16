@@ -37,6 +37,7 @@ export class Editor {
   }
 
   private handlePointerDown = (e: PointerEvent) => {
+    this.canvas.setPointerCapture(e.pointerId);
     this.saveState();
     this.currentTool?.onPointerDown(e, this);
   };

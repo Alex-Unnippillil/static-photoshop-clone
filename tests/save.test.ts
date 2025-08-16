@@ -13,10 +13,7 @@ describe("save button", () => {
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
     const ctx = {
       scale: jest.fn(),
-      setTransform: jest.fn(),
-      getImageData: jest.fn(),
-      putImageData: jest.fn(),
-      clearRect: jest.fn(),
+
     } as any;
     canvas.getContext = jest.fn().mockReturnValue(ctx);
     canvas.toDataURL = jest.fn().mockReturnValue("data:image/png;base64,TEST");
@@ -36,10 +33,12 @@ describe("save button", () => {
     const anchor = { href: "", download: "", click } as any;
     jest.spyOn(document, "createElement").mockReturnValue(anchor);
 
-    initEditor();
+    const handle = initEditor();
 
     (document.getElementById("save") as HTMLButtonElement).click();
     expect(canvas.toDataURL).toHaveBeenCalledWith("image/png");
     expect(click).toHaveBeenCalled();
+
+    handle.destroy();
   });
 });

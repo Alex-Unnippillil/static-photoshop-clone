@@ -9,6 +9,9 @@ import { Tool } from "./Tool";
     textarea.style.position = "absolute";
 
 
+    const x = e.offsetX;
+    const y = e.offsetY;
+
     const commit = () => {
       if (!this.textarea) return;
       const text = this.textarea.value;
@@ -36,12 +39,11 @@ import { Tool } from "./Tool";
       }
     };
 
-    textarea.addEventListener("keydown", this.keydownListener);
-    textarea.addEventListener("blur", this.blurListener);
 
+    textarea.addEventListener("blur", this.blurListener);
+    textarea.addEventListener("keydown", this.keydownListener);
     this.textarea = textarea;
   }
-
 
 
     if (this.textarea && document.activeElement !== this.textarea) {

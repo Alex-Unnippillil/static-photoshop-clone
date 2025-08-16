@@ -11,13 +11,10 @@ describe("save button", () => {
     `;
 
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-    (canvas as any).setPointerCapture = jest.fn();
-    (canvas as any).releasePointerCapture = jest.fn();
-    const ctx = {
-      scale: jest.fn(),
 
-    } as any;
-    canvas.getContext = jest.fn().mockReturnValue(ctx);
+      scale: jest.fn(),
+    };
+    canvas.getContext = jest.fn().mockReturnValue(ctx as CanvasRenderingContext2D);
     canvas.toDataURL = jest.fn().mockReturnValue("data:image/png;base64,TEST");
     canvas.getBoundingClientRect = () => ({
       width: 100,
@@ -32,6 +29,7 @@ describe("save button", () => {
     });
 
     const click = jest.fn();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const anchor = { href: "", download: "", click } as any;
     jest.spyOn(document, "createElement").mockReturnValue(anchor);
 

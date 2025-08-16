@@ -1,0 +1,90 @@
+/**
+ * Tool that lets the user place text on the canvas by creating an overlay
+ * textarea. The text is committed to the canvas when the user presses Enter
+ * or the textarea loses focus. Pressing Escape cancels the operation.
+ */
+export class TextTool {
+    constructor() {
+        this.textarea = null;
+        this.blurListener = null;
+        this.keydownListener = null;
+    }
+    onPointerDown(e, editor) {
+        this.cleanup();
+        const textarea = document.createElement("textarea");
+        textarea.style.position = "absolute";
+        textarea.style.left = `${e.offsetX}px`;
+        textarea.style.top = `${e.offsetY}px`;
+        textarea.style.color = this.hexToRgb(editor.strokeStyle);
+        textarea.style.fontSize = `${editor.lineWidthValue * 4}px`;
+        document.body.appendChild(textarea);
+        textarea.focus();
+        const x = e.offsetX;
+        const y = e.offsetY;
+        const commit = () => {
+            if (!this.textarea)
+                return;
+            const text = this.textarea.value;
+            if (text) {
+                const ctx = editor.ctx;
+                ctx.fillStyle = editor.strokeStyle;
+                ctx.font = `${editor.lineWidthValue * 4}px sans-serif`;
+                ctx.fillText(text, x, y);
+            }
+            this.cleanup();
+        };
+        const cancel = () => {
+            this.cleanup();
+        };
+        this.blurListener = commit;
+        this.keydownListener = (ev) => {
+            if (ev.key === "Enter") {
+                ev.preventDefault();
+                commit();
+            }
+            else if (ev.key === "Escape") {
+                ev.preventDefault();
+                cancel();
+            }
+        };
+        textarea.addEventListener("blur", this.blurListener);
+        textarea.addEventListener("keydown", this.keydownListener);
+        this.textarea = textarea;
+    }
+    onPointerMove(e, editor) {
+        // parameters required by interface
+        void e;
+        void editor;
+    }
+    onPointerUp(e, editor) {
+        void e;
+        void editor;
+        if (this.textarea && document.activeElement !== this.textarea) {
+            this.cleanup();
+        }
+    }
+    destroy() {
+        this.cleanup();
+    }
+    cleanup() {
+        if (!this.textarea)
+            return;
+        if (this.blurListener) {
+            this.textarea.removeEventListener("blur", this.blurListener);
+        }
+        if (this.keydownListener) {
+            this.textarea.removeEventListener("keydown", this.keydownListener);
+        }
+        this.textarea.remove();
+        this.textarea = null;
+        this.blurListener = null;
+        this.keydownListener = null;
+    }
+    hexToRgb(hex) {
+        const v = hex.replace("#", "");
+        const r = parseInt(v.substring(0, 2), 16);
+        const g = parseInt(v.substring(2, 4), 16);
+        const b = parseInt(v.substring(4, 6), 16);
+        return `rgb(${r}, ${g}, ${b})`;
+    }
+}

@@ -1,8 +1,10 @@
 import { Editor } from "../core/Editor";
 import { Tool } from "./Tool";
 
-/**
-
+export class TextTool implements Tool {
+  private textarea: HTMLTextAreaElement | null = null;
+  private blurListener: (() => void) | null = null;
+  private keydownListener: ((e: KeyboardEvent) => void) | null = null;
 
   onPointerDown(e: PointerEvent, editor: Editor): void {
     this.cleanup();
@@ -11,7 +13,18 @@ import { Tool } from "./Tool";
     textarea.style.position = "absolute";
     textarea.style.left = `${e.offsetX}px`;
     textarea.style.top = `${e.offsetY}px`;
+    textarea.style.color = this.hexToRgb(editor.strokeStyle);
+    textarea.style.fontSize = `${editor.lineWidthValue * 4}px`;
+    textarea.style.border = "none";
+    textarea.style.background = "transparent";
+    textarea.style.padding = "0";
+    textarea.style.margin = "0";
+    textarea.style.outline = "none";
+    document.body.appendChild(textarea);
+    textarea.focus();
 
+    const x = e.offsetX;
+    const y = e.offsetY;
 
     const commit = () => {
       if (!this.textarea) return;
@@ -30,7 +43,6 @@ import { Tool } from "./Tool";
     };
 
     this.blurListener = commit;
-
     this.keydownListener = (ev: KeyboardEvent) => {
       if (ev.key === "Enter") {
         ev.preventDefault();
@@ -40,17 +52,22 @@ import { Tool } from "./Tool";
         cancel();
       }
     };
-    textarea.addEventListener("keydown", this.keydownListener);
 
+    textarea.addEventListener("blur", this.blurListener);
+    textarea.addEventListener("keydown", this.keydownListener);
 
     this.textarea = textarea;
   }
 
-  onPointerMove(_e: PointerEvent, _editor: Editor): void {
-    // No-op for text tool
+  onPointerMove(e: PointerEvent, editor: Editor): void {
+    void e;
+    void editor;
+    // no preview behaviour
   }
 
-  onPointerUp(_e: PointerEvent, _editor: Editor): void {
+  onPointerUp(e: PointerEvent, editor: Editor): void {
+    void e;
+    void editor;
     if (this.textarea && document.activeElement !== this.textarea) {
       this.cleanup();
     }
@@ -62,14 +79,12 @@ import { Tool } from "./Tool";
 
   private cleanup(): void {
     if (!this.textarea) return;
-
     if (this.blurListener) {
       this.textarea.removeEventListener("blur", this.blurListener);
     }
     if (this.keydownListener) {
       this.textarea.removeEventListener("keydown", this.keydownListener);
     }
-
     this.textarea.remove();
     this.textarea = null;
     this.blurListener = null;

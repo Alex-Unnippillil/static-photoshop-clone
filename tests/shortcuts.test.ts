@@ -1,6 +1,8 @@
 import { initEditor, EditorHandle } from "../src/editor";
 import { RectangleTool } from "../src/tools/RectangleTool";
 import { PencilTool } from "../src/tools/PencilTool";
+import { Shortcuts } from "../src/core/Shortcuts";
+import { Editor } from "../src/core/Editor";
 
 describe("keyboard shortcuts", () => {
   let handle: EditorHandle;
@@ -58,5 +60,27 @@ describe("keyboard shortcuts", () => {
       new KeyboardEvent("keydown", { key: "z", ctrlKey: true, shiftKey: true }),
     );
     expect(redo).toHaveBeenCalled();
+  });
+
+  it("switches active editor when requested", () => {
+    const e1 = {
+      setTool: jest.fn(),
+      undo: jest.fn(),
+      redo: jest.fn(),
+    } as unknown as Editor;
+    const e2 = {
+      setTool: jest.fn(),
+      undo: jest.fn(),
+      redo: jest.fn(),
+    } as unknown as Editor;
+
+    const shortcuts = new Shortcuts(e1);
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "p" }));
+    expect(e1.setTool).toHaveBeenCalled();
+
+    shortcuts.switchEditor(e2);
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "p" }));
+    expect(e2.setTool).toHaveBeenCalled();
+    shortcuts.destroy();
   });
 });

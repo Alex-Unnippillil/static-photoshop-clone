@@ -2,6 +2,7 @@ import { Editor } from "../core/Editor";
 import { Tool } from "./Tool";
 
 
+
     const textarea = document.createElement("textarea");
     const x = e.offsetX;
     const y = e.offsetY;
@@ -35,12 +36,12 @@ import { Tool } from "./Tool";
       }
     };
 
-    textarea.addEventListener("blur", this.blurListener);
     textarea.addEventListener("keydown", this.keydownListener);
     textarea.addEventListener("blur", this.blurListener);
 
     this.textarea = textarea;
   }
+
 
 
     if (this.textarea && document.activeElement !== this.textarea) {

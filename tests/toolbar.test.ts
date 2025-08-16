@@ -85,9 +85,16 @@ describe("toolbar controls", () => {
   it("triggers undo and redo when buttons are clicked", () => {
     const undo = jest.spyOn(handle.editor, "undo").mockImplementation(() => {});
     const redo = jest.spyOn(handle.editor, "redo").mockImplementation(() => {});
-    (document.getElementById("undo") as HTMLButtonElement).click();
+    const undoBtn = document.getElementById("undo") as HTMLButtonElement;
+    const redoBtn = document.getElementById("redo") as HTMLButtonElement;
+    // ensure buttons are enabled for the test
+    undoBtn.disabled = false;
+    redoBtn.disabled = false;
+    undoBtn.click();
     expect(undo).toHaveBeenCalled();
-    (document.getElementById("redo") as HTMLButtonElement).click();
+    // undo click will toggle button states; re-enable redo for this test
+    redoBtn.disabled = false;
+    redoBtn.click();
     expect(redo).toHaveBeenCalled();
   });
 });

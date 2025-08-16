@@ -20,6 +20,7 @@ describe("image operations", () => {
     `;
 
 
+
     const readSpy = jest.fn().mockImplementation(function (this: MockFileReader) {
       this.result = "data:image/png;base64,LOAD";
       this.onload();

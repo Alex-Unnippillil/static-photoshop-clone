@@ -1,16 +1,16 @@
 import { Editor } from "../core/Editor";
 import { Tool } from "./Tool";
 
-/**
-
 
   onPointerDown(e: PointerEvent, editor: Editor): void {
     this.cleanup();
+    this.x = e.offsetX;
+    this.y = e.offsetY;
 
+    const x = e.offsetX;
+    const y = e.offsetY;
     const textarea = document.createElement("textarea");
     textarea.style.position = "absolute";
-    textarea.style.left = `${e.offsetX}px`;
-    textarea.style.top = `${e.offsetY}px`;
 
 
     const commit = () => {
@@ -20,7 +20,7 @@ import { Tool } from "./Tool";
         const ctx = editor.ctx;
         ctx.fillStyle = editor.strokeStyle;
         ctx.font = `${editor.lineWidthValue * 4}px sans-serif`;
-        ctx.fillText(text, x, y);
+        ctx.fillText(text, this.x, this.y);
       }
       this.cleanup();
     };
@@ -40,6 +40,7 @@ import { Tool } from "./Tool";
         cancel();
       }
     };
+    textarea.addEventListener("blur", this.blurListener);
     textarea.addEventListener("keydown", this.keydownListener);
 
 
@@ -47,7 +48,7 @@ import { Tool } from "./Tool";
   }
 
   onPointerMove(_e: PointerEvent, _editor: Editor): void {
-    // No-op for text tool
+    // no-op
   }
 
   onPointerUp(_e: PointerEvent, _editor: Editor): void {
@@ -62,14 +63,12 @@ import { Tool } from "./Tool";
 
   private cleanup(): void {
     if (!this.textarea) return;
-
     if (this.blurListener) {
       this.textarea.removeEventListener("blur", this.blurListener);
     }
     if (this.keydownListener) {
       this.textarea.removeEventListener("keydown", this.keydownListener);
     }
-
     this.textarea.remove();
     this.textarea = null;
     this.blurListener = null;
@@ -84,4 +83,3 @@ import { Tool } from "./Tool";
     return `rgb(${r}, ${g}, ${b})`;
   }
 }
-

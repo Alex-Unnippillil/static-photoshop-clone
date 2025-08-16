@@ -41,9 +41,9 @@ export class Editor {
   }
 
   private handlePointerDown = (e: PointerEvent) => {
+    // Capture the pointer once before recording canvas state
     this.canvas.setPointerCapture(e.pointerId);
     this.saveState();
-    this.canvas.setPointerCapture(e.pointerId);
     this.currentTool?.onPointerDown(e, this);
   };
 

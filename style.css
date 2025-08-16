@@ -1,3 +1,8 @@
+button:focus-visible, input:focus-visible {
+  outline: 2px solid #1e90ff;
+  outline-offset: 2px;
+}
+
 html,
 body {
   height: 100%;
@@ -28,13 +33,9 @@ body {
   outline: 2px solid #007bff;
 }
 
-#canvas {
-  border: 1px solid #ccc;
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
-  background: #fff;
-  cursor: crosshair;
-  width: 100%;
-  height: 100%;
+
   flex: 1;
   display: block;
 }
+
+

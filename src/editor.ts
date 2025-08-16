@@ -8,16 +8,8 @@ import { CircleTool } from "./tools/CircleTool";
 import { TextTool } from "./tools/TextTool";
 import { Tool } from "./tools/Tool";
 
-export interface EditorHandle {
-  editor: Editor;
-  destroy: () => void;
-}
 
-/**
- * Initialise the editor and wire up toolbar controls.
- */
-export function initEditor(): EditorHandle {
-  const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+
   const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
   const fillMode = document.getElementById("fillMode") as HTMLInputElement;
@@ -79,26 +71,7 @@ export function initEditor(): EditorHandle {
   };
   addListener(saveBtn, "click", saveHandler);
 
-  const imageLoader = document.getElementById("imageLoader") as HTMLInputElement | null;
-  const imageHandler = () => {
-    const file = imageLoader?.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        editor.ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      };
-      img.src = reader.result as string;
-    };
-    reader.readAsDataURL(file);
-  };
-  addListener(imageLoader, "change", imageHandler);
 
-  return {
-    editor,
-    destroy: () => {
-      listeners.forEach((off) => off());
       shortcuts.destroy();
       editor.destroy();
     },

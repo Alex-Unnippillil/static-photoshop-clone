@@ -12,19 +12,25 @@ import { EraserTool } from "../tools/EraserTool";
  */
 export class Shortcuts {
   private readonly handler: (e: KeyboardEvent) => void;
+  private editor: Editor;
 
-  constructor(private readonly editor: Editor) {
+
     this.handler = (e: KeyboardEvent) => this.onKeyDown(e);
     document.addEventListener("keydown", this.handler);
   }
 
+  switchEditor(newEditor: Editor) {
+    this.editor = newEditor;
+  }
+
   private onKeyDown(e: KeyboardEvent) {
+    const editor = this.getEditor();
     if (e.ctrlKey || e.metaKey) {
       if (e.key.toLowerCase() === "z") {
         if (e.shiftKey) {
-          this.editor.redo();
+          editor.redo();
         } else {
-          this.editor.undo();
+          editor.undo();
         }
         e.preventDefault();
       }
@@ -33,28 +39,7 @@ export class Shortcuts {
 
     switch (e.key.toLowerCase()) {
       case "p":
-        this.editor.setTool(new PencilTool());
-        this.activate("pencil");
-        break;
-      case "r":
-        this.editor.setTool(new RectangleTool());
-        this.activate("rectangle");
-        break;
-      case "l":
-        this.editor.setTool(new LineTool());
-        this.activate("line");
-        break;
-      case "c":
-        this.editor.setTool(new CircleTool());
-        this.activate("circle");
-        break;
-      case "t":
-        this.editor.setTool(new TextTool());
-        this.activate("text");
-        break;
-      case "e":
-        this.editor.setTool(new EraserTool());
-        this.activate("eraser");
+
         break;
     }
   }

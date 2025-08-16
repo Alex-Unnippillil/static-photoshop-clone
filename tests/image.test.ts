@@ -2,7 +2,11 @@ import { initEditor, EditorHandle } from "../src/editor";
 
 describe("image operations", () => {
   let canvas: HTMLCanvasElement;
-  let ctx: Partial<CanvasRenderingContext2D>;
+  let ctx: Partial<CanvasRenderingContext2D> = {
+    drawImage: jest.fn(),
+    setTransform: jest.fn(),
+    scale: jest.fn(),
+  };
   let handle: EditorHandle;
 
   beforeEach(() => {
@@ -14,39 +18,22 @@ describe("image operations", () => {
       <input id="imageLoader" type="file" />
       <button id="save"></button>
     `;
-    canvas = document.getElementById("canvas") as HTMLCanvasElement;
 
-    ctx = {
-      drawImage: jest.fn(),
-    } as Partial<CanvasRenderingContext2D>;
-    canvas.getContext = jest.fn().mockReturnValue(ctx as CanvasRenderingContext2D);
-    canvas.toDataURL = jest.fn().mockReturnValue("data:img/png;base64,SAVE");
+
 
     const readSpy = jest.fn().mockImplementation(function (this: MockFileReader) {
       this.result = "data:image/png;base64,LOAD";
       this.onload();
     });
-    class MockFileReader {
-      result: string | ArrayBuffer | null = null;
-      onload: () => void = () => {};
-      readAsDataURL = readSpy;
-    }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (global as any).FileReader = MockFileReader;
 
-    class MockImage {
-      onload: () => void = () => {};
-      set src(_src: string) {
-        setTimeout(() => this.onload(), 0);
+
+      class MockImage {
+        onload: () => void = () => {};
+        set src(_src: string) {
+          setTimeout(() => this.onload(), 0);
+        }
       }
-    }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (global as any).Image = MockImage;
 
-    handle = initEditor();
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (global as any).readSpy = readSpy;
   });
 
   afterEach(() => {

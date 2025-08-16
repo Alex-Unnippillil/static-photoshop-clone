@@ -20,9 +20,11 @@ describe("image operations", () => {
     `;
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
 
-    canvas.getContext = jest
-      .fn()
-      .mockReturnValue(ctx as CanvasRenderingContext2D);
+    ctx = {
+      drawImage: jest.fn(),
+      setTransform: jest.fn(),
+      scale: jest.fn(),
+
     canvas.toDataURL = jest.fn().mockReturnValue("data:img/png;base64,SAVE");
 
     const readSpy = jest.fn().mockImplementation(function (this: MockFileReader) {

@@ -1,26 +1,20 @@
 import { Editor } from "../core/Editor";
 import { Tool } from "./Tool";
 
-/**
- * Tool for placing text on the canvas. A textarea is temporarily created to
- * gather input and then rendered to the canvas when committed.
- */
-export class TextTool implements Tool {
-  private textarea: HTMLTextAreaElement | null = null;
-  private blurListener: (() => void) | null = null;
-  private keydownListener: ((e: KeyboardEvent) => void) | null = null;
+
 
   onPointerDown(e: PointerEvent, editor: Editor): void {
     this.cleanup();
+    this.x = e.offsetX;
+    this.y = e.offsetY;
 
+    const x = e.offsetX;
+    const y = e.offsetY;
     const textarea = document.createElement("textarea");
+    const x = e.offsetX;
+    const y = e.offsetY;
     textarea.style.position = "absolute";
-    textarea.style.left = `${e.offsetX}px`;
-    textarea.style.top = `${e.offsetY}px`;
-    textarea.style.color = this.hexToRgb(editor.strokeStyle);
-    textarea.style.fontSize = `${editor.lineWidthValue * 4}px`;
-    document.body.appendChild(textarea);
-    textarea.focus();
+
 
     const commit = () => {
       if (!this.textarea) return;
@@ -29,7 +23,7 @@ export class TextTool implements Tool {
         const ctx = editor.ctx;
         ctx.fillStyle = editor.strokeStyle;
         ctx.font = `${editor.lineWidthValue * 4}px sans-serif`;
-        ctx.fillText(text, e.offsetX, e.offsetY);
+
       }
       this.cleanup();
     };
@@ -50,13 +44,15 @@ export class TextTool implements Tool {
         cancel();
       }
     };
+    textarea.addEventListener("blur", this.blurListener);
     textarea.addEventListener("keydown", this.keydownListener);
+
 
     this.textarea = textarea;
   }
 
   onPointerMove(_e: PointerEvent, _editor: Editor): void {
-    // Text tool does not draw during pointer move
+
   }
 
   onPointerUp(_e: PointerEvent, _editor: Editor): void {
@@ -91,4 +87,3 @@ export class TextTool implements Tool {
     return `rgb(${r}, ${g}, ${b})`;
   }
 }
-

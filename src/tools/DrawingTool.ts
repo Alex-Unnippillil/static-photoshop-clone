@@ -7,7 +7,15 @@ import { Tool } from "./Tool";
  * rendering context. Concrete tools must implement the pointer handlers.
  */
 export abstract class DrawingTool implements Tool {
-
+  /**
+   * Apply the current stroke and fill styles from the editor to the canvas
+   * rendering context. Subclasses should call this before performing any
+   * drawing operations.
+   */
+  protected applyStroke(
+    ctx: CanvasRenderingContext2D,
+    editor: Editor,
+  ): void {
     ctx.lineWidth = editor.lineWidthValue;
     ctx.strokeStyle = editor.strokeStyle;
     ctx.fillStyle = editor.fillStyle;
@@ -17,3 +25,4 @@ export abstract class DrawingTool implements Tool {
   abstract onPointerMove(e: PointerEvent, editor: Editor): void;
   abstract onPointerUp(e: PointerEvent, editor: Editor): void;
 }
+

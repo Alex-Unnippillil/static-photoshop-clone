@@ -2,16 +2,31 @@ import { Editor } from "../core/Editor";
 import { Tool } from "./Tool";
 
 /**
-
+ * Tool for adding text to the canvas. When the user clicks the canvas a
+ * textarea is created at the click position allowing the user to type. The
+ * text is committed to the canvas on blur or pressing Enter. Pressing Escape
+ * cancels the operation.
+ */
+export class TextTool implements Tool {
+  private textarea: HTMLTextAreaElement | null = null;
+  private blurListener: (() => void) | null = null;
+  private keydownListener: ((e: KeyboardEvent) => void) | null = null;
+  private x = 0;
+  private y = 0;
 
   onPointerDown(e: PointerEvent, editor: Editor): void {
     this.cleanup();
+    this.x = e.offsetX;
+    this.y = e.offsetY;
 
     const textarea = document.createElement("textarea");
     textarea.style.position = "absolute";
     textarea.style.left = `${e.offsetX}px`;
     textarea.style.top = `${e.offsetY}px`;
-
+    textarea.style.color = this.hexToRgb(editor.strokeStyle);
+    textarea.style.fontSize = `${editor.lineWidthValue * 4}px`;
+    textarea.style.background = "transparent";
+    textarea.style.border = "1px dashed #000";
 
     const commit = () => {
       if (!this.textarea) return;
@@ -20,7 +35,7 @@ import { Tool } from "./Tool";
         const ctx = editor.ctx;
         ctx.fillStyle = editor.strokeStyle;
         ctx.font = `${editor.lineWidthValue * 4}px sans-serif`;
-        ctx.fillText(text, x, y);
+        ctx.fillText(text, this.x, this.y);
       }
       this.cleanup();
     };
@@ -30,7 +45,6 @@ import { Tool } from "./Tool";
     };
 
     this.blurListener = commit;
-
     this.keydownListener = (ev: KeyboardEvent) => {
       if (ev.key === "Enter") {
         ev.preventDefault();
@@ -40,14 +54,16 @@ import { Tool } from "./Tool";
         cancel();
       }
     };
+    textarea.addEventListener("blur", this.blurListener);
     textarea.addEventListener("keydown", this.keydownListener);
 
-
+    document.body.appendChild(textarea);
+    textarea.focus();
     this.textarea = textarea;
   }
 
   onPointerMove(_e: PointerEvent, _editor: Editor): void {
-    // No-op for text tool
+    // no-op
   }
 
   onPointerUp(_e: PointerEvent, _editor: Editor): void {
@@ -62,14 +78,12 @@ import { Tool } from "./Tool";
 
   private cleanup(): void {
     if (!this.textarea) return;
-
     if (this.blurListener) {
       this.textarea.removeEventListener("blur", this.blurListener);
     }
     if (this.keydownListener) {
       this.textarea.removeEventListener("keydown", this.keydownListener);
     }
-
     this.textarea.remove();
     this.textarea = null;
     this.blurListener = null;

@@ -7,8 +7,10 @@ import { TextTool } from "../tools/TextTool";
 import { EraserTool } from "../tools/EraserTool";
 
 /**
- * Keyboard shortcuts handler for the editor.
- * Maps specific key presses to tool changes or editor actions.
+ * Keyboard shortcut manager. Binds to `keydown` events and translates key
+ * presses into editor actions such as switching tools or performing undo/redo.
+ * A single instance can be shared across multiple editors by calling
+ * {@link switchEditor} when the active editor changes.
  */
 export class Shortcuts {
   private readonly handler: (e: KeyboardEvent) => void;
@@ -20,6 +22,7 @@ export class Shortcuts {
     document.addEventListener("keydown", this.handler);
   }
 
+  /** Swap the editor that receives subsequent shortcut actions. */
   switchEditor(newEditor: Editor) {
     this.editor = newEditor;
   }
@@ -42,6 +45,7 @@ export class Shortcuts {
         this.editor.setTool(new PencilTool());
         this.activate("pencil");
         break;
+
       case "r":
         this.editor.setTool(new RectangleTool());
         this.activate("rectangle");
@@ -57,21 +61,19 @@ export class Shortcuts {
       case "t":
         this.editor.setTool(new TextTool());
         this.activate("text");
-        break;
-      case "e":
-        this.editor.setTool(new EraserTool());
-        this.activate("eraser");
+
         break;
     }
   }
 
+  /** Highlight toolbar button corresponding to the tool id. */
   private activate(id: string) {
     const buttons = document.querySelectorAll("#toolbar .tool-button");
     buttons.forEach((b) => b.classList.remove("active"));
-    const btn = document.getElementById(id);
-    btn?.classList.add("active");
+    document.getElementById(id)?.classList.add("active");
   }
 
+  /** Remove keyboard listeners. */
   destroy() {
     document.removeEventListener("keydown", this.handler);
   }

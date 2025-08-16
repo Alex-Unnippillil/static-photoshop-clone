@@ -9,12 +9,17 @@ export class CircleTool extends DrawingTool {
   onPointerDown(e: PointerEvent, editor: Editor): void {
     this.startX = e.offsetX;
     this.startY = e.offsetY;
-
+    const ctx = editor.ctx;
+    this.imageData = ctx.getImageData
+      ? ctx.getImageData(0, 0, editor.canvas.width, editor.canvas.height)
+      : null;
   }
 
   onPointerMove(e: PointerEvent, editor: Editor): void {
     if (e.buttons !== 1 || !this.imageData) return;
-
+    const ctx = editor.ctx;
+    ctx.putImageData?.(this.imageData, 0, 0);
+    this.applyStroke(editor.ctx, editor);
     const dx = e.offsetX - this.startX;
     const dy = e.offsetY - this.startY;
     const radius = Math.sqrt(dx * dx + dy * dy);
@@ -28,12 +33,8 @@ export class CircleTool extends DrawingTool {
   }
 
   onPointerUp(e: PointerEvent, editor: Editor): void {
-    const ctx = editor.ctx as any;
-    if (this.imageData) {
-      ctx.putImageData?.(this.imageData, 0, 0);
-    }
     this.applyStroke(editor.ctx, editor);
-
+    const ctx = editor.ctx;
     const dx = e.offsetX - this.startX;
     const dy = e.offsetY - this.startY;
     const radius = Math.sqrt(dx * dx + dy * dy);
@@ -47,3 +48,4 @@ export class CircleTool extends DrawingTool {
     this.imageData = null;
   }
 }
+

@@ -33,7 +33,7 @@ body {
   outline: 2px solid #007bff;
 }
 
-
+canvas {
   flex: 1;
   display: block;
 }

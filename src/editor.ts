@@ -9,48 +9,46 @@ import { TextTool } from "./tools/TextTool";
 import { Tool } from "./tools/Tool";
 
 export interface EditorHandle {
-  editor: Editor;
+  /** Array of editors, one for each canvas layer. */
+  editors: Editor[];
+  /** Returns the editor for the currently active layer. */
+  readonly editor: Editor;
+  /** Clean up all listeners and editors. */
   destroy: () => void;
 }
 
-export function initEditor(): EditorHandle {
-  const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+
   const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
   const fillMode = document.getElementById("fillMode") as HTMLInputElement;
+  const layerSelect = document.getElementById("layerSelect") as HTMLSelectElement | null;
   const saveBtn = document.getElementById("save") as HTMLButtonElement | null;
   const imageLoader = document.getElementById("imageLoader") as HTMLInputElement | null;
+  const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
+  const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
 
-  const editor = new Editor(canvas, colorPicker, lineWidth, fillMode);
-  editor.setTool(new PencilTool());
+  const editors = canvases.map(
+    (c) => new Editor(c, colorPicker, lineWidth, fillMode),
+  );
+
+  let currentLayerIndex = 0;
+  const getActiveEditor = () => editors[currentLayerIndex];
+
+  function updateCanvasInteraction() {
+    canvases.forEach((c, idx) => {
+      c.style.pointerEvents = idx === currentLayerIndex ? "auto" : "none";
+    });
+  }
+  updateCanvasInteraction();
+
+  // Keyboard shortcuts operate on the active editor.
+  const shortcuts = new Shortcuts(getActiveEditor);
+
 
   const shortcuts = new Shortcuts(editor);
 
-  const toolButtons: Record<string, () => Tool> = {
-    pencil: () => new PencilTool(),
-    eraser: () => new EraserTool(),
-    rectangle: () => new RectangleTool(),
-    line: () => new LineTool(),
-    circle: () => new CircleTool(),
-    text: () => new TextTool(),
+
   };
-
-  Object.entries(toolButtons).forEach(([id, factory]) => {
-    document.getElementById(id)?.addEventListener("click", () => {
-      editor.setTool(factory());
-    });
-  });
-
-  document.getElementById("undo")?.addEventListener("click", () => editor.undo());
-  document.getElementById("redo")?.addEventListener("click", () => editor.redo());
-
-  const saveHandler = () => {
-    const link = document.createElement("a");
-    link.href = canvas.toDataURL("image/png");
-    link.download = "canvas.png";
-    link.click();
-  };
-  saveBtn?.addEventListener("click", saveHandler);
 
   const imageHandler = (e: Event) => {
     const input = e.target as HTMLInputElement;

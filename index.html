@@ -19,9 +19,13 @@
       <button id="text">Text</button>
       <input type="file" id="imageLoader" accept="image/*" />
       <button id="undo">Undo</button>
-      <button id="redo">Redo</button>
-      <button id="save">Save</button>
-    </div>
+        <button id="redo">Redo</button>
+        <select id="formatSelect">
+          <option value="png" selected>PNG</option>
+          <option value="jpeg">JPEG</option>
+        </select>
+        <button id="save">Save</button>
+      </div>
     <canvas id="canvas"></canvas>
     <script type="module" src="dist/index.js"></script>
   </body>

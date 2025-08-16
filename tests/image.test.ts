@@ -5,7 +5,7 @@ describe("image operations", () => {
   let ctx: Partial<CanvasRenderingContext2D>;
   let handle: EditorHandle;
 
-  beforeEach(() => {
+    beforeEach(() => {
     document.body.innerHTML = `
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
@@ -14,11 +14,16 @@ describe("image operations", () => {
       <input id="imageLoader" type="file" />
       <button id="save"></button>
     `;
-    canvas = document.getElementById("canvas") as HTMLCanvasElement;
+      canvas = document.getElementById("canvas") as HTMLCanvasElement;
 
-    canvas.getContext = jest
-      .fn()
-      .mockReturnValue(ctx as CanvasRenderingContext2D);
+      ctx = {
+        drawImage: jest.fn(),
+        scale: jest.fn(),
+      } as Partial<CanvasRenderingContext2D>;
+
+      canvas.getContext = jest
+        .fn()
+        .mockReturnValue(ctx as CanvasRenderingContext2D);
     canvas.toDataURL = jest.fn().mockReturnValue("data:img/png;base64,SAVE");
 
     const readSpy = jest.fn().mockImplementation(function (this: MockFileReader) {

@@ -15,7 +15,11 @@ describe("image operations", () => {
       <button id="save"></button>
     `;
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
-
+    ctx = {
+      drawImage: jest.fn(),
+      setTransform: jest.fn(),
+      scale: jest.fn(),
+    };
     canvas.getContext = jest
       .fn()
       .mockReturnValue(ctx as CanvasRenderingContext2D);
@@ -30,7 +34,8 @@ describe("image operations", () => {
       onload: () => void = () => {};
       readAsDataURL = readSpy;
     }
-    (global as any).FileReader = MockFileReader;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (global as any).FileReader = MockFileReader;
 
     class MockImage {
       onload: () => void = () => {};
@@ -38,11 +43,13 @@ describe("image operations", () => {
         setTimeout(() => this.onload(), 0);
       }
     }
-    (global as any).Image = MockImage;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (global as any).Image = MockImage;
 
     handle = initEditor();
 
-    (global as any).readSpy = readSpy;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (global as any).readSpy = readSpy;
   });
 
   afterEach(() => {
@@ -55,13 +62,15 @@ describe("image operations", () => {
     Object.defineProperty(loader, "files", { value: [file], configurable: true });
     loader.dispatchEvent(new Event("change"));
     await new Promise((r) => setTimeout(r, 0));
-    expect((global as any).readSpy).toHaveBeenCalled();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((global as any).readSpy).toHaveBeenCalled();
     expect(ctx.drawImage).toHaveBeenCalled();
   });
 
   it("saves the canvas as an image", () => {
     const click = jest.fn();
-    const anchor = { href: "", download: "", click } as any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const anchor = { href: "", download: "", click } as any;
     jest.spyOn(document, "createElement").mockReturnValue(anchor);
     const save = document.getElementById("save") as HTMLButtonElement;
     save.click();

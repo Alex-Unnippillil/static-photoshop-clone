@@ -2,16 +2,28 @@ import { Editor } from "../core/Editor";
 import { Tool } from "./Tool";
 
 /**
-
+ * Tool for placing text on the canvas. A textarea is created at the
+ * pointer position, allowing the user to type before committing the
+ * text to the canvas.
+ */
+export class TextTool implements Tool {
+  private textarea: HTMLTextAreaElement | null = null;
+  private blurListener: (() => void) | null = null;
+  private keydownListener: ((ev: KeyboardEvent) => void) | null = null;
 
   onPointerDown(e: PointerEvent, editor: Editor): void {
     this.cleanup();
 
-    const textarea = document.createElement("textarea");
-    textarea.style.position = "absolute";
-    textarea.style.left = `${e.offsetX}px`;
-    textarea.style.top = `${e.offsetY}px`;
-
+    const ta = document.createElement("textarea");
+    const x = e.offsetX;
+    const y = e.offsetY;
+    ta.style.position = "absolute";
+    ta.style.left = `${x}px`;
+    ta.style.top = `${y}px`;
+    ta.style.color = this.hexToRgb(editor.strokeStyle);
+    ta.style.fontSize = `${editor.lineWidthValue * 4}px`;
+    document.body.appendChild(ta);
+    ta.focus();
 
     const commit = () => {
       if (!this.textarea) return;
@@ -30,7 +42,6 @@ import { Tool } from "./Tool";
     };
 
     this.blurListener = commit;
-
     this.keydownListener = (ev: KeyboardEvent) => {
       if (ev.key === "Enter") {
         ev.preventDefault();
@@ -40,16 +51,19 @@ import { Tool } from "./Tool";
         cancel();
       }
     };
-    textarea.addEventListener("keydown", this.keydownListener);
 
+    ta.addEventListener("blur", this.blurListener);
+    ta.addEventListener("keydown", this.keydownListener);
 
-    this.textarea = textarea;
+    this.textarea = ta;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onPointerMove(_e: PointerEvent, _editor: Editor): void {
-    // No-op for text tool
+    // no-op
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onPointerUp(_e: PointerEvent, _editor: Editor): void {
     if (this.textarea && document.activeElement !== this.textarea) {
       this.cleanup();
@@ -62,14 +76,12 @@ import { Tool } from "./Tool";
 
   private cleanup(): void {
     if (!this.textarea) return;
-
     if (this.blurListener) {
       this.textarea.removeEventListener("blur", this.blurListener);
     }
     if (this.keydownListener) {
       this.textarea.removeEventListener("keydown", this.keydownListener);
     }
-
     this.textarea.remove();
     this.textarea = null;
     this.blurListener = null;

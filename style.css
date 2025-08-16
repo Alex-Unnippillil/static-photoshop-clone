@@ -16,6 +16,12 @@ body {
   margin: 10px;
 }
 
+.hint {
+  font-size: 0.8rem;
+  color: #555;
+  align-self: center;
+}
+
 #canvas {
   border: 1px solid #000;
   cursor: crosshair;

@@ -7,39 +7,13 @@ import { LineTool } from "./tools/LineTool";
 import { CircleTool } from "./tools/CircleTool";
 import { TextTool } from "./tools/TextTool";
 
-export interface EditorHandle {
-  editor: Editor;
-  destroy: () => void;
-}
 
-/**
- * Initialize the editor by wiring up DOM controls and returning an
- * {@link EditorHandle} that allows tests or callers to tear down the editor.
- */
-export function initEditor(): EditorHandle {
-  const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+
   const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
   const fillMode = document.getElementById("fillMode") as HTMLInputElement;
 
-  const editor = new Editor(canvas, colorPicker, lineWidth, fillMode);
-  // Default tool
-  editor.setTool(new PencilTool());
 
-  const shortcuts = new Shortcuts(editor);
-
-  // Tool buttons
-  const pencilBtn = document.getElementById("pencil") as HTMLButtonElement | null;
-  const eraserBtn = document.getElementById("eraser") as HTMLButtonElement | null;
-  const rectangleBtn = document.getElementById("rectangle") as HTMLButtonElement | null;
-  const lineBtn = document.getElementById("line") as HTMLButtonElement | null;
-  const circleBtn = document.getElementById("circle") as HTMLButtonElement | null;
-  const textBtn = document.getElementById("text") as HTMLButtonElement | null;
-  const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
-  const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
-  const saveBtn = document.getElementById("save") as HTMLButtonElement | null;
-  const saveJpegBtn = document.getElementById("saveJpeg") as HTMLButtonElement | null;
-  const imageLoader = document.getElementById("imageLoader") as HTMLInputElement | null;
 
   const listeners: Array<() => void> = [];
 
@@ -53,22 +27,7 @@ export function initEditor(): EditorHandle {
     listeners.push(() => el.removeEventListener(type, handler as EventListener));
   }
 
-  addListener(pencilBtn, "click", () => editor.setTool(new PencilTool()));
-  addListener(eraserBtn, "click", () => editor.setTool(new EraserTool()));
-  addListener(rectangleBtn, "click", () => editor.setTool(new RectangleTool()));
-  addListener(lineBtn, "click", () => editor.setTool(new LineTool()));
-  addListener(circleBtn, "click", () => editor.setTool(new CircleTool()));
-  addListener(textBtn, "click", () => editor.setTool(new TextTool()));
-  addListener(undoBtn, "click", () => editor.undo());
-  addListener(redoBtn, "click", () => editor.redo());
 
-  function saveAs(type: string, fileName: string) {
-    const data = canvas.toDataURL(type);
-    const a = document.createElement("a");
-    a.href = data;
-    a.download = fileName;
-    a.click();
-  }
 
   addListener(saveBtn, "click", () => saveAs("image/png", "canvas.png"));
   addListener(saveJpegBtn, "click", () => saveAs("image/jpeg", "canvas.jpg"));

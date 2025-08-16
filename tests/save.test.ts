@@ -11,7 +11,7 @@ describe("save button", () => {
     `;
 
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-    const ctx: Partial<CanvasRenderingContext2D> = {
+
       scale: jest.fn(),
     };
     canvas.getContext = jest.fn().mockReturnValue(ctx as CanvasRenderingContext2D);

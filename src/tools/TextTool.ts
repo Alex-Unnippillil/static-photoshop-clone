@@ -1,27 +1,13 @@
 import { Editor } from "../core/Editor";
 import { Tool } from "./Tool";
 
-/**
- * Tool that lets the user place text on the canvas by creating an overlay
- * textarea. The text is committed to the canvas when the user presses Enter
- * or the textarea loses focus. Pressing Escape cancels the operation.
- */
-export class TextTool implements Tool {
-  private textarea: HTMLTextAreaElement | null = null;
-  private blurListener: (() => void) | null = null;
-  private keydownListener: ((e: KeyboardEvent) => void) | null = null;
 
-  onPointerDown(e: PointerEvent, editor: Editor): void {
-    this.cleanup();
 
     const textarea = document.createElement("textarea");
+    const x = e.offsetX;
+    const y = e.offsetY;
     textarea.style.position = "absolute";
-    textarea.style.left = `${e.offsetX}px`;
-    textarea.style.top = `${e.offsetY}px`;
-    textarea.style.color = this.hexToRgb(editor.strokeStyle);
-    textarea.style.fontSize = `${editor.lineWidthValue * 4}px`;
-    document.body.appendChild(textarea);
-    textarea.focus();
+
 
     const x = e.offsetX;
     const y = e.offsetY;
@@ -33,7 +19,7 @@ export class TextTool implements Tool {
         const ctx = editor.ctx;
         ctx.fillStyle = editor.strokeStyle;
         ctx.font = `${editor.lineWidthValue * 4}px sans-serif`;
-        ctx.fillText(text, x, y);
+
       }
       this.cleanup();
     };
@@ -53,20 +39,13 @@ export class TextTool implements Tool {
       }
     };
 
+
     textarea.addEventListener("blur", this.blurListener);
     textarea.addEventListener("keydown", this.keydownListener);
     this.textarea = textarea;
   }
 
-  onPointerMove(e: PointerEvent, editor: Editor): void {
-    // parameters required by interface
-    void e;
-    void editor;
-  }
 
-  onPointerUp(e: PointerEvent, editor: Editor): void {
-    void e;
-    void editor;
     if (this.textarea && document.activeElement !== this.textarea) {
       this.cleanup();
     }
@@ -98,4 +77,3 @@ export class TextTool implements Tool {
     return `rgb(${r}, ${g}, ${b})`;
   }
 }
-

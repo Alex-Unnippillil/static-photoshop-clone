@@ -9,12 +9,14 @@ export class Editor {
   colorPicker: HTMLInputElement;
   lineWidth: HTMLInputElement;
   fillMode: HTMLInputElement;
+  private onChange?: () => void;
 
   constructor(
     canvas: HTMLCanvasElement,
     colorPicker: HTMLInputElement,
     lineWidth: HTMLInputElement,
     fillMode: HTMLInputElement,
+    onChange?: () => void,
   ) {
     this.canvas = canvas;
     const ctx = canvas.getContext("2d");
@@ -23,6 +25,7 @@ export class Editor {
     this.colorPicker = colorPicker;
     this.lineWidth = lineWidth;
     this.fillMode = fillMode;
+    this.onChange = onChange;
     this.adjustForPixelRatio();
     window.addEventListener("resize", this.handleResize);
 
@@ -34,10 +37,13 @@ export class Editor {
   setTool(tool: Tool) {
     this.currentTool?.destroy?.();
     this.currentTool = tool;
+    this.canvas.style.cursor = tool.cursor || "crosshair";
   }
 
   private handlePointerDown = (e: PointerEvent) => {
+    this.canvas.setPointerCapture(e.pointerId);
     this.saveState();
+    this.canvas.setPointerCapture(e.pointerId);
     this.currentTool?.onPointerDown(e, this);
   };
 
@@ -47,6 +53,7 @@ export class Editor {
 
   private handlePointerUp = (e: PointerEvent) => {
     this.currentTool?.onPointerUp(e, this);
+    this.canvas.releasePointerCapture(e.pointerId);
   };
 
   private adjustForPixelRatio() {
@@ -84,6 +91,7 @@ export class Editor {
     );
     if (this.undoStack.length > 50) this.undoStack.shift();
     this.redoStack.length = 0;
+    this.onChange?.();
   }
 
   private restoreState(stack: ImageData[], opposite: ImageData[]) {
@@ -94,6 +102,7 @@ export class Editor {
     const imageData = stack.pop()!;
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.putImageData(imageData, 0, 0);
+    this.onChange?.();
   }
 
   undo() {
@@ -102,6 +111,14 @@ export class Editor {
 
   redo() {
     this.restoreState(this.redoStack, this.undoStack);
+  }
+
+  get canUndo() {
+    return this.undoStack.length > 0;
+  }
+
+  get canRedo() {
+    return this.redoStack.length > 0;
   }
 
   get strokeStyle() {

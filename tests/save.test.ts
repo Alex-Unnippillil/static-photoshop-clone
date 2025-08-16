@@ -11,11 +11,7 @@ describe("save button", () => {
     `;
 
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-      const ctx: Partial<CanvasRenderingContext2D> = {
-        scale: jest.fn(),
-        setTransform: jest.fn(),
-      };
-      canvas.getContext = jest.fn().mockReturnValue(ctx as CanvasRenderingContext2D);
+
     canvas.toDataURL = jest.fn().mockReturnValue("data:image/png;base64,TEST");
     canvas.getBoundingClientRect = () => ({
       width: 100,

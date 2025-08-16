@@ -1,29 +1,13 @@
 import { Editor } from "../core/Editor";
 import { Tool } from "./Tool";
 
-/**
- * Tool for placing text on the canvas. A textarea is created at the
- * pointer position, allowing the user to type before committing the
- * text to the canvas.
- */
-export class TextTool implements Tool {
-  private textarea: HTMLTextAreaElement | null = null;
-  private blurListener: (() => void) | null = null;
-  private keydownListener: ((ev: KeyboardEvent) => void) | null = null;
+
 
   onPointerDown(e: PointerEvent, editor: Editor): void {
     this.cleanup();
+    this.x = e.offsetX;
+    this.y = e.offsetY;
 
-    const ta = document.createElement("textarea");
-    const x = e.offsetX;
-    const y = e.offsetY;
-    ta.style.position = "absolute";
-    ta.style.left = `${x}px`;
-    ta.style.top = `${y}px`;
-    ta.style.color = this.hexToRgb(editor.strokeStyle);
-    ta.style.fontSize = `${editor.lineWidthValue * 4}px`;
-    document.body.appendChild(ta);
-    ta.focus();
 
     const commit = () => {
       if (!this.textarea) return;
@@ -32,7 +16,7 @@ export class TextTool implements Tool {
         const ctx = editor.ctx;
         ctx.fillStyle = editor.strokeStyle;
         ctx.font = `${editor.lineWidthValue * 4}px sans-serif`;
-        ctx.fillText(text, x, y);
+        ctx.fillText(text, this.x, this.y);
       }
       this.cleanup();
     };
@@ -42,6 +26,7 @@ export class TextTool implements Tool {
     };
 
     this.blurListener = commit;
+
     this.keydownListener = (ev: KeyboardEvent) => {
       if (ev.key === "Enter") {
         ev.preventDefault();
@@ -52,15 +37,12 @@ export class TextTool implements Tool {
       }
     };
 
-    ta.addEventListener("blur", this.blurListener);
-    ta.addEventListener("keydown", this.keydownListener);
-
     this.textarea = ta;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onPointerMove(_e: PointerEvent, _editor: Editor): void {
-    // no-op
+
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -96,4 +78,3 @@ export class TextTool implements Tool {
     return `rgb(${r}, ${g}, ${b})`;
   }
 }
-

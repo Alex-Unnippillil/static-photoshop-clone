@@ -26,9 +26,7 @@ describe("save button", () => {
     });
 
     const click = jest.fn();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const anchor = { href: "", download: "", click } as any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     jest.spyOn(document, "createElement").mockReturnValue(anchor);
 
     const handle = initEditor();

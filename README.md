@@ -14,7 +14,7 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 - Color picker for stroke selection
 - Adjustable line width
 - Undo/redo support
-- Touch and stylus input for drawing
+
 
 ### Keyboard Shortcuts
 

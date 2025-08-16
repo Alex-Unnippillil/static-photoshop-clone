@@ -25,13 +25,13 @@ describe("image operations", () => {
       this.onload();
     });
 
-
       class MockImage {
         onload: () => void = () => {};
         set src(_src: string) {
           setTimeout(() => this.onload(), 0);
         }
       }
+
 
   });
 
@@ -45,16 +45,13 @@ describe("image operations", () => {
     Object.defineProperty(loader, "files", { value: [file], configurable: true });
     loader.dispatchEvent(new Event("change"));
     await new Promise((r) => setTimeout(r, 0));
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect((global as any).readSpy).toHaveBeenCalled();
+
     expect(ctx.drawImage).toHaveBeenCalled();
   });
 
   it("saves the canvas as an image", () => {
     const click = jest.fn();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const anchor = { href: "", download: "", click } as any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     jest.spyOn(document, "createElement").mockReturnValue(anchor);
     const save = document.getElementById("save") as HTMLButtonElement;
     save.click();

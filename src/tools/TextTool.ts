@@ -7,14 +7,7 @@ import { Tool } from "./Tool";
     textarea.style.position = "absolute";
 
 
-    const x = e.offsetX;
-    const y = e.offsetY;
 
-    const x = e.offsetX;
-    const y = e.offsetY;
-
-    const x = e.offsetX;
-    const y = e.offsetY;
 
     const commit = () => {
       if (!this.textarea) return;
@@ -31,6 +24,7 @@ import { Tool } from "./Tool";
     const cancel = () => this.cleanup();
 
     this.blurListener = commit;
+
     this.keydownListener = (ev: KeyboardEvent) => {
       if (ev.key === "Enter") {
         ev.preventDefault();
@@ -40,6 +34,7 @@ import { Tool } from "./Tool";
         cancel();
       }
     };
+
 
     if (this.textarea && document.activeElement !== this.textarea) {
       this.cleanup();

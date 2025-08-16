@@ -8,8 +8,6 @@ import { Tool } from "./Tool";
     this.x = e.offsetX;
     this.y = e.offsetY;
 
-    const x = e.offsetX;
-    const y = e.offsetY;
     const textarea = document.createElement("textarea");
     const x = e.offsetX;
     const y = e.offsetY;
@@ -33,7 +31,6 @@ import { Tool } from "./Tool";
     };
 
     this.blurListener = commit;
-    textarea.addEventListener("blur", this.blurListener);
 
     this.keydownListener = (ev: KeyboardEvent) => {
       if (ev.key === "Enter") {
@@ -44,9 +41,11 @@ import { Tool } from "./Tool";
         cancel();
       }
     };
+
     textarea.addEventListener("blur", this.blurListener);
     textarea.addEventListener("keydown", this.keydownListener);
-
+    document.body.appendChild(textarea);
+    textarea.focus();
 
     this.textarea = textarea;
   }

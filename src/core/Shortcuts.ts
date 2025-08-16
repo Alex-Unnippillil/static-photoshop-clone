@@ -13,18 +13,23 @@ import { EraserTool } from "../tools/EraserTool";
 export class Shortcuts {
   private readonly handler: (e: KeyboardEvent) => void;
 
-  constructor(private readonly editor: Editor) {
+  /**
+   * @param getEditor Function returning the currently active editor. This allows
+   *                  shortcuts to always operate on the active layer.
+   */
+  constructor(private readonly getEditor: () => Editor) {
     this.handler = (e: KeyboardEvent) => this.onKeyDown(e);
     document.addEventListener("keydown", this.handler);
   }
 
   private onKeyDown(e: KeyboardEvent) {
+    const editor = this.getEditor();
     if (e.ctrlKey || e.metaKey) {
       if (e.key.toLowerCase() === "z") {
         if (e.shiftKey) {
-          this.editor.redo();
+          editor.redo();
         } else {
-          this.editor.undo();
+          editor.undo();
         }
         e.preventDefault();
       }
@@ -33,22 +38,22 @@ export class Shortcuts {
 
     switch (e.key.toLowerCase()) {
       case "p":
-        this.editor.setTool(new PencilTool());
+        editor.setTool(new PencilTool());
         break;
       case "r":
-        this.editor.setTool(new RectangleTool());
+        editor.setTool(new RectangleTool());
         break;
       case "l":
-        this.editor.setTool(new LineTool());
+        editor.setTool(new LineTool());
         break;
       case "c":
-        this.editor.setTool(new CircleTool());
+        editor.setTool(new CircleTool());
         break;
       case "t":
-        this.editor.setTool(new TextTool());
+        editor.setTool(new TextTool());
         break;
       case "e":
-        this.editor.setTool(new EraserTool());
+        editor.setTool(new EraserTool());
         break;
     }
   }

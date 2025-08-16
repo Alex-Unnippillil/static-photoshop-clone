@@ -61,7 +61,7 @@ export class Editor {
     const rect = this.canvas.getBoundingClientRect();
     this.canvas.width = rect.width * dpr;
     this.canvas.height = rect.height * dpr;
-
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
   private handleResize = () => {

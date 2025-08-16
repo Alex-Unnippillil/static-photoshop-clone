@@ -13,6 +13,8 @@ describe("EraserTool", () => {
       <input id="fillMode" type="checkbox" />
     `;
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+    (canvas as any).setPointerCapture = jest.fn();
+    (canvas as any).releasePointerCapture = jest.fn();
     ctx = {
       beginPath: jest.fn(),
       moveTo: jest.fn(),

@@ -1,27 +1,20 @@
 import { Editor } from "../core/Editor";
 import { Tool } from "./Tool";
 
-/**
- * Tool for placing text on the canvas.
- * Clicking the canvas will create a temporary textarea for input.
- * Pressing Enter commits the text, Escape or blur cancels.
- */
-export class TextTool implements Tool {
-  private textarea: HTMLTextAreaElement | null = null;
-  private blurListener: (() => void) | null = null;
-  private keydownListener: ((e: KeyboardEvent) => void) | null = null;
+
 
   onPointerDown(e: PointerEvent, editor: Editor): void {
     this.cleanup();
+    this.x = e.offsetX;
+    this.y = e.offsetY;
 
+    const x = e.offsetX;
+    const y = e.offsetY;
     const textarea = document.createElement("textarea");
     const x = e.offsetX;
     const y = e.offsetY;
     textarea.style.position = "absolute";
-    textarea.style.left = `${x}px`;
-    textarea.style.top = `${y}px`;
-    textarea.style.color = this.hexToRgb(editor.strokeStyle);
-    textarea.style.fontSize = `${editor.lineWidthValue * 4}px`;
+
 
     const commit = () => {
       if (!this.textarea) return;
@@ -30,7 +23,7 @@ export class TextTool implements Tool {
         const ctx = editor.ctx;
         ctx.fillStyle = editor.strokeStyle;
         ctx.font = `${editor.lineWidthValue * 4}px sans-serif`;
-        ctx.fillText(text, x, y);
+        ctx.fillText(text, this.x, this.y);
       }
       this.cleanup();
     };
@@ -51,6 +44,7 @@ export class TextTool implements Tool {
         cancel();
       }
     };
+    textarea.addEventListener("blur", this.blurListener);
     textarea.addEventListener("keydown", this.keydownListener);
 
     document.body.appendChild(textarea);
@@ -60,7 +54,7 @@ export class TextTool implements Tool {
   }
 
   onPointerMove(_e: PointerEvent, _editor: Editor): void {
-    // Text tool does not draw on move
+
   }
 
   onPointerUp(_e: PointerEvent, _editor: Editor): void {
@@ -75,14 +69,12 @@ export class TextTool implements Tool {
 
   private cleanup(): void {
     if (!this.textarea) return;
-
     if (this.blurListener) {
       this.textarea.removeEventListener("blur", this.blurListener);
     }
     if (this.keydownListener) {
       this.textarea.removeEventListener("keydown", this.keydownListener);
     }
-
     this.textarea.remove();
     this.textarea = null;
     this.blurListener = null;
@@ -97,4 +89,3 @@ export class TextTool implements Tool {
     return `rgb(${r}, ${g}, ${b})`;
   }
 }
-

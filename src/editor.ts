@@ -6,11 +6,13 @@ import { RectangleTool } from "./tools/RectangleTool";
 import { LineTool } from "./tools/LineTool";
 import { CircleTool } from "./tools/CircleTool";
 import { TextTool } from "./tools/TextTool";
+import { Tool } from "./tools/Tool";
 
 export interface EditorHandle {
   editor: Editor;
   destroy: () => void;
 }
+
 
 export function initEditor(): EditorHandle {
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -20,30 +22,12 @@ export function initEditor(): EditorHandle {
   const saveBtn = document.getElementById("save") as HTMLButtonElement | null;
   const imageLoader = document.getElementById("imageLoader") as HTMLInputElement | null;
 
-  const pencilBtn = document.getElementById("pencil") as HTMLButtonElement | null;
-  const eraserBtn = document.getElementById("eraser") as HTMLButtonElement | null;
-  const rectangleBtn = document.getElementById("rectangle") as HTMLButtonElement | null;
-  const lineBtn = document.getElementById("line") as HTMLButtonElement | null;
-  const circleBtn = document.getElementById("circle") as HTMLButtonElement | null;
-  const textBtn = document.getElementById("text") as HTMLButtonElement | null;
-  const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
-  const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
 
   const editor = new Editor(canvas, colorPicker, lineWidth, fillMode);
   const shortcuts = new Shortcuts(editor);
   editor.setTool(new PencilTool());
 
-  const loadImage = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        editor.ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      };
-      img.src = reader.result as string;
-    };
-    reader.readAsDataURL(file);
-  };
+
 
   const handleImageChange = () => {
     const file = imageLoader?.files?.[0];

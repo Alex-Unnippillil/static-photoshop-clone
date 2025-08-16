@@ -14,6 +14,7 @@ describe("additional tools", () => {
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
+      <input id="fillMode" type="checkbox" />
     `;
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
     ctx = {
@@ -25,6 +26,9 @@ describe("additional tools", () => {
       fillText: jest.fn(),
       closePath: jest.fn(),
       scale: jest.fn(),
+      setTransform: jest.fn(),
+      getImageData: jest.fn().mockReturnValue({}),
+      putImageData: jest.fn(),
     };
     canvas.getContext = jest
       .fn()
@@ -33,6 +37,7 @@ describe("additional tools", () => {
       canvas,
       document.getElementById("colorPicker") as HTMLInputElement,
       document.getElementById("lineWidth") as HTMLInputElement,
+      document.getElementById("fillMode") as HTMLInputElement,
     );
   });
 

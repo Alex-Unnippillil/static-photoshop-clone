@@ -18,14 +18,7 @@ describe("image operations", () => {
       <input id="imageLoader" type="file" />
       <button id="save"></button>
     `;
-    canvas = document.getElementById("canvas") as HTMLCanvasElement;
 
-    ctx = {
-      drawImage: jest.fn(),
-      setTransform: jest.fn(),
-      scale: jest.fn(),
-
-    canvas.toDataURL = jest.fn().mockReturnValue("data:img/png;base64,SAVE");
 
     const readSpy = jest.fn().mockImplementation(function (this: MockFileReader) {
       this.result = "data:image/png;base64,LOAD";

@@ -2,12 +2,6 @@ import { Editor } from "../core/Editor";
 import { Tool } from "./Tool";
 
 
-
-  onPointerDown(e: PointerEvent, editor: Editor): void {
-    this.cleanup();
-    this.x = e.offsetX;
-    this.y = e.offsetY;
-
     const textarea = document.createElement("textarea");
     const x = e.offsetX;
     const y = e.offsetY;
@@ -43,17 +37,12 @@ import { Tool } from "./Tool";
 
     textarea.addEventListener("blur", this.blurListener);
     textarea.addEventListener("keydown", this.keydownListener);
-
+    textarea.addEventListener("blur", this.blurListener);
 
     this.textarea = textarea;
   }
 
 
-  }
-
-  onPointerUp(e: PointerEvent, editor: Editor): void {
-    void e;
-    void editor;
     if (this.textarea && document.activeElement !== this.textarea) {
       this.cleanup();
     }

@@ -1,32 +1,17 @@
 import { Editor } from "../core/Editor";
 import { Tool } from "./Tool";
 
-/**
- * Tool for adding text to the canvas. When the user clicks the canvas a
- * textarea is created at the click position allowing the user to type. The
- * text is committed to the canvas on blur or pressing Enter. Pressing Escape
- * cancels the operation.
- */
-export class TextTool implements Tool {
-  private textarea: HTMLTextAreaElement | null = null;
-  private blurListener: (() => void) | null = null;
-  private keydownListener: ((e: KeyboardEvent) => void) | null = null;
-  private x = 0;
-  private y = 0;
 
   onPointerDown(e: PointerEvent, editor: Editor): void {
     this.cleanup();
     this.x = e.offsetX;
     this.y = e.offsetY;
 
+    const x = e.offsetX;
+    const y = e.offsetY;
     const textarea = document.createElement("textarea");
     textarea.style.position = "absolute";
-    textarea.style.left = `${e.offsetX}px`;
-    textarea.style.top = `${e.offsetY}px`;
-    textarea.style.color = this.hexToRgb(editor.strokeStyle);
-    textarea.style.fontSize = `${editor.lineWidthValue * 4}px`;
-    textarea.style.background = "transparent";
-    textarea.style.border = "1px dashed #000";
+
 
     const commit = () => {
       if (!this.textarea) return;
@@ -45,6 +30,7 @@ export class TextTool implements Tool {
     };
 
     this.blurListener = commit;
+
     this.keydownListener = (ev: KeyboardEvent) => {
       if (ev.key === "Enter") {
         ev.preventDefault();
@@ -57,8 +43,7 @@ export class TextTool implements Tool {
     textarea.addEventListener("blur", this.blurListener);
     textarea.addEventListener("keydown", this.keydownListener);
 
-    document.body.appendChild(textarea);
-    textarea.focus();
+
     this.textarea = textarea;
   }
 
@@ -98,4 +83,3 @@ export class TextTool implements Tool {
     return `rgb(${r}, ${g}, ${b})`;
   }
 }
-

@@ -15,6 +15,8 @@ describe("keyboard shortcuts", () => {
       <input id="fillMode" type="checkbox" />
     `;
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
+    (canvas as any).setPointerCapture = jest.fn();
+    (canvas as any).releasePointerCapture = jest.fn();
     ctx = {
       setTransform: jest.fn(),
       scale: jest.fn(),

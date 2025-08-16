@@ -13,6 +13,8 @@ describe("CircleTool", () => {
       <input id="fillMode" type="checkbox" />
     `;
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+    (canvas as any).setPointerCapture = jest.fn();
+    (canvas as any).releasePointerCapture = jest.fn();
     const imageData = {} as ImageData;
     ctx = {
       getImageData: jest.fn().mockReturnValue(imageData),

@@ -6,6 +6,7 @@ import { RectangleTool } from "./tools/RectangleTool";
 import { LineTool } from "./tools/LineTool";
 import { CircleTool } from "./tools/CircleTool";
 import { TextTool } from "./tools/TextTool";
+import { Tool } from "./tools/Tool";
 
 export interface EditorHandle {
   /** Array of editors, one for each canvas layer. */
@@ -16,20 +17,7 @@ export interface EditorHandle {
   destroy: () => void;
 }
 
-/**
- * Initialize editors and wire toolbar controls.
- * Supports multiple canvas layers with a select element (id="layerSelect")
- * to choose the active layer.
- */
-export function initEditor(): EditorHandle {
-  const canvases: HTMLCanvasElement[] = [];
-  const primary = document.getElementById("canvas") as HTMLCanvasElement | null;
-  const secondary = document.getElementById("canvas2") as HTMLCanvasElement | null;
-  if (primary) canvases.push(primary);
-  if (secondary) canvases.push(secondary);
-  if (canvases.length === 0) {
-    throw new Error("No canvas elements found");
-  }
+
 
   const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
@@ -65,12 +53,7 @@ export function initEditor(): EditorHandle {
   const circleBtn = document.getElementById("circle") as HTMLButtonElement | null;
   const textBtn = document.getElementById("text") as HTMLButtonElement | null;
 
-  const pencilHandler = () => getActiveEditor().setTool(new PencilTool());
-  const eraserHandler = () => getActiveEditor().setTool(new EraserTool());
-  const rectHandler = () => getActiveEditor().setTool(new RectangleTool());
-  const lineHandler = () => getActiveEditor().setTool(new LineTool());
-  const circleHandler = () => getActiveEditor().setTool(new CircleTool());
-  const textHandler = () => getActiveEditor().setTool(new TextTool());
+
 
   pencilBtn?.addEventListener("click", pencilHandler);
   eraserBtn?.addEventListener("click", eraserHandler);
@@ -98,44 +81,6 @@ export function initEditor(): EditorHandle {
     a.download = "canvas.png";
     a.click();
   };
-  saveBtn?.addEventListener("click", saveHandler);
 
-  const loadHandler = (e: Event) => {
-    const input = e.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        getActiveEditor().ctx.drawImage(img, 0, 0);
-      };
-      img.src = reader.result as string;
-    };
-    reader.readAsDataURL(file);
-  };
-  imageLoader?.addEventListener("change", loadHandler);
-
-  return {
-    editors,
-    get editor() {
-      return getActiveEditor();
-    },
-    destroy() {
-      pencilBtn?.removeEventListener("click", pencilHandler);
-      eraserBtn?.removeEventListener("click", eraserHandler);
-      rectBtn?.removeEventListener("click", rectHandler);
-      lineBtn?.removeEventListener("click", lineHandler);
-      circleBtn?.removeEventListener("click", circleHandler);
-      textBtn?.removeEventListener("click", textHandler);
-      undoBtn?.removeEventListener("click", undoHandler);
-      redoBtn?.removeEventListener("click", redoHandler);
-      saveBtn?.removeEventListener("click", saveHandler);
-      imageLoader?.removeEventListener("change", loadHandler);
-      layerSelect?.removeEventListener("change", layerHandler);
-      shortcuts.destroy();
-      editors.forEach((e) => e.destroy());
-    },
-  };
 }
 

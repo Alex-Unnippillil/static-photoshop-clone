@@ -2,7 +2,11 @@ import { initEditor, EditorHandle } from "../src/editor";
 
 describe("image operations", () => {
   let canvas: HTMLCanvasElement;
-  let ctx: Partial<CanvasRenderingContext2D>;
+  let ctx: Partial<CanvasRenderingContext2D> = {
+    drawImage: jest.fn(),
+    setTransform: jest.fn(),
+    scale: jest.fn(),
+  };
   let handle: EditorHandle;
 
   beforeEach(() => {
@@ -20,13 +24,7 @@ describe("image operations", () => {
       drawImage: jest.fn(),
       setTransform: jest.fn(),
       scale: jest.fn(),
-      getImageData: jest.fn(),
-      putImageData: jest.fn(),
-      clearRect: jest.fn(),
-    };
-    canvas.getContext = jest
-      .fn()
-      .mockReturnValue(ctx as CanvasRenderingContext2D);
+
     canvas.toDataURL = jest.fn().mockReturnValue("data:img/png;base64,SAVE");
 
     const readSpy = jest.fn().mockImplementation(function (this: MockFileReader) {

@@ -1,28 +1,18 @@
 import { Editor } from "../core/Editor";
 import { Tool } from "./Tool";
 
-/**
- * Simple text tool that creates a textarea overlay on the canvas where the
- * user clicked. Text is committed on Enter or blur, and cancelled on Escape.
- */
-export class TextTool implements Tool {
-  private textarea: HTMLTextAreaElement | null = null;
-  private blurListener: ((e: Event) => void) | null = null;
-  private keydownListener: ((e: KeyboardEvent) => void) | null = null;
+
 
   onPointerDown(e: PointerEvent, editor: Editor): void {
     this.cleanup();
-
-    const { offsetX: x, offsetY: y } = e;
+    this.x = e.offsetX;
+    this.y = e.offsetY;
 
     const textarea = document.createElement("textarea");
+    const x = e.offsetX;
+    const y = e.offsetY;
     textarea.style.position = "absolute";
-    textarea.style.left = `${x}px`;
-    textarea.style.top = `${y}px`;
-    textarea.style.color = this.hexToRgb(editor.strokeStyle);
-    textarea.style.fontSize = `${editor.lineWidthValue * 4}px`;
-    textarea.style.border = "none";
-    textarea.style.background = "transparent";
+
 
     const commit = () => {
       if (!this.textarea) return;
@@ -31,7 +21,7 @@ export class TextTool implements Tool {
         const ctx = editor.ctx;
         ctx.fillStyle = editor.strokeStyle;
         ctx.font = `${editor.lineWidthValue * 4}px sans-serif`;
-        ctx.fillText(text, x, y);
+
       }
       this.cleanup();
     };
@@ -41,6 +31,7 @@ export class TextTool implements Tool {
     };
 
     this.blurListener = commit;
+
     this.keydownListener = (ev: KeyboardEvent) => {
       if (ev.key === "Enter") {
         ev.preventDefault();
@@ -60,7 +51,7 @@ export class TextTool implements Tool {
   }
 
   onPointerMove(_e: PointerEvent, _editor: Editor): void {
-    // No preview behaviour
+
   }
 
   onPointerUp(_e: PointerEvent, _editor: Editor): void {
@@ -95,4 +86,3 @@ export class TextTool implements Tool {
     return `rgb(${r}, ${g}, ${b})`;
   }
 }
-

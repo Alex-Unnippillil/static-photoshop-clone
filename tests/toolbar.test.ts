@@ -11,23 +11,6 @@ describe("toolbar controls", () => {
   let canvas: HTMLCanvasElement;
   let ctx: Partial<CanvasRenderingContext2D>;
 
-    beforeEach(() => {
-      document.body.innerHTML = `
-        <canvas id="canvas"></canvas>
-        <canvas id="canvas2"></canvas>
-        <select id="layerSelect"><option value="0">Layer 1</option><option value="1">Layer 2</option></select>
-        <input id="colorPicker" value="#000000" />
-        <input id="lineWidth" value="2" />
-        <input id="fillMode" type="checkbox" />
-        <button id="pencil"></button>
-        <button id="eraser"></button>
-        <button id="rectangle"></button>
-        <button id="line"></button>
-        <button id="circle"></button>
-        <button id="text"></button>
-        <button id="undo"></button>
-        <button id="redo"></button>
-      `;
 
       canvas = document.getElementById("canvas") as HTMLCanvasElement;
       const canvas2 = document.getElementById("canvas2") as HTMLCanvasElement;

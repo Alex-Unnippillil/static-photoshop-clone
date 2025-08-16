@@ -13,10 +13,7 @@ describe("save button", () => {
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
     const ctx = {
       scale: jest.fn(),
-      getImageData: jest.fn(),
-      putImageData: jest.fn(),
-      clearRect: jest.fn(),
-      setTransform: jest.fn(),
+
     } as any;
     canvas.getContext = jest.fn().mockReturnValue(ctx);
     canvas.toDataURL = jest.fn().mockReturnValue("data:image/png;base64,TEST");

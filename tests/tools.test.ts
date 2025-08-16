@@ -27,7 +27,7 @@ describe("additional tools", () => {
       closePath: jest.fn(),
       scale: jest.fn(),
       setTransform: jest.fn(),
-      getImageData: jest.fn().mockReturnValue({} as ImageData),
+
       putImageData: jest.fn(),
     };
     canvas.getContext = jest

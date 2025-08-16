@@ -3,12 +3,10 @@ import { Tool } from "./Tool";
 
 
 
-    const x = e.offsetX;
-    const y = e.offsetY;
+    (editor.canvas.parentElement || document.body).appendChild(textarea);
+    textarea.focus();
 
 
-
-    this.blurListener = commit;
     this.keydownListener = (ev: KeyboardEvent) => {
       if (ev.key === "Enter") {
         ev.preventDefault();
@@ -18,12 +16,10 @@ import { Tool } from "./Tool";
         cancel();
       }
     };
-
-    textarea.addEventListener("blur", this.blurListener);
     textarea.addEventListener("keydown", this.keydownListener);
+  }
 
-    }
-    this.cleanup();
+
   }
 
   destroy(): void {
@@ -43,6 +39,5 @@ import { Tool } from "./Tool";
     this.blurListener = null;
     this.keydownListener = null;
   }
-
 }
 

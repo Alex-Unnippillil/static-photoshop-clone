@@ -9,7 +9,7 @@ describe("image operations", () => {
   };
   let handle: EditorHandle;
 
-  beforeEach(() => {
+    beforeEach(() => {
     document.body.innerHTML = `
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
@@ -18,7 +18,6 @@ describe("image operations", () => {
       <input id="imageLoader" type="file" />
       <button id="save"></button>
     `;
-
 
 
     const readSpy = jest.fn().mockImplementation(function (this: MockFileReader) {

@@ -2,14 +2,7 @@ import { Editor } from "../core/Editor";
 import { Tool } from "./Tool";
 
 /**
- * A tool for adding text to the canvas using a temporary textarea overlay.
- */
-export class TextTool implements Tool {
-  textarea: HTMLTextAreaElement | null = null;
-  blurListener: ((this: HTMLTextAreaElement, ev: FocusEvent) => void) | null = null;
-  keydownListener:
-    | ((this: HTMLTextAreaElement, ev: KeyboardEvent) => void)
-    | null = null;
+
 
   onPointerDown(e: PointerEvent, editor: Editor): void {
     this.cleanup();
@@ -18,13 +11,7 @@ export class TextTool implements Tool {
     textarea.style.position = "absolute";
     textarea.style.left = `${e.offsetX}px`;
     textarea.style.top = `${e.offsetY}px`;
-    textarea.style.color = this.hexToRgb(editor.strokeStyle);
-    textarea.style.fontSize = `${editor.lineWidthValue * 4}px`;
-    editor.canvas.parentElement?.appendChild(textarea);
-    textarea.focus();
 
-    const x = e.offsetX;
-    const y = e.offsetY;
 
     const commit = () => {
       if (!this.textarea) return;
@@ -43,7 +30,6 @@ export class TextTool implements Tool {
     };
 
     this.blurListener = commit;
-    textarea.addEventListener("blur", this.blurListener);
 
     this.keydownListener = (ev: KeyboardEvent) => {
       if (ev.key === "Enter") {
@@ -56,11 +42,12 @@ export class TextTool implements Tool {
     };
     textarea.addEventListener("keydown", this.keydownListener);
 
+
     this.textarea = textarea;
   }
 
   onPointerMove(_e: PointerEvent, _editor: Editor): void {
-    // No operation
+    // No-op for text tool
   }
 
   onPointerUp(_e: PointerEvent, _editor: Editor): void {

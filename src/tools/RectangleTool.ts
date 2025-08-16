@@ -9,6 +9,7 @@ export class RectangleTool extends DrawingTool {
   onPointerDown(e: PointerEvent, editor: Editor) {
     this.startX = e.offsetX;
     this.startY = e.offsetY;
+    this.applyStroke(editor.ctx, editor);
     const ctx = editor.ctx;
     this.imageData = ctx.getImageData(0, 0, editor.canvas.width, editor.canvas.height);
   }

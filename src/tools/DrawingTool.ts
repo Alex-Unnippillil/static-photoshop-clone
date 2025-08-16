@@ -6,7 +6,15 @@ import { Tool } from "./Tool";
  * editor's current stroke and fill settings to a rendering context.
  */
 export abstract class DrawingTool implements Tool {
-
+  /**
+   * Apply the current stroke and fill styles from the editor to the canvas
+   * rendering context. Subclasses should call this before performing any
+   * drawing operations.
+   */
+  protected applyStroke(
+    ctx: CanvasRenderingContext2D,
+    editor: Editor,
+  ): void {
     ctx.lineWidth = editor.lineWidthValue;
     ctx.strokeStyle = editor.strokeStyle;
     ctx.fillStyle = editor.fillStyle;

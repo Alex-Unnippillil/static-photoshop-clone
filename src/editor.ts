@@ -6,65 +6,8 @@ import { RectangleTool } from "./tools/RectangleTool";
 import { LineTool } from "./tools/LineTool";
 import { CircleTool } from "./tools/CircleTool";
 import { TextTool } from "./tools/TextTool";
-import { Tool } from "./tools/Tool";
 
-/**
- * Handle returned by {@link initEditor}. Allows consumers (and tests) to
- * interact with the currently active editor, switch layers and tear down all
- * resources when finished.
- */
-export interface EditorHandle {
-  /** The currently active editor instance */
-  editor: Editor;
-  /** All instantiated editors, one per canvas element */
-  editors: Editor[];
-  /**
-   * Activate a different editor/layer by index.
-   *
-   * @param index Index within the {@link editors} array
-   */
-  activateLayer(index: number): void;
-  /**
-   * Remove all event listeners and destroy editor instances. Should be called
-   * when the editor UI is no longer needed.
-   */
-  destroy(): void;
-}
 
-/**
- * Utility for registering event listeners so they can easily be removed on
- * destroy. Returns a function that unregisters the listener.
- */
-function listen<K extends keyof HTMLElementEventMap>(
-  el: HTMLElement | null | undefined,
-  type: K,
-  handler: (ev: HTMLElementEventMap[K]) => void,
-  listeners: Array<() => void>,
-) {
-  if (!el) return;
-  el.addEventListener(type, handler as EventListener);
-  listeners.push(() => el.removeEventListener(type, handler as EventListener));
-}
-
-/**
- * Initialize one or more canvas editors. The function searches the DOM for
- * `<canvas>` elements (optionally filtered by `canvasId`) and wires up
- * toolbar controls, image loading and keyboard shortcuts.  The first canvas is
- * activated by default.
- */
-export function initEditor(canvasId?: string): EditorHandle {
-  // locate canvases to manage
-  let canvases: HTMLCanvasElement[];
-  if (canvasId) {
-    const c = document.getElementById(canvasId) as HTMLCanvasElement | null;
-    canvases = c ? [c] : [];
-  } else {
-    canvases = Array.from(document.querySelectorAll<HTMLCanvasElement>("canvas"));
-  }
-
-  if (canvases.length === 0) {
-    throw new Error("No canvas elements found");
-  }
 
   const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;

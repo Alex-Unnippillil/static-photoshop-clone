@@ -34,6 +34,7 @@ export class Editor {
   setTool(tool: Tool) {
     this.currentTool?.destroy?.();
     this.currentTool = tool;
+    this.canvas.style.cursor = tool.cursor || "crosshair";
   }
 
   private handlePointerDown = (e: PointerEvent) => {

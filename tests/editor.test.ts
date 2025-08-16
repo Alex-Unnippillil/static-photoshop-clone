@@ -26,6 +26,8 @@ describe("editor toolbar controls", () => {
     `;
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
+    (canvas as any).setPointerCapture = jest.fn();
+    (canvas as any).releasePointerCapture = jest.fn();
     const mockImage = {
       data: new Uint8ClampedArray(),
       width: 100,
@@ -49,6 +51,7 @@ describe("editor toolbar controls", () => {
       fillText: jest.fn(),
       setTransform: jest.fn(),
       scale: jest.fn(),
+      globalCompositeOperation: "source-over" as GlobalCompositeOperation,
     };
 
     canvas.getContext = jest
@@ -79,6 +82,7 @@ describe("editor toolbar controls", () => {
     Object.defineProperty(event, "offsetX", { value: x });
     Object.defineProperty(event, "offsetY", { value: y });
     Object.defineProperty(event, "buttons", { value: buttons });
+    Object.defineProperty(event, "pointerId", { value: 1 });
     canvas.dispatchEvent(event);
   }
 
@@ -107,6 +111,16 @@ describe("editor toolbar controls", () => {
     dispatch("pointerdown", 2, 2, 1);
     dispatch("pointermove", 4, 4, 1);
     expect(ctx.clearRect).toHaveBeenCalled();
+  });
+
+  it("resets compositing mode after erasing", () => {
+    (document.getElementById("eraser") as HTMLButtonElement).click();
+    dispatch("pointerdown", 0, 0, 1);
+    expect((canvas.setPointerCapture as jest.Mock)).toHaveBeenCalledWith(1);
+    expect(ctx.globalCompositeOperation).toBe("destination-out");
+    dispatch("pointerup", 0, 0, 0);
+    expect((canvas.releasePointerCapture as jest.Mock)).toHaveBeenCalledWith(1);
+    expect(ctx.globalCompositeOperation).toBe("source-over");
   });
 
   it("previews rectangle during pointer move", () => {

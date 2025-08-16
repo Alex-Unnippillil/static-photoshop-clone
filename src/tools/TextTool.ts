@@ -1,24 +1,17 @@
 import { Editor } from "../core/Editor";
 import { Tool } from "./Tool";
 
-/**
- * Tool for placing text on the canvas. When activated, a textarea is placed at
- * the pointer location allowing the user to type. Pressing Enter commits the
- * text to the canvas while Escape cancels the operation.
- */
-export class TextTool implements Tool {
-  private textarea: HTMLTextAreaElement | null = null;
-  private blurListener: (() => void) | null = null;
-  private keydownListener: ((e: KeyboardEvent) => void) | null = null;
-
-  onPointerDown(e: PointerEvent, editor: Editor): void {
-    this.cleanup();
     const textarea = document.createElement("textarea");
+    const x = e.offsetX;
+    const y = e.offsetY;
     textarea.style.position = "absolute";
-    textarea.style.left = `${e.offsetX}px`;
-    textarea.style.top = `${e.offsetY}px`;
-    textarea.style.color = this.hexToRgb(editor.strokeStyle);
-    textarea.style.fontSize = `${editor.lineWidthValue * 4}px`;
+
+
+    const x = e.offsetX;
+    const y = e.offsetY;
+
+    const x = e.offsetX;
+    const y = e.offsetY;
 
     const x = e.offsetX;
     const y = e.offsetY;
@@ -30,14 +23,12 @@ export class TextTool implements Tool {
         const ctx = editor.ctx;
         ctx.fillStyle = editor.strokeStyle;
         ctx.font = `${editor.lineWidthValue * 4}px sans-serif`;
-        ctx.fillText(text, x, y);
+
       }
       this.cleanup();
     };
 
-    const cancel = () => {
-      this.cleanup();
-    };
+    const cancel = () => this.cleanup();
 
     this.blurListener = commit;
     this.keydownListener = (ev: KeyboardEvent) => {
@@ -50,18 +41,6 @@ export class TextTool implements Tool {
       }
     };
 
-    textarea.addEventListener("blur", this.blurListener);
-    textarea.addEventListener("keydown", this.keydownListener);
-    document.body.appendChild(textarea);
-    textarea.focus();
-    this.textarea = textarea;
-  }
-
-  onPointerMove(_e: PointerEvent, _editor: Editor): void {
-    // No-op
-  }
-
-  onPointerUp(_e: PointerEvent, _editor: Editor): void {
     if (this.textarea && document.activeElement !== this.textarea) {
       this.cleanup();
     }
@@ -85,14 +64,4 @@ export class TextTool implements Tool {
     this.keydownListener = null;
   }
 
-  // Utility to convert a hex color to rgb() string. Unused internally but kept
-  // for completeness as tests may reference it indirectly.
-  private hexToRgb(hex: string): string {
-    const v = hex.replace("#", "");
-    const r = parseInt(v.substring(0, 2), 16);
-    const g = parseInt(v.substring(2, 4), 16);
-    const b = parseInt(v.substring(4, 6), 16);
-    return `rgb(${r}, ${g}, ${b})`;
-  }
 }
-

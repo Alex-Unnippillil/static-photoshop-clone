@@ -14,6 +14,7 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 - Color picker for stroke selection
 - Adjustable line width
 - Undo/redo support
+- Touch and stylus input for drawing
 
 ### Keyboard Shortcuts
 
@@ -29,6 +30,9 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 
 ## Usage
 
+Draw on the canvas using a mouse, a single finger, or a stylus. Pointer events
+enable touch input, but multi-touch gestures such as pinch-to-zoom or panning
+are handled by the browser and are not yet supported by the app.
 
 ## Installing Dependencies
 

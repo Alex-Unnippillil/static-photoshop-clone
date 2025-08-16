@@ -31,7 +31,6 @@ import { Tool } from "./Tool";
     };
 
     this.blurListener = commit;
-
     this.keydownListener = (ev: KeyboardEvent) => {
       if (ev.key === "Enter") {
         ev.preventDefault();
@@ -44,17 +43,17 @@ import { Tool } from "./Tool";
 
     textarea.addEventListener("blur", this.blurListener);
     textarea.addEventListener("keydown", this.keydownListener);
-    document.body.appendChild(textarea);
-    textarea.focus();
+
 
     this.textarea = textarea;
   }
 
-  onPointerMove(_e: PointerEvent, _editor: Editor): void {
 
   }
 
-  onPointerUp(_e: PointerEvent, _editor: Editor): void {
+  onPointerUp(e: PointerEvent, editor: Editor): void {
+    void e;
+    void editor;
     if (this.textarea && document.activeElement !== this.textarea) {
       this.cleanup();
     }

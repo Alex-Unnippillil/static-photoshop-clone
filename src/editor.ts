@@ -18,7 +18,6 @@ export interface EditorHandle {
 }
 
 
-
   const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
   const fillMode = document.getElementById("fillMode") as HTMLInputElement;
@@ -45,42 +44,41 @@ export interface EditorHandle {
   // Keyboard shortcuts operate on the active editor.
   const shortcuts = new Shortcuts(getActiveEditor);
 
-  // Tool button handlers
-  const pencilBtn = document.getElementById("pencil") as HTMLButtonElement | null;
-  const eraserBtn = document.getElementById("eraser") as HTMLButtonElement | null;
-  const rectBtn = document.getElementById("rectangle") as HTMLButtonElement | null;
-  const lineBtn = document.getElementById("line") as HTMLButtonElement | null;
-  const circleBtn = document.getElementById("circle") as HTMLButtonElement | null;
-  const textBtn = document.getElementById("text") as HTMLButtonElement | null;
+
+  const shortcuts = new Shortcuts(editor);
 
 
-
-  pencilBtn?.addEventListener("click", pencilHandler);
-  eraserBtn?.addEventListener("click", eraserHandler);
-  rectBtn?.addEventListener("click", rectHandler);
-  lineBtn?.addEventListener("click", lineHandler);
-  circleBtn?.addEventListener("click", circleHandler);
-  textBtn?.addEventListener("click", textHandler);
-
-  const undoHandler = () => getActiveEditor().undo();
-  const redoHandler = () => getActiveEditor().redo();
-  undoBtn?.addEventListener("click", undoHandler);
-  redoBtn?.addEventListener("click", redoHandler);
-
-  const layerHandler = (e: Event) => {
-    const target = e.target as HTMLSelectElement;
-    currentLayerIndex = parseInt(target.value, 10) || 0;
-    updateCanvasInteraction();
-  };
-  layerSelect?.addEventListener("change", layerHandler);
-
-  const saveHandler = () => {
-    const url = getActiveEditor().canvas.toDataURL("image/png");
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "canvas.png";
-    a.click();
   };
 
+  const imageHandler = (e: Event) => {
+    const input = e.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        editor.ctx.drawImage(
+          img,
+          0,
+          0,
+          canvas.width,
+          canvas.height,
+        );
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+  imageLoader?.addEventListener("change", imageHandler);
+
+  return {
+    editor,
+    destroy() {
+      shortcuts.destroy();
+      saveBtn?.removeEventListener("click", saveHandler);
+      imageLoader?.removeEventListener("change", imageHandler);
+    },
+  };
 }
 

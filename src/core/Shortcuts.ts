@@ -12,14 +12,15 @@ import { EraserTool } from "../tools/EraserTool";
  */
 export class Shortcuts {
   private readonly handler: (e: KeyboardEvent) => void;
+  private editor: Editor;
 
-  /**
-   * @param getEditor Function returning the currently active editor. This allows
-   *                  shortcuts to always operate on the active layer.
-   */
-  constructor(private readonly getEditor: () => Editor) {
+
     this.handler = (e: KeyboardEvent) => this.onKeyDown(e);
     document.addEventListener("keydown", this.handler);
+  }
+
+  switchEditor(newEditor: Editor) {
+    this.editor = newEditor;
   }
 
   private onKeyDown(e: KeyboardEvent) {

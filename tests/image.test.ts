@@ -15,10 +15,15 @@ describe("image operations", () => {
       <button id="save"></button>
     `;
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
-
-    canvas.getContext = jest
-      .fn()
-      .mockReturnValue(ctx as CanvasRenderingContext2D);
+    (canvas as any).setPointerCapture = jest.fn();
+    (canvas as any).releasePointerCapture = jest.fn();
+    ctx = {
+      drawImage: jest.fn(),
+      setTransform: jest.fn(),
+      scale: jest.fn(),
+      clearRect: jest.fn(),
+    };
+    canvas.getContext = jest.fn().mockReturnValue(ctx as CanvasRenderingContext2D);
     canvas.toDataURL = jest.fn().mockReturnValue("data:img/png;base64,SAVE");
 
     const readSpy = jest.fn().mockImplementation(function (this: MockFileReader) {

@@ -15,6 +15,8 @@ describe("RectangleTool", () => {
     `;
 
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+    (canvas as any).setPointerCapture = jest.fn();
+    (canvas as any).releasePointerCapture = jest.fn();
     const mockImage = {
       data: new Uint8ClampedArray(),
       width: 100,

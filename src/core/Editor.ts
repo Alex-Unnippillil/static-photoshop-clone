@@ -38,6 +38,7 @@ export class Editor {
 
   private handlePointerDown = (e: PointerEvent) => {
     this.saveState();
+    this.canvas.setPointerCapture(e.pointerId);
     this.currentTool?.onPointerDown(e, this);
   };
 
@@ -47,6 +48,7 @@ export class Editor {
 
   private handlePointerUp = (e: PointerEvent) => {
     this.currentTool?.onPointerUp(e, this);
+    this.canvas.releasePointerCapture(e.pointerId);
   };
 
   private adjustForPixelRatio() {

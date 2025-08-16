@@ -43,7 +43,6 @@ export class Editor {
   private handlePointerDown = (e: PointerEvent) => {
     this.canvas.setPointerCapture(e.pointerId);
     this.saveState();
-    this.canvas.setPointerCapture(e.pointerId);
     this.currentTool?.onPointerDown(e, this);
   };
 
@@ -61,7 +60,9 @@ export class Editor {
     const rect = this.canvas.getBoundingClientRect();
     this.canvas.width = rect.width * dpr;
     this.canvas.height = rect.height * dpr;
-
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // Reset any existing transforms
+    this.ctx.scale(1, 1);
   }
 
   private handleResize = () => {

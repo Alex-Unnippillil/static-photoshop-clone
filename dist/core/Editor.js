@@ -45,12 +45,8 @@ export class Editor {
         const rect = this.canvas.getBoundingClientRect();
         this.canvas.width = rect.width * dpr;
         this.canvas.height = rect.height * dpr;
-        if ("setTransform" in this.ctx) {
-            this.ctx.setTransform(1, 0, 0, 1, 0, 0);
-        }
-        if ("scale" in this.ctx) {
-            this.ctx.scale(dpr, dpr);
-        }
+        this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        this.ctx.scale(1, 1);
     }
     saveState() {
         this.undoStack.push(this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height));

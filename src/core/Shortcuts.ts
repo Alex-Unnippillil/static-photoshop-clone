@@ -45,10 +45,7 @@ export class Shortcuts {
         this.editor.setTool(new PencilTool());
         this.activate("pencil");
         break;
-      case "e":
-        this.editor.setTool(new EraserTool());
-        this.activate("eraser");
-        break;
+
       case "r":
         this.editor.setTool(new RectangleTool());
         this.activate("rectangle");
@@ -64,6 +61,7 @@ export class Shortcuts {
       case "t":
         this.editor.setTool(new TextTool());
         this.activate("text");
+
         break;
     }
   }

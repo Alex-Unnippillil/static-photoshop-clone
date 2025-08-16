@@ -1,21 +1,12 @@
 import { Editor } from "../core/Editor";
 import { Tool } from "./Tool";
 
-export class TextTool implements Tool {
-  private textarea: HTMLTextAreaElement | null = null;
-  private blurListener: (() => void) | null = null;
-  private keydownListener: ((ev: KeyboardEvent) => void) | null = null;
 
-  onPointerDown(e: PointerEvent, editor: Editor): void {
-    this.cleanup();
     const textarea = document.createElement("textarea");
+    const x = e.offsetX;
+    const y = e.offsetY;
     textarea.style.position = "absolute";
-    textarea.style.left = `${e.offsetX}px`;
-    textarea.style.top = `${e.offsetY}px`;
-    textarea.style.color = this.hexToRgb(editor.strokeStyle);
-    textarea.style.fontSize = `${editor.lineWidthValue * 4}px`;
-    document.body.appendChild(textarea);
-    textarea.focus();
+
 
     const commit = () => {
       if (!this.textarea) return;
@@ -24,7 +15,7 @@ export class TextTool implements Tool {
         const ctx = editor.ctx;
         ctx.fillStyle = editor.strokeStyle;
         ctx.font = `${editor.lineWidthValue * 4}px sans-serif`;
-        ctx.fillText(text, e.offsetX, e.offsetY);
+
       }
       this.cleanup();
     };
@@ -43,17 +34,15 @@ export class TextTool implements Tool {
         cancel();
       }
     };
+
+    textarea.addEventListener("blur", this.blurListener);
     textarea.addEventListener("keydown", this.keydownListener);
     textarea.addEventListener("blur", this.blurListener);
 
     this.textarea = textarea;
   }
 
-  onPointerMove(): void {
-    // no-op
-  }
 
-  onPointerUp(): void {
     if (this.textarea && document.activeElement !== this.textarea) {
       this.cleanup();
     }

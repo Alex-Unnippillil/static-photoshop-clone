@@ -2,7 +2,11 @@ import { initEditor, EditorHandle } from "../src/editor";
 
 describe("image operations", () => {
   let canvas: HTMLCanvasElement;
-  let ctx: Partial<CanvasRenderingContext2D>;
+  let ctx: Partial<CanvasRenderingContext2D> = {
+    drawImage: jest.fn(),
+    setTransform: jest.fn(),
+    scale: jest.fn(),
+  };
   let handle: EditorHandle;
 
   beforeEach(() => {

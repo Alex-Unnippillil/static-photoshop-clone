@@ -23,7 +23,7 @@ import { Tool } from "./Tool";
         const ctx = editor.ctx;
         ctx.fillStyle = editor.strokeStyle;
         ctx.font = `${editor.lineWidthValue * 4}px sans-serif`;
-        ctx.fillText(text, this.x, this.y);
+
       }
       this.cleanup();
     };
@@ -47,8 +47,6 @@ import { Tool } from "./Tool";
     textarea.addEventListener("blur", this.blurListener);
     textarea.addEventListener("keydown", this.keydownListener);
 
-    document.body.appendChild(textarea);
-    textarea.focus();
 
     this.textarea = textarea;
   }

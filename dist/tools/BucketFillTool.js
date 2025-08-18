@@ -33,14 +33,8 @@ export class BucketFillTool {
         }
         ctx.putImageData(image, 0, 0);
     }
-    onPointerMove(_e, _editor) {
-        void _e;
-        void _editor;
-    }
-    onPointerUp(_e, _editor) {
-        void _e;
-        void _editor;
-    }
+    onPointerMove() { }
+    onPointerUp() { }
     getPixel(image, x, y) {
         const { width, data } = image;
         const idx = (Math.floor(y) * width + Math.floor(x)) * 4;

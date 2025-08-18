@@ -20,12 +20,20 @@ describe("image load and save", () => {
     `;
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
+    const imageData = {
+      data: new Uint8ClampedArray(),
+      width: 100,
+      height: 100,
+    } as ImageData;
     ctx = {
       drawImage: jest.fn(),
       setTransform: jest.fn(),
       scale: jest.fn(),
+      getImageData: jest.fn().mockReturnValue(imageData),
+      putImageData: jest.fn(),
+      clearRect: jest.fn(),
     };
-    canvas.getContext = jest.fn().mockReturnValue(ctx);
+    canvas.getContext = jest.fn().mockReturnValue(ctx as CanvasRenderingContext2D);
     canvas.toDataURL = jest
       .fn()
       .mockReturnValue("data:image/png;base64,SAVE");
@@ -88,6 +96,23 @@ describe("image load and save", () => {
     loader.dispatchEvent(new Event("change"));
     await new Promise((r) => setTimeout(r, 0));
     expect(ctx.drawImage).toHaveBeenCalled();
+  });
+
+  it("adds state to undo stack when loading image", async () => {
+    const file = new File([""], "test.png", { type: "image/png" });
+    const loader = document.getElementById("imageLoader") as HTMLInputElement;
+    Object.defineProperty(loader, "files", {
+      value: [file],
+      configurable: true,
+    });
+    loader.dispatchEvent(new Event("change"));
+    await new Promise((r) => setTimeout(r, 0));
+    expect(handle.editor.canUndo).toBe(true);
+    handle.editor.undo();
+    expect(ctx.putImageData).toHaveBeenCalled();
+    expect(handle.editor.canRedo).toBe(true);
+    handle.editor.redo();
+    expect(ctx.putImageData).toHaveBeenCalledTimes(2);
   });
 
   it("saves the canvas as an image", () => {

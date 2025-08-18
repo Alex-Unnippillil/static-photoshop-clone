@@ -16,7 +16,7 @@ export class LineTool extends DrawingTool {
         0,
         0,
         editor.canvas.width,
-        editor.canvas.height,
+
       );
     } else {
       this.imageData = null;

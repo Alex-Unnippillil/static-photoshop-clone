@@ -5,6 +5,7 @@ import { LineTool } from "../tools/LineTool.js";
 import { CircleTool } from "../tools/CircleTool.js";
 import { TextTool } from "../tools/TextTool.js";
 import { EraserTool } from "../tools/EraserTool.js";
+import { EyedropperTool } from "../tools/EyedropperTool.js";
 
 /**
  * Keyboard shortcuts handler for the editor.
@@ -57,6 +58,9 @@ export class Shortcuts {
         break;
       case "e":
         this.editor.setTool(new EraserTool());
+        break;
+      case "i":
+        this.editor.setTool(new EyedropperTool());
         break;
     }
   }

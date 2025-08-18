@@ -91,6 +91,7 @@ describe("image load and save", () => {
   });
 
   it("saves the canvas as an image", () => {
+
     const save = document.getElementById("save") as HTMLButtonElement;
     save.click();
     expect(canvas.toDataURL).toHaveBeenCalledWith("image/png");

@@ -1,5 +1,6 @@
 import { Editor } from "./core/Editor.js";
 import { Shortcuts } from "./core/Shortcuts.js";
+
 import { PencilTool } from "./tools/PencilTool.js";
 import { EraserTool } from "./tools/EraserTool.js";
 import { RectangleTool } from "./tools/RectangleTool.js";
@@ -7,12 +8,7 @@ import { LineTool } from "./tools/LineTool.js";
 import { CircleTool } from "./tools/CircleTool.js";
 import { TextTool } from "./tools/TextTool.js";
 
-  list: Array<() => void>,
-): void {
-  if (!el) return;
-  el.addEventListener(type, handler);
-  list.push(() => el.removeEventListener(type, handler));
-}
+
 
 export interface EditorHandle {
   editor: Editor;
@@ -20,6 +16,8 @@ export interface EditorHandle {
   activateLayer(index: number): void;
   destroy(): void;
 }
+
+
 
 /**
  * Initialize the editor by wiring up DOM controls and returning an
@@ -35,7 +33,6 @@ export function initEditor(): EditorHandle {
   const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
 
   const listeners: Array<() => void> = [];
-
 
   const updateHistoryButtons = () => {
     if (undoBtn) undoBtn.disabled = !editor?.canUndo;
@@ -71,6 +68,7 @@ export function initEditor(): EditorHandle {
     line: LineTool,
     circle: CircleTool,
     text: TextTool,
+
   };
 
   Object.entries(toolButtons).forEach(([id, ToolCtor]) =>
@@ -143,7 +141,7 @@ export function initEditor(): EditorHandle {
   );
 
   // image loading
-  const imageLoader = document.getElementById("imageLoader") as HTMLInputElement | null;
+
   listen(
     imageLoader,
     "change",
@@ -221,7 +219,6 @@ export function initEditor(): EditorHandle {
   };
 
   updateHistoryButtons();
-
   return handle;
 }
 

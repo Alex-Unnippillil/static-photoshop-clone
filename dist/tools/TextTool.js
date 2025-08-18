@@ -47,8 +47,12 @@ export class TextTool {
         textarea.addEventListener("keydown", this.keydownListener);
         this.textarea = textarea;
     }
-    onPointerMove() { }
-    onPointerUp() { }
+    onPointerMove(_e, _editor) { }
+    onPointerUp(_e, _editor) {
+        if (this.textarea && document.activeElement !== this.textarea) {
+            this.cleanup();
+        }
+    }
     destroy() {
         this.cleanup();
     }

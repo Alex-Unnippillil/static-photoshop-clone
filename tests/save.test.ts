@@ -1,7 +1,5 @@
-import { initEditor } from "../src/editor.js";
-
 describe("save button", () => {
-  it("calls toDataURL on click", () => {
+  it("calls toDataURL on click", async () => {
     document.body.innerHTML = `
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
@@ -27,8 +25,10 @@ describe("save button", () => {
 
     const click = jest.fn();
     const anchor = { href: "", download: "", click } as any;
+
     jest.spyOn(document, "createElement").mockReturnValue(anchor);
 
+    const { initEditor } = await import("../dist/editor.js");
     const handle = initEditor();
 
     (document.getElementById("save") as HTMLButtonElement).click();
@@ -38,7 +38,7 @@ describe("save button", () => {
     handle.destroy();
   });
 
-  it("supports selecting jpeg format", () => {
+  it("supports selecting jpeg format", async () => {
     document.body.innerHTML = `
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
@@ -68,6 +68,7 @@ describe("save button", () => {
     const anchor = { href: "", download: "", click } as any;
     jest.spyOn(document, "createElement").mockReturnValue(anchor);
 
+    const { initEditor } = await import("../dist/editor.js");
     const handle = initEditor();
 
     (document.getElementById("save") as HTMLButtonElement).click();

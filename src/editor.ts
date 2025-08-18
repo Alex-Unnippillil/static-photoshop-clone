@@ -1,24 +1,15 @@
 import { Editor } from "./core/Editor.js";
 import { Shortcuts } from "./core/Shortcuts.js";
+
 import { PencilTool } from "./tools/PencilTool.js";
 import { EraserTool } from "./tools/EraserTool.js";
 import { RectangleTool } from "./tools/RectangleTool.js";
 import { LineTool } from "./tools/LineTool.js";
 import { CircleTool } from "./tools/CircleTool.js";
 import { TextTool } from "./tools/TextTool.js";
-import type { Tool } from "./tools/Tool.js";
 
-/** Utility to listen to events and auto-remove on destroy. */
-function listen<T extends HTMLElement, K extends keyof HTMLElementEventMap>(
-  el: T | null,
-  type: K,
-  handler: (this: T, ev: HTMLElementEventMap[K]) => void,
-  list: Array<() => void>,
-): void {
-  if (!el) return;
-  el.addEventListener(type, handler);
-  list.push(() => el.removeEventListener(type, handler));
-}
+
+import { BucketFillTool } from "./tools/BucketFillTool.js";
 
 export interface EditorHandle {
   editor: Editor;
@@ -27,13 +18,16 @@ export interface EditorHandle {
   destroy(): void;
 }
 
+
+
 /**
  * Initialize the editor by wiring up DOM controls and returning an
  * {@link EditorHandle} that allows tests or callers to tear down the editor.
  */
 export function initEditor(): EditorHandle {
-  const canvases = Array.from(document.querySelectorAll<HTMLCanvasElement>("canvas"));
-
+  const canvases = Array.from(
+    document.querySelectorAll<HTMLCanvasElement>("canvas"),
+  );
   const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
   const fillMode = document.getElementById("fillMode") as HTMLInputElement;
@@ -42,9 +36,6 @@ export function initEditor(): EditorHandle {
   const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
 
   const listeners: Array<() => void> = [];
-
-  // active editor instance
-  let editor: Editor;
 
   const updateHistoryButtons = () => {
     if (undoBtn) undoBtn.disabled = !editor?.canUndo;
@@ -64,7 +55,6 @@ export function initEditor(): EditorHandle {
     }
   });
 
-  // default to first editor
   editor = editors[0];
 
   // default tool
@@ -81,6 +71,7 @@ export function initEditor(): EditorHandle {
     line: LineTool,
     circle: CircleTool,
     text: TextTool,
+
   };
 
   Object.entries(toolButtons).forEach(([id, ToolCtor]) =>
@@ -121,7 +112,8 @@ export function initEditor(): EditorHandle {
       const formatSelect = document.getElementById(
         "formatSelect",
       ) as HTMLSelectElement | null;
-      const format = formatSelect?.value?.toLowerCase() === "jpeg" ? "jpeg" : "png";
+      const format =
+        formatSelect?.value?.toLowerCase() === "jpeg" ? "jpeg" : "png";
       const mime = format === "jpeg" ? "image/jpeg" : "image/png";
       const quality = format === "jpeg" ? 0.9 : undefined;
 
@@ -152,7 +144,7 @@ export function initEditor(): EditorHandle {
   );
 
   // image loading
-  const imageLoader = document.getElementById("imageLoader") as HTMLInputElement | null;
+
   listen(
     imageLoader,
     "change",
@@ -178,7 +170,7 @@ export function initEditor(): EditorHandle {
     listeners,
   );
 
-  // layer opacity sliders
+
   document
     .querySelectorAll<HTMLInputElement>('input[id$="Opacity"]')
     .forEach((input) => {
@@ -228,7 +220,6 @@ export function initEditor(): EditorHandle {
   };
 
   updateHistoryButtons();
-
   return handle;
 }
 

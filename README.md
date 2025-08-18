@@ -33,6 +33,9 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 Draw on the canvas using a mouse, a single finger, or a stylus. Pointer events
 enable touch input, but multi-touch gestures such as pinch-to-zoom or panning
 are handled by the browser and are not yet supported by the app.
+At least one `<canvas>` element with a 2D rendering context must be present in
+the DOM before calling `initEditor()`; initialization will throw an error
+otherwise.
 
 ## Installing Dependencies
 

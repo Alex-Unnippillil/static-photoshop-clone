@@ -10,7 +10,14 @@ export class LineTool extends DrawingTool {
     const ctx = editor.ctx;
     this.startX = e.offsetX;
     this.startY = e.offsetY;
-
+    const ctx = editor.ctx;
+    this.applyStroke(ctx, editor);
+    this.imageData = ctx.getImageData(
+      0,
+      0,
+      editor.canvas.width,
+      editor.canvas.height,
+    );
   }
 
   onPointerMove(e: PointerEvent, editor: Editor): void {

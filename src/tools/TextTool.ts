@@ -2,7 +2,6 @@ import { Editor } from "../core/Editor.js";
 import { Tool } from "./Tool.js";
 
 
-    this.blurListener = commit;
     this.keydownListener = (ev: KeyboardEvent) => {
       if (ev.key === "Enter") {
         ev.preventDefault();
@@ -12,24 +11,15 @@ import { Tool } from "./Tool.js";
         cancel();
       }
     };
+    textarea.addEventListener("keydown", this.keydownListener);
 
-
-  onPointerUp(_e: PointerEvent, _editor: Editor): void {
-    if (this.textarea && document.activeElement !== this.textarea) {
-      this.cleanup();
-    }
   }
-
-  onPointerMove(): void {}
-  onPointerUp(): void {}
 
   destroy(): void {
     this.cleanup();
   }
 
-  /**
-   * Remove textarea overlay and any registered listeners.
-   */
+  /** Remove textarea overlay and any registered listeners. */
   private cleanup(): void {
     if (!this.textarea) return;
     if (this.blurListener) {
@@ -43,5 +33,5 @@ import { Tool } from "./Tool.js";
     this.blurListener = null;
     this.keydownListener = null;
   }
-
+}
 

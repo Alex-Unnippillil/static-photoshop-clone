@@ -9,7 +9,6 @@ import { CircleTool } from "./tools/CircleTool.js";
 import { TextTool } from "./tools/TextTool.js";
 
 
-import { BucketFillTool } from "./tools/BucketFillTool.js";
 
 export interface EditorHandle {
   editor: Editor;
@@ -25,9 +24,7 @@ export interface EditorHandle {
  * {@link EditorHandle} that allows tests or callers to tear down the editor.
  */
 export function initEditor(): EditorHandle {
-  const canvases = Array.from(
-    document.querySelectorAll<HTMLCanvasElement>("canvas"),
-  );
+
   const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
   const fillMode = document.getElementById("fillMode") as HTMLInputElement;
@@ -190,6 +187,8 @@ export function initEditor(): EditorHandle {
 
   // layer selection
   const layerSelect = document.getElementById("layerSelect") as HTMLSelectElement | null;
+  let handle: EditorHandle;
+
   listen(
     layerSelect,
     "change",
@@ -208,7 +207,7 @@ export function initEditor(): EditorHandle {
     updateHistoryButtons();
   }
 
-  const handle: EditorHandle = {
+  handle = {
     editor,
     editors,
     activateLayer,

@@ -10,25 +10,21 @@ describe("toolbar controls", () => {
   let handle: EditorHandle;
   let canvas: HTMLCanvasElement;
   let ctx: Partial<CanvasRenderingContext2D>;
-  let initEditor: () => EditorHandle;
 
-  beforeEach(async () => {
     document.body.innerHTML = `
       <canvas id="canvas"></canvas>
       <canvas id="canvas2"></canvas>
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
       <input id="fillMode" type="checkbox" />
+
       <button id="pencil"></button>
       <button id="eraser"></button>
       <button id="rectangle"></button>
       <button id="line"></button>
       <button id="circle"></button>
       <button id="text"></button>
-      <select id="layerSelect">
-        <option value="0"></option>
-        <option value="1"></option>
-      </select>
+
       <button id="undo"></button>
       <button id="redo"></button>
     `;
@@ -60,8 +56,7 @@ describe("toolbar controls", () => {
       });
     });
 
-    (globalThis as any).canvases = [canvas, canvas2];
-    ({ initEditor } = await import("../src/editor.js"));
+
     handle = initEditor();
   });
 

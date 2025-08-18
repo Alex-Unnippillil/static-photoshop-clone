@@ -1,21 +1,12 @@
 import { Editor } from "../core/Editor";
 import { Tool } from "./Tool";
 
-export class TextTool implements Tool {
-  cursor = "text";
-  private textarea: HTMLTextAreaElement | null = null;
-  private blurListener: ((e: FocusEvent) => void) | null = null;
-  private keydownListener: ((e: KeyboardEvent) => void) | null = null;
-  private startX = 0;
-  private startY = 0;
-
-  onPointerDown(e: PointerEvent, editor: Editor): void {
-    this.cleanup();
 
 
-    this.blurListener = () => commit();
-    textarea.addEventListener("blur", this.blurListener);
 
+
+
+    this.blurListener = commit;
     this.keydownListener = (ev: KeyboardEvent) => {
       if (ev.key === "Enter") {
         ev.preventDefault();
@@ -25,11 +16,17 @@ export class TextTool implements Tool {
         cancel();
       }
     };
+
+    textarea.addEventListener("blur", this.blurListener);
     textarea.addEventListener("keydown", this.keydownListener);
 
 
-    (editor.canvas.parentElement || document.body).appendChild(textarea);
-    textarea.focus();
+  onPointerMove(e: PointerEvent, editor: Editor): void {
+    void e;
+    void editor;
+  }
+
+
   }
 
   onPointerMove(): void {}
@@ -59,6 +56,5 @@ export class TextTool implements Tool {
     const g = parseInt(v.substring(2, 4), 16);
     const b = parseInt(v.substring(4, 6), 16);
     return `rgb(${r}, ${g}, ${b})`;
-    }
-}
+
 

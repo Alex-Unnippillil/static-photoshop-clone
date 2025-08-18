@@ -5,33 +5,42 @@
 export class BucketFillTool {
     onPointerDown(e, editor) {
         const ctx = editor.ctx;
-        const { width, height } = editor.canvas;
-        const image = ctx.getImageData(0, 0, width, height);
-        const targetColor = this.getPixel(image, e.offsetX, e.offsetY);
+        const image = ctx.getImageData(0, 0, editor.canvas.width, editor.canvas.height);
+        const { width, height } = image;
+        const dpr = window.devicePixelRatio || 1;
+        const x = Math.max(0, Math.min(width - 1, Math.floor(e.offsetX * dpr)));
+        const y = Math.max(0, Math.min(height - 1, Math.floor(e.offsetY * dpr)));
+        const targetColor = this.getPixel(image, x, y);
         const fillColor = this.hexToRgb(editor.fillStyle);
         // if target already the fill color, nothing to do
         if (this.colorsMatch(targetColor, fillColor))
             return;
-        const stack = [[e.offsetX | 0, e.offsetY | 0]];
+        const stack = [[x, y]];
         while (stack.length) {
-            const [x, y] = stack.pop();
-            const current = this.getPixel(image, x, y);
+            const [px, py] = stack.pop();
+            const current = this.getPixel(image, px, py);
             if (!this.colorsMatch(current, targetColor))
                 continue;
-            this.setPixel(image, x, y, fillColor);
-            if (x > 0)
-                stack.push([x - 1, y]);
-            if (x < width - 1)
-                stack.push([x + 1, y]);
-            if (y > 0)
-                stack.push([x, y - 1]);
-            if (y < height - 1)
-                stack.push([x, y + 1]);
+            this.setPixel(image, px, py, fillColor);
+            if (px > 0)
+                stack.push([px - 1, py]);
+            if (px < width - 1)
+                stack.push([px + 1, py]);
+            if (py > 0)
+                stack.push([px, py - 1]);
+            if (py < height - 1)
+                stack.push([px, py + 1]);
         }
         ctx.putImageData(image, 0, 0);
     }
-    onPointerMove(_e, _editor) { }
-    onPointerUp(_e, _editor) { }
+    onPointerMove(_e, _editor) {
+        void _e;
+        void _editor;
+    }
+    onPointerUp(_e, _editor) {
+        void _e;
+        void _editor;
+    }
     getPixel(image, x, y) {
         const { width, data } = image;
         const idx = (Math.floor(y) * width + Math.floor(x)) * 4;

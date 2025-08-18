@@ -51,7 +51,7 @@ describe("image operations", () => {
 
   it("saves the canvas as an image", () => {
     const click = jest.fn();
-
+    const anchor = { href: "", download: "", click } as any;
     jest.spyOn(document, "createElement").mockReturnValue(anchor);
     const save = document.getElementById("save") as HTMLButtonElement;
     save.click();

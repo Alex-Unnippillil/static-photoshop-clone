@@ -26,7 +26,7 @@ describe("save button", () => {
     });
 
     const click = jest.fn();
-
+    const anchor = { href: "", download: "", click } as any;
     jest.spyOn(document, "createElement").mockReturnValue(anchor);
 
     const handle = initEditor();

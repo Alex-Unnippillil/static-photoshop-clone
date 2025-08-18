@@ -10,6 +10,13 @@ export class Editor {
   lineWidth: HTMLInputElement;
   fillMode: HTMLInputElement;
   private onChange?: () => void;
+  private scale = 1;
+  private offsetX = 0;
+  private offsetY = 0;
+  private touches = new Map<number, PointerEvent>();
+  private pinchStartDist = 0;
+  private pinchStartScale = 1;
+  private lastCenter: { x: number; y: number } | null = null;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -32,6 +39,8 @@ export class Editor {
     this.canvas.addEventListener("pointerdown", this.handlePointerDown);
     this.canvas.addEventListener("pointermove", this.handlePointerMove);
     this.canvas.addEventListener("pointerup", this.handlePointerUp);
+    this.canvas.addEventListener("pointercancel", this.handlePointerUp);
+    this.canvas.addEventListener("wheel", this.handleWheel, { passive: false });
   }
 
   setTool(tool: Tool) {
@@ -41,6 +50,16 @@ export class Editor {
   }
 
   private handlePointerDown = (e: PointerEvent) => {
+    if (e.pointerType === "touch") {
+      this.touches.set(e.pointerId, e);
+      if (this.touches.size === 2) {
+        const [p1, p2] = Array.from(this.touches.values());
+        this.pinchStartDist = this.distance(p1, p2);
+        this.pinchStartScale = this.scale;
+        this.lastCenter = this.center(p1, p2);
+        return;
+      }
+    }
     // Capture the pointer once before recording canvas state
     this.canvas.setPointerCapture(e.pointerId);
     this.saveState();
@@ -48,10 +67,31 @@ export class Editor {
   };
 
   private handlePointerMove = (e: PointerEvent) => {
+    if (e.pointerType === "touch" && this.touches.size >= 2) {
+      this.touches.set(e.pointerId, e);
+      const [p1, p2] = Array.from(this.touches.values());
+      const newDist = this.distance(p1, p2);
+      const newCenter = this.center(p1, p2);
+      this.scale = this.pinchStartScale * (newDist / this.pinchStartDist || 1);
+      if (this.lastCenter) {
+        this.offsetX += newCenter.x - this.lastCenter.x;
+        this.offsetY += newCenter.y - this.lastCenter.y;
+      }
+      this.lastCenter = newCenter;
+      this.updateTransform();
+      return;
+    }
     this.currentTool?.onPointerMove(e, this);
   };
 
   private handlePointerUp = (e: PointerEvent) => {
+    if (e.pointerType === "touch") {
+      this.touches.delete(e.pointerId);
+      if (this.touches.size >= 1) {
+        return;
+      }
+      this.lastCenter = null;
+    }
     this.currentTool?.onPointerUp(e, this);
     this.canvas.releasePointerCapture(e.pointerId);
   };
@@ -61,9 +101,7 @@ export class Editor {
     const rect = this.canvas.getBoundingClientRect();
     this.canvas.width = rect.width * dpr;
     this.canvas.height = rect.height * dpr;
-    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    // Reset any existing transforms
-    this.ctx.scale(1, 1);
+    this.updateTransform();
   }
 
   private handleResize = () => {
@@ -82,7 +120,52 @@ export class Editor {
     };
   };
 
+  private updateTransform() {
+    const dpr = window.devicePixelRatio || 1;
+    this.ctx.setTransform(
+      this.scale * dpr,
+      0,
+      0,
+      this.scale * dpr,
+      this.offsetX * dpr,
+      this.offsetY * dpr,
+    );
+  }
+
+  getTransformedPoint(e: PointerEvent) {
+    return {
+      x: (e.offsetX - this.offsetX) / this.scale,
+      y: (e.offsetY - this.offsetY) / this.scale,
+    };
+  }
+
+  private distance(a: PointerEvent, b: PointerEvent) {
+    return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+  }
+
+  private center(a: PointerEvent, b: PointerEvent) {
+    return { x: (a.clientX + b.clientX) / 2, y: (a.clientY + b.clientY) / 2 };
+  }
+
+  private handleWheel = (e: WheelEvent) => {
+    e.preventDefault();
+    if (e.ctrlKey) {
+      const { offsetX, offsetY, deltaY } = e;
+      const factor = deltaY < 0 ? 1.1 : 0.9;
+      const x = (offsetX - this.offsetX) / this.scale;
+      const y = (offsetY - this.offsetY) / this.scale;
+      this.scale *= factor;
+      this.offsetX -= x * (factor - 1);
+      this.offsetY -= y * (factor - 1);
+    } else {
+      this.offsetX -= e.deltaX;
+      this.offsetY -= e.deltaY;
+    }
+    this.updateTransform();
+  };
+
   saveState() {
+    if (typeof this.ctx.getImageData !== "function") return;
     this.undoStack.push(
       this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height),
     );
@@ -144,5 +227,7 @@ export class Editor {
     this.canvas.removeEventListener("pointerdown", this.handlePointerDown);
     this.canvas.removeEventListener("pointermove", this.handlePointerMove);
     this.canvas.removeEventListener("pointerup", this.handlePointerUp);
+    this.canvas.removeEventListener("pointercancel", this.handlePointerUp);
+    this.canvas.removeEventListener("wheel", this.handleWheel);
   }
 }

@@ -29,8 +29,13 @@ describe("additional tools", () => {
       closePath: jest.fn(),
       scale: jest.fn(),
       setTransform: jest.fn(),
-
+      getImageData: jest.fn(() => ({
+        data: new Uint8ClampedArray(),
+        width: 1,
+        height: 1,
+      })),
       putImageData: jest.fn(),
+      clearRect: jest.fn(),
     };
     canvas.getContext = jest
       .fn()

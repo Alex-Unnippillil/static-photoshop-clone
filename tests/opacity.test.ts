@@ -37,6 +37,9 @@ describe("layer opacity", () => {
       y: 0,
       toJSON: () => {},
     });
+    const canvas2 = document.getElementById("layer2") as HTMLCanvasElement;
+    canvas2.getContext = jest.fn().mockReturnValue({ ...ctx });
+    canvas2.getBoundingClientRect = canvas.getBoundingClientRect;
 
     handle = initEditor();
   });
@@ -85,7 +88,7 @@ describe("layer opacity", () => {
 
     expect(tempCtx.drawImage).toHaveBeenCalledTimes(2);
     expect(tempCtxAlpha).toEqual([1, 0.5]);
-    expect(tempCanvas.toDataURL).toHaveBeenCalledWith("image/png");
+    expect(tempCanvas.toDataURL).toHaveBeenCalledWith("image/png", undefined);
 
     createSpy.mockRestore();
   });

@@ -94,7 +94,7 @@ describe("image load and save", () => {
 
     const save = document.getElementById("save") as HTMLButtonElement;
     save.click();
-    expect(canvas.toDataURL).toHaveBeenCalledWith("image/png");
+    expect(canvas.toDataURL).toHaveBeenCalledWith("image/png", undefined);
     expect(anchor.href).toBe("data:image/png;base64,SAVE");
     expect(anchor.download).toBe("canvas.png");
     expect(anchor.click).toHaveBeenCalled();

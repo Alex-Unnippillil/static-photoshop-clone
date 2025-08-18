@@ -86,6 +86,18 @@ describe("editor toolbar controls", () => {
     canvas.dispatchEvent(event);
   }
 
+  function wheel(deltaY: number, deltaX = 0, ctrlKey = false, x = 0, y = 0) {
+    const event = new WheelEvent("wheel", {
+      bubbles: true,
+      deltaY,
+      deltaX,
+      ctrlKey,
+    });
+    Object.defineProperty(event, "offsetX", { value: x });
+    Object.defineProperty(event, "offsetY", { value: y });
+    canvas.dispatchEvent(event);
+  }
+
   it("draws with pencil tool and supports undo/redo", () => {
     (document.getElementById("pencil") as HTMLButtonElement).click();
     dispatch("pointerdown", 0, 0, 1);
@@ -159,5 +171,25 @@ describe("editor toolbar controls", () => {
     );
     expect(ctx.fillText).toHaveBeenCalledWith("hi", 10, 10);
     expect(document.querySelector("textarea")).toBeNull();
+  });
+
+  it("draws correctly after zooming", () => {
+    (document.getElementById("pencil") as HTMLButtonElement).click();
+    wheel(-1, 0, true, 0, 0);
+    dispatch("pointerdown", 11, 11, 1);
+    dispatch("pointermove", 22, 22, 1);
+    dispatch("pointerup", 22, 22, 0);
+    expect(ctx.moveTo).toHaveBeenCalledWith(10, 10);
+    expect(ctx.lineTo).toHaveBeenCalledWith(20, 20);
+  });
+
+  it("draws correctly after panning", () => {
+    (document.getElementById("pencil") as HTMLButtonElement).click();
+    wheel(-20, -10);
+    dispatch("pointerdown", 15, 25, 1);
+    dispatch("pointermove", 20, 30, 1);
+    dispatch("pointerup", 20, 30, 0);
+    expect(ctx.moveTo).toHaveBeenCalledWith(5, 5);
+    expect(ctx.lineTo).toHaveBeenCalledWith(10, 10);
   });
 });

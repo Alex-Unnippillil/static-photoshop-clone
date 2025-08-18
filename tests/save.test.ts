@@ -9,7 +9,8 @@ describe("save button", () => {
     `;
 
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-
+    const ctx = { scale: jest.fn(), setTransform: jest.fn(), getImageData: jest.fn(), putImageData: jest.fn(), clearRect: jest.fn() } as any;
+    canvas.getContext = jest.fn().mockReturnValue(ctx);
     canvas.toDataURL = jest.fn().mockReturnValue("data:image/png;base64,TEST");
     canvas.getBoundingClientRect = () => ({
       width: 100,
@@ -28,11 +29,11 @@ describe("save button", () => {
 
     jest.spyOn(document, "createElement").mockReturnValue(anchor);
 
-    const { initEditor } = await import("../dist/editor.js");
+    const { initEditor } = await import("../src/editor.js");
     const handle = initEditor();
 
     (document.getElementById("save") as HTMLButtonElement).click();
-    expect(canvas.toDataURL).toHaveBeenCalledWith("image/png");
+    expect(canvas.toDataURL).toHaveBeenCalledWith("image/png", undefined);
     expect(click).toHaveBeenCalled();
 
     handle.destroy();
@@ -49,7 +50,7 @@ describe("save button", () => {
     `;
 
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-    const ctx = { scale: jest.fn() } as any;
+    const ctx = { scale: jest.fn(), setTransform: jest.fn(), getImageData: jest.fn(), putImageData: jest.fn(), clearRect: jest.fn() } as any;
     canvas.getContext = jest.fn().mockReturnValue(ctx);
     canvas.toDataURL = jest.fn().mockReturnValue("data:image/jpeg;base64,TEST");
     canvas.getBoundingClientRect = () => ({
@@ -68,7 +69,7 @@ describe("save button", () => {
     const anchor = { href: "", download: "", click } as any;
     jest.spyOn(document, "createElement").mockReturnValue(anchor);
 
-    const { initEditor } = await import("../dist/editor.js");
+    const { initEditor } = await import("../src/editor.js");
     const handle = initEditor();
 
     (document.getElementById("save") as HTMLButtonElement).click();

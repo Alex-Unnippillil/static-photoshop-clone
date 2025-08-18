@@ -10,13 +10,14 @@ export class BucketFillTool implements Tool {
     const ctx = editor.ctx;
     const { width, height } = editor.canvas;
     const image = ctx.getImageData(0, 0, width, height);
-    const targetColor = this.getPixel(image, e.offsetX, e.offsetY);
+    const { x, y } = editor.getTransformedPoint(e);
+    const targetColor = this.getPixel(image, x, y);
     const fillColor = this.hexToRgb(editor.fillStyle);
 
     // if target already the fill color, nothing to do
     if (this.colorsMatch(targetColor, fillColor)) return;
 
-    const stack: Array<[number, number]> = [[e.offsetX | 0, e.offsetY | 0]];
+    const stack: Array<[number, number]> = [[x | 0, y | 0]];
     while (stack.length) {
       const [x, y] = stack.pop()!;
       const current = this.getPixel(image, x, y);
@@ -30,8 +31,8 @@ export class BucketFillTool implements Tool {
     ctx.putImageData(image, 0, 0);
   }
 
-  onPointerMove(_e: PointerEvent, _editor: Editor): void {}
-  onPointerUp(_e: PointerEvent, _editor: Editor): void {}
+  onPointerMove(): void {}
+  onPointerUp(): void {}
 
   private getPixel(image: ImageData, x: number, y: number): [number, number, number, number] {
     const { width, data } = image;

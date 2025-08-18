@@ -7,8 +7,18 @@ import { RectangleTool } from "./tools/RectangleTool.js";
 import { LineTool } from "./tools/LineTool.js";
 import { CircleTool } from "./tools/CircleTool.js";
 import { TextTool } from "./tools/TextTool.js";
+import { BucketFillTool } from "./tools/BucketFillTool.js";
 
-
+function listen(
+  target: EventTarget | null,
+  type: string,
+  handler: EventListenerOrEventListenerObject,
+  store: Array<() => void>,
+) {
+  if (!target) return;
+  target.addEventListener(type, handler);
+  store.push(() => target.removeEventListener(type, handler));
+}
 
 export interface EditorHandle {
   editor: Editor;
@@ -29,10 +39,14 @@ export function initEditor(): EditorHandle {
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
   const fillMode = document.getElementById("fillMode") as HTMLInputElement;
 
+  const canvases = document.querySelectorAll<HTMLCanvasElement>("canvas");
+
   const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
   const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
+  const imageLoader = document.getElementById("imageLoader") as HTMLInputElement | null;
 
   const listeners: Array<() => void> = [];
+  let editor: Editor;
 
   const updateHistoryButtons = () => {
     if (undoBtn) undoBtn.disabled = !editor?.canUndo;
@@ -68,6 +82,7 @@ export function initEditor(): EditorHandle {
     line: LineTool,
     circle: CircleTool,
     text: TextTool,
+    bucket: BucketFillTool,
 
   };
 
@@ -187,7 +202,6 @@ export function initEditor(): EditorHandle {
 
   // layer selection
   const layerSelect = document.getElementById("layerSelect") as HTMLSelectElement | null;
-  let handle: EditorHandle;
 
   listen(
     layerSelect,
@@ -207,7 +221,7 @@ export function initEditor(): EditorHandle {
     updateHistoryButtons();
   }
 
-  handle = {
+  const handle: EditorHandle = {
     editor,
     editors,
     activateLayer,

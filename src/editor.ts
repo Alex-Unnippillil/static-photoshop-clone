@@ -1,5 +1,7 @@
 
 
+import { BucketFillTool } from "./tools/BucketFillTool.js";
+
 export interface EditorHandle {
   editor: Editor;
   editors: Editor[];
@@ -47,6 +49,7 @@ export interface EditorHandle {
     line: LineTool,
     circle: CircleTool,
     text: TextTool,
+    bucket: BucketFillTool,
   };
 
   Object.entries(toolButtons).forEach(([id, ToolCtor]) =>

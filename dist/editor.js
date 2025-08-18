@@ -6,6 +6,7 @@ import { RectangleTool } from "./tools/RectangleTool.js";
 import { LineTool } from "./tools/LineTool.js";
 import { CircleTool } from "./tools/CircleTool.js";
 import { TextTool } from "./tools/TextTool.js";
+import { BucketFillTool } from "./tools/BucketFillTool.js";
 /** Utility to listen to events and auto-remove on destroy. */
 function listen(el, type, handler, list) {
     if (!el)
@@ -58,6 +59,7 @@ export function initEditor() {
         line: LineTool,
         circle: CircleTool,
         text: TextTool,
+        bucket: BucketFillTool,
     };
     Object.entries(toolButtons).forEach(([id, ToolCtor]) => listen(document.getElementById(id), "click", () => editor.setTool(new ToolCtor()), listeners));
     listen(undoBtn, "click", () => {

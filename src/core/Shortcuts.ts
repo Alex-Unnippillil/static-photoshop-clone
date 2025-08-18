@@ -26,6 +26,7 @@ export class Shortcuts {
   }
 
   private onKeyDown(e: KeyboardEvent) {
+
     if (e.ctrlKey || e.metaKey) {
       if (e.key.toLowerCase() === "z") {
         if (e.shiftKey) {
@@ -53,9 +54,7 @@ export class Shortcuts {
         break;
       case "t":
         this.editor.setTool(new TextTool());
-        break;
-      case "e":
-        this.editor.setTool(new EraserTool());
+
         break;
     }
   }

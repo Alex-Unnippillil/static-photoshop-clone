@@ -25,9 +25,10 @@ export function initEditor() {
     const fillMode = document.getElementById("fillMode");
     const undoBtn = document.getElementById("undo");
     const redoBtn = document.getElementById("redo");
+    const layerSelect = document.getElementById("layerSelect");
+    const imageLoader = document.getElementById("imageLoader");
     const listeners = [];
-    // helper to update undo/redo button states for current editor
-    let editor; // will be set after editors are created
+    let editor;
     const updateHistoryButtons = () => {
         if (undoBtn)
             undoBtn.disabled = !editor?.canUndo;
@@ -45,8 +46,16 @@ export function initEditor() {
             /* skip canvases without 2D context */
         }
     });
-    // active editor defaults to the first successfully created editor
     editor = editors[0];
+    if (layerSelect) {
+        canvases.forEach((_, i) => {
+            const option = document.createElement("option");
+            option.value = String(i);
+            option.textContent = `Layer ${i + 1}`;
+            layerSelect.appendChild(option);
+        });
+        layerSelect.value = "0";
+    }
     // default tool
     editor.setTool(new PencilTool());
     // keyboard shortcuts
@@ -101,7 +110,6 @@ export function initEditor() {
         a.click();
     }, listeners);
     // image loading
-    const imageLoader = document.getElementById("imageLoader");
     listen(imageLoader, "change", (e) => {
         const file = e.target.files?.[0];
         if (!file)
@@ -116,7 +124,6 @@ export function initEditor() {
         };
         reader.readAsDataURL(file);
     }, listeners);
-    // layer opacity sliders: inputs ending with "Opacity" adjust corresponding canvas
     document
         .querySelectorAll('input[id$="Opacity"]')
         .forEach((input) => {
@@ -130,7 +137,6 @@ export function initEditor() {
         }, listeners);
     });
     // layer selection
-    const layerSelect = document.getElementById("layerSelect");
     listen(layerSelect, "change", () => {
         const idx = parseInt(layerSelect.value, 10);
         activateLayer(idx);

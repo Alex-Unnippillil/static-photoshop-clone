@@ -7,6 +7,20 @@ import { RectangleTool } from "./tools/RectangleTool.js";
 import { LineTool } from "./tools/LineTool.js";
 import { CircleTool } from "./tools/CircleTool.js";
 import { TextTool } from "./tools/TextTool.js";
+import { BucketFillTool } from "./tools/BucketFillTool.js";
+import type { Tool } from "./tools/Tool.js";
+
+/** Utility to listen to events and auto-remove on destroy. */
+function listen(
+  el: EventTarget | null,
+  type: string,
+  handler: EventListenerOrEventListenerObject,
+  list: Array<() => void>,
+): void {
+  if (!el) return;
+  el.addEventListener(type, handler);
+  list.push(() => el.removeEventListener(type, handler));
+}
 
 
 
@@ -24,15 +38,21 @@ export interface EditorHandle {
  * {@link EditorHandle} that allows tests or callers to tear down the editor.
  */
 export function initEditor(): EditorHandle {
-
+  const canvases = Array.from(
+    document.querySelectorAll<HTMLCanvasElement>("canvas"),
+  );
   const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
   const fillMode = document.getElementById("fillMode") as HTMLInputElement;
 
   const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
   const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
+  const layerSelect = document.getElementById("layerSelect") as HTMLSelectElement | null;
+  const imageLoader = document.getElementById("imageLoader") as HTMLInputElement | null;
 
-  const listeners: Array<() => void> = [];
+    const listeners: Array<() => void> = [];
+
+    let editor: Editor;
 
   const updateHistoryButtons = () => {
     if (undoBtn) undoBtn.disabled = !editor?.canUndo;
@@ -54,6 +74,16 @@ export function initEditor(): EditorHandle {
 
   editor = editors[0];
 
+  if (layerSelect) {
+    canvases.forEach((_, i) => {
+      const option = document.createElement("option");
+      option.value = String(i);
+      option.textContent = `Layer ${i + 1}`;
+      layerSelect.appendChild(option);
+    });
+    layerSelect.value = "0";
+  }
+
   // default tool
   editor.setTool(new PencilTool());
 
@@ -68,7 +98,7 @@ export function initEditor(): EditorHandle {
     line: LineTool,
     circle: CircleTool,
     text: TextTool,
-
+    bucket: BucketFillTool,
   };
 
   Object.entries(toolButtons).forEach(([id, ToolCtor]) =>
@@ -185,19 +215,16 @@ export function initEditor(): EditorHandle {
       );
     });
 
-  // layer selection
-  const layerSelect = document.getElementById("layerSelect") as HTMLSelectElement | null;
-  let handle: EditorHandle;
-
-  listen(
-    layerSelect,
-    "change",
-    () => {
-      const idx = parseInt(layerSelect!.value, 10);
-      activateLayer(idx);
-    },
-    listeners,
-  );
+    // layer selection
+    listen(
+      layerSelect,
+      "change",
+      () => {
+        const idx = parseInt(layerSelect!.value, 10);
+        activateLayer(idx);
+      },
+      listeners,
+    );
 
   function activateLayer(index: number) {
     if (index < 0 || index >= editors.length) return;
@@ -207,18 +234,18 @@ export function initEditor(): EditorHandle {
     updateHistoryButtons();
   }
 
-  handle = {
-    editor,
-    editors,
-    activateLayer,
-    destroy() {
-      listeners.forEach((fn) => fn());
-      shortcuts.destroy();
-      editors.forEach((e) => e.destroy());
-    },
-  };
+    const handle: EditorHandle = {
+      editor,
+      editors,
+      activateLayer,
+      destroy() {
+        listeners.forEach((fn) => fn());
+        shortcuts.destroy();
+        editors.forEach((e) => e.destroy());
+      },
+    };
 
-  updateHistoryButtons();
-  return handle;
-}
+    updateHistoryButtons();
+    return handle;
+  }
 

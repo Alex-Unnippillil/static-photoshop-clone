@@ -1,6 +1,6 @@
-import { Editor } from "../src/core/Editor";
-import { RectangleTool } from "../src/tools/RectangleTool";
-import { DrawingTool } from "../src/tools/DrawingTool";
+import { Editor } from "../src/core/Editor.js";
+import { RectangleTool } from "../src/tools/RectangleTool.js";
+import { DrawingTool } from "../src/tools/DrawingTool.js";
 
 describe("RectangleTool", () => {
   let editor: Editor;

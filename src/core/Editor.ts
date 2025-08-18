@@ -1,4 +1,4 @@
-import { Tool } from "../tools/Tool";
+import { Tool } from "../tools/Tool.js";
 
 export class Editor {
   canvas: HTMLCanvasElement;

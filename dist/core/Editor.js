@@ -1,9 +1,10 @@
 export class Editor {
-    constructor(canvas, colorPicker, lineWidth, fillMode) {
+    constructor(canvas, colorPicker, lineWidth, fillMode, onChange) {
         this.undoStack = [];
         this.redoStack = [];
         this.currentTool = null;
         this.handlePointerDown = (e) => {
+            this.canvas.setPointerCapture(e.pointerId);
             this.saveState();
             this.currentTool?.onPointerDown(e, this);
         };
@@ -12,6 +13,7 @@ export class Editor {
         };
         this.handlePointerUp = (e) => {
             this.currentTool?.onPointerUp(e, this);
+            this.canvas.releasePointerCapture(e.pointerId);
         };
         this.handleResize = () => {
             const data = this.canvas.toDataURL();
@@ -30,6 +32,7 @@ export class Editor {
         this.colorPicker = colorPicker;
         this.lineWidth = lineWidth;
         this.fillMode = fillMode;
+        this.onChange = onChange;
         this.adjustForPixelRatio();
         window.addEventListener("resize", this.handleResize);
         this.canvas.addEventListener("pointerdown", this.handlePointerDown);
@@ -39,6 +42,7 @@ export class Editor {
     setTool(tool) {
         this.currentTool?.destroy?.();
         this.currentTool = tool;
+        this.canvas.style.cursor = tool.cursor || "crosshair";
     }
     adjustForPixelRatio() {
         const dpr = window.devicePixelRatio || 1;
@@ -46,6 +50,7 @@ export class Editor {
         this.canvas.width = rect.width * dpr;
         this.canvas.height = rect.height * dpr;
         this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        // Reset any existing transforms
         this.ctx.scale(1, 1);
     }
     saveState() {
@@ -53,6 +58,7 @@ export class Editor {
         if (this.undoStack.length > 50)
             this.undoStack.shift();
         this.redoStack.length = 0;
+        this.onChange?.();
     }
     restoreState(stack, opposite) {
         if (!stack.length)
@@ -61,12 +67,19 @@ export class Editor {
         const imageData = stack.pop();
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.putImageData(imageData, 0, 0);
+        this.onChange?.();
     }
     undo() {
         this.restoreState(this.undoStack, this.redoStack);
     }
     redo() {
         this.restoreState(this.redoStack, this.undoStack);
+    }
+    get canUndo() {
+        return this.undoStack.length > 0;
+    }
+    get canRedo() {
+        return this.redoStack.length > 0;
     }
     get strokeStyle() {
         return this.colorPicker.value;

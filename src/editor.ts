@@ -1,13 +1,40 @@
-import { Editor } from "./core/Editor";
-import { Shortcuts } from "./core/Shortcuts";
-import { PencilTool } from "./tools/PencilTool";
-import { EraserTool } from "./tools/EraserTool";
-import { RectangleTool } from "./tools/RectangleTool";
-import { LineTool } from "./tools/LineTool";
-import { CircleTool } from "./tools/CircleTool";
-import { TextTool } from "./tools/TextTool";
+import { Editor } from "./core/Editor.js";
+import { Shortcuts } from "./core/Shortcuts.js";
+import { PencilTool } from "./tools/PencilTool.js";
+import { EraserTool } from "./tools/EraserTool.js";
+import { RectangleTool } from "./tools/RectangleTool.js";
+import { LineTool } from "./tools/LineTool.js";
+import { CircleTool } from "./tools/CircleTool.js";
+import { TextTool } from "./tools/TextTool.js";
+import { Tool } from "./tools/Tool.js";
 
+/** Utility to listen to events and auto-remove on destroy. */
+function listen<E extends Event>(
+  el: HTMLElement | null,
+  type: string,
+  handler: (ev: E) => void,
+  list: Array<() => void>,
+) {
+  if (!el) return;
+  el.addEventListener(type, handler as EventListener);
+  list.push(() => el.removeEventListener(type, handler as EventListener));
+}
 
+export interface EditorHandle {
+  editor: Editor;
+  editors: Editor[];
+  activateLayer: (index: number) => void;
+  destroy: () => void;
+}
+
+/**
+ * Initialize the editor by wiring up DOM controls and returning an
+ * {@link EditorHandle} that allows tests or callers to tear down the editor.
+ */
+export function initEditor(): EditorHandle {
+  const canvases = Array.from(
+    document.querySelectorAll<HTMLCanvasElement>("canvas"),
+  );
 
   const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
@@ -66,15 +93,25 @@ import { TextTool } from "./tools/TextTool";
     ),
   );
 
-  listen(undoBtn, "click", () => {
-    editor.undo();
-    updateHistoryButtons();
-  }, listeners);
+  listen(
+    undoBtn,
+    "click",
+    () => {
+      editor.undo();
+      updateHistoryButtons();
+    },
+    listeners,
+  );
 
-  listen(redoBtn, "click", () => {
-    editor.redo();
-    updateHistoryButtons();
-  }, listeners);
+  listen(
+    redoBtn,
+    "click",
+    () => {
+      editor.redo();
+      updateHistoryButtons();
+    },
+    listeners,
+  );
 
   // saving
   const saveBtn = document.getElementById("save") as HTMLButtonElement | null;
@@ -127,7 +164,13 @@ import { TextTool } from "./tools/TextTool";
       reader.onload = () => {
         const img = new Image();
         img.onload = () => {
-          editor.ctx.drawImage(img, 0, 0, editor.canvas.width, editor.canvas.height);
+          editor.ctx.drawImage(
+            img,
+            0,
+            0,
+            editor.canvas.width,
+            editor.canvas.height,
+          );
         };
         img.src = reader.result as string;
       };
@@ -160,7 +203,7 @@ import { TextTool } from "./tools/TextTool";
     layerSelect,
     "change",
     () => {
-      const idx = parseInt(layerSelect.value, 10);
+      const idx = parseInt(layerSelect!.value, 10);
       activateLayer(idx);
     },
     listeners,

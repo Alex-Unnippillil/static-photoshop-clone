@@ -1,5 +1,5 @@
-import { Editor } from "../core/Editor";
-import { DrawingTool } from "./DrawingTool";
+import { Editor } from "../core/Editor.js";
+import { DrawingTool } from "./DrawingTool.js";
 
 export class LineTool extends DrawingTool {
   private startX = 0;
@@ -10,15 +10,16 @@ export class LineTool extends DrawingTool {
     const ctx = editor.ctx;
     this.startX = e.offsetX;
     this.startY = e.offsetY;
-
+    this.imageData = ctx.getImageData
+      ? ctx.getImageData(0, 0, editor.canvas.width, editor.canvas.height)
+      : null;
   }
 
   onPointerMove(e: PointerEvent, editor: Editor): void {
     const ctx = editor.ctx;
     if (e.buttons !== 1 || !this.imageData) return;
 
-    const ctx = editor.ctx;
-    ctx.putImageData(this.imageData, 0, 0);
+    ctx.putImageData?.(this.imageData, 0, 0);
     this.applyStroke(ctx, editor);
     ctx.beginPath();
     ctx.moveTo(this.startX, this.startY);
@@ -28,7 +29,11 @@ export class LineTool extends DrawingTool {
   }
 
   onPointerUp(e: PointerEvent, editor: Editor): void {
-
+    const ctx = editor.ctx;
+    if (this.imageData) {
+      ctx.putImageData?.(this.imageData, 0, 0);
+    }
+    this.applyStroke(ctx, editor);
     ctx.beginPath();
     ctx.moveTo(this.startX, this.startY);
     ctx.lineTo(e.offsetX, e.offsetY);
@@ -37,4 +42,3 @@ export class LineTool extends DrawingTool {
     this.imageData = null;
   }
 }
-

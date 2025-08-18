@@ -1,8 +1,8 @@
-import { Editor } from "../src/core/Editor";
-import { PencilTool } from "../src/tools/PencilTool";
-import { LineTool } from "../src/tools/LineTool";
-import { CircleTool } from "../src/tools/CircleTool";
-import { TextTool } from "../src/tools/TextTool";
+import { Editor } from "../src/core/Editor.js";
+import { PencilTool } from "../src/tools/PencilTool.js";
+import { LineTool } from "../src/tools/LineTool.js";
+import { CircleTool } from "../src/tools/CircleTool.js";
+import { TextTool } from "../src/tools/TextTool.js";
 
 describe("additional tools", () => {
   let canvas: HTMLCanvasElement;

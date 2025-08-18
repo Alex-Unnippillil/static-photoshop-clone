@@ -1,7 +1,4 @@
-import { initEditor } from "./editor";
+import { initEditor } from "./editor.js";
 
-const handles = [initEditor("layer1"), initEditor("layer2")];
-window.addEventListener("beforeunload", () =>
-  handles.forEach((h) => h.destroy()),
-);
-
+const handle = initEditor();
+window.addEventListener("beforeunload", () => handle.destroy());

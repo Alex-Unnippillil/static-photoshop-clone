@@ -7,11 +7,16 @@ export class LineTool extends DrawingTool {
         this.imageData = null;
     }
     onPointerDown(e, editor) {
-        const ctx = editor.ctx;
         this.startX = e.offsetX;
         this.startY = e.offsetY;
+        const ctx = editor.ctx;
         this.applyStroke(ctx, editor);
-        this.imageData = ctx.getImageData(0, 0, editor.canvas.width, editor.canvas.height);
+        if (typeof ctx.getImageData === "function") {
+            this.imageData = ctx.getImageData(0, 0, editor.canvas.width, editor.canvas.height);
+        }
+        else {
+            this.imageData = null;
+        }
     }
     onPointerMove(e, editor) {
         if (e.buttons !== 1 || !this.imageData)

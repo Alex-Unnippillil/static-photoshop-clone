@@ -2,9 +2,7 @@ import { Editor } from "../core/Editor.js";
 import { Tool } from "./Tool.js";
 
 export class TextTool implements Tool {
-  textarea: HTMLTextAreaElement | null = null;
-  blurListener: ((e: FocusEvent) => void) | null = null;
-  keydownListener: ((e: KeyboardEvent) => void) | null = null;
+
 
   onPointerDown(e: PointerEvent, editor: Editor): void {
     this.cleanup();
@@ -55,9 +53,6 @@ export class TextTool implements Tool {
     this.textarea = textarea;
   }
 
-  onPointerMove(): void {}
-
-  onPointerUp(): void {}
 
   destroy(): void {
     this.cleanup();

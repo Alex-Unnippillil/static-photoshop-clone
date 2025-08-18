@@ -46,7 +46,7 @@ describe("LineTool", () => {
     );
   });
 
-
+  it("renders line preview during drag", () => {
     const tool = new LineTool();
     tool.onPointerDown({ offsetX: 1, offsetY: 2 } as PointerEvent, editor);
     tool.onPointerMove({

@@ -1,6 +1,7 @@
 import { initEditor, EditorHandle } from "../src/editor.js";
 import { RectangleTool } from "../src/tools/RectangleTool.js";
 import { PencilTool } from "../src/tools/PencilTool.js";
+import { EraserTool } from "../src/tools/EraserTool.js";
 import { Shortcuts } from "../src/core/Shortcuts.js";
 import { Editor } from "../src/core/Editor.js";
 
@@ -51,6 +52,8 @@ describe("keyboard shortcuts", () => {
     expect(spy.mock.calls[0][0]).toBeInstanceOf(RectangleTool);
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "p" }));
     expect(spy.mock.calls[1][0]).toBeInstanceOf(PencilTool);
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "e" }));
+    expect(spy.mock.calls[2][0]).toBeInstanceOf(EraserTool);
   });
 
   it("performs undo and redo with shortcuts", () => {

@@ -33,8 +33,15 @@ body {
   outline: 2px solid #007bff;
 }
 
-canvas {
+#canvasContainer {
   flex: 1;
+  position: relative;
+}
+
+#canvasContainer canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
   display: block;
 }
 

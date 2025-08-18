@@ -30,7 +30,7 @@ describe("toolbar controls", () => {
 
       <button id="undo"></button>
       <button id="redo"></button>
-      <select id="layerSelect"><option value="0">0</option><option value="1">1</option></select>
+      <select id="layerSelect"></select>
     `;
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -66,6 +66,11 @@ describe("toolbar controls", () => {
 
   afterEach(() => {
     handle.destroy();
+  });
+
+  it("populates layer select", () => {
+    const select = document.getElementById("layerSelect") as HTMLSelectElement;
+    expect(select.options.length).toBe(2);
   });
 
     it("switches tools when buttons are clicked", () => {

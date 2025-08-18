@@ -1,21 +1,51 @@
+import { Editor } from "./core/Editor.js";
+import { Shortcuts } from "./core/Shortcuts.js";
+import { PencilTool } from "./tools/PencilTool.js";
+import { EraserTool } from "./tools/EraserTool.js";
+import { RectangleTool } from "./tools/RectangleTool.js";
+import { LineTool } from "./tools/LineTool.js";
+import { CircleTool } from "./tools/CircleTool.js";
+import { TextTool } from "./tools/TextTool.js";
+import type { Tool } from "./tools/Tool.js";
 
+/** Utility to listen to events and auto-remove on destroy. */
+function listen(
+  el: EventTarget | null,
+  type: string,
+  handler: (e: Event) => void,
+  list: Array<() => void>,
+): void {
+  if (!el) return;
+  el.addEventListener(type, handler);
+  list.push(() => el.removeEventListener(type, handler));
+}
 
 export interface EditorHandle {
   editor: Editor;
   editors: Editor[];
+  activateLayer: (index: number) => void;
+  destroy(): void;
+}
 
-
+/**
+ * Initialize the editor by wiring up DOM controls and returning an
+ * {@link EditorHandle} that allows tests or callers to tear down the editor.
+ */
+export function initEditor(): EditorHandle {
+  const canvases = Array.from(document.querySelectorAll<HTMLCanvasElement>("canvas"));
   const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
   const fillMode = document.getElementById("fillMode") as HTMLInputElement;
 
   const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
   const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
+  const zoomInBtn = document.getElementById("zoomIn") as HTMLButtonElement | null;
+  const zoomOutBtn = document.getElementById("zoomOut") as HTMLButtonElement | null;
 
   const listeners: Array<() => void> = [];
 
+  // helper to update undo/redo button states for current editor
   let editor: Editor;
-
   const updateHistoryButtons = () => {
     if (undoBtn) undoBtn.disabled = !editor?.canUndo;
     if (redoBtn) redoBtn.disabled = !editor?.canRedo;
@@ -34,12 +64,16 @@ export interface EditorHandle {
     }
   });
 
+  // active editor defaults to the first successfully created editor
   editor = editors[0];
 
+  // default tool
   editor.setTool(new PencilTool());
 
+  // keyboard shortcuts
   const shortcuts = new Shortcuts(editor);
 
+  // map button id to tool constructor
   const toolButtons: Record<string, new () => Tool> = {
     pencil: PencilTool,
     eraser: EraserTool,
@@ -78,14 +112,16 @@ export interface EditorHandle {
     listeners,
   );
 
+  listen(zoomInBtn, "click", () => editor.zoom(1.1), listeners);
+  listen(zoomOutBtn, "click", () => editor.zoom(0.9), listeners);
+
+  // saving
   const saveBtn = document.getElementById("save") as HTMLButtonElement | null;
   listen(
     saveBtn,
     "click",
     () => {
-      const formatSelect = document.getElementById(
-        "formatSelect",
-      ) as HTMLSelectElement | null;
+      const formatSelect = document.getElementById("formatSelect") as HTMLSelectElement | null;
       const format = formatSelect?.value?.toLowerCase() === "jpeg" ? "jpeg" : "png";
       const mime = format === "jpeg" ? "image/jpeg" : "image/png";
       const quality = format === "jpeg" ? 0.9 : undefined;
@@ -107,7 +143,7 @@ export interface EditorHandle {
         exportCanvas = editor.canvas;
       }
 
-      const data = exportCanvas.toDataURL(mime, quality as any);
+      const data = exportCanvas.toDataURL(mime, quality as number | undefined);
       const a = document.createElement("a");
       a.href = data;
       a.download = `canvas.${format === "jpeg" ? "jpg" : "png"}`;
@@ -116,6 +152,7 @@ export interface EditorHandle {
     listeners,
   );
 
+  // image loading
   const imageLoader = document.getElementById("imageLoader") as HTMLInputElement | null;
   listen(
     imageLoader,
@@ -142,6 +179,7 @@ export interface EditorHandle {
     listeners,
   );
 
+  // layer opacity sliders: inputs ending with "Opacity" adjust corresponding canvas
   document
     .querySelectorAll<HTMLInputElement>('input[id$="Opacity"]')
     .forEach((input) => {
@@ -159,6 +197,7 @@ export interface EditorHandle {
       );
     });
 
+  // layer selection
   const layerSelect = document.getElementById("layerSelect") as HTMLSelectElement | null;
   listen(
     layerSelect,

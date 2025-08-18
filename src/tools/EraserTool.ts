@@ -7,27 +7,21 @@ export class EraserTool extends DrawingTool {
     ctx.globalCompositeOperation = "destination-out";
     this.applyStroke(ctx, editor);
     ctx.beginPath();
-    ctx.moveTo(e.offsetX, e.offsetY);
-    ctx.clearRect(
-      e.offsetX - editor.lineWidthValue / 2,
-      e.offsetY - editor.lineWidthValue / 2,
-      editor.lineWidthValue,
-      editor.lineWidthValue,
-    );
+    const { x, y } = editor.getCanvasPoint(e);
+    const size = editor.lineWidthValue / editor.scale;
+    ctx.moveTo(x, y);
+    ctx.clearRect(x - size / 2, y - size / 2, size, size);
   }
 
   onPointerMove(e: PointerEvent, editor: Editor) {
     if (e.buttons !== 1) return;
     const ctx = editor.ctx;
     this.applyStroke(ctx, editor);
-    ctx.lineTo(e.offsetX, e.offsetY);
+    const { x, y } = editor.getCanvasPoint(e);
+    const size = editor.lineWidthValue / editor.scale;
+    ctx.lineTo(x, y);
     ctx.stroke();
-    ctx.clearRect(
-      e.offsetX - editor.lineWidthValue / 2,
-      e.offsetY - editor.lineWidthValue / 2,
-      editor.lineWidthValue,
-      editor.lineWidthValue,
-    );
+    ctx.clearRect(x - size / 2, y - size / 2, size, size);
   }
 
   onPointerUp(_e: PointerEvent, editor: Editor) {

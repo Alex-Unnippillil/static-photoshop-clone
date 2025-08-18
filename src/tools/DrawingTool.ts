@@ -15,7 +15,7 @@ export abstract class DrawingTool implements Tool {
     ctx: CanvasRenderingContext2D,
     editor: Editor,
   ): void {
-    ctx.lineWidth = editor.lineWidthValue;
+    ctx.lineWidth = editor.lineWidthValue / editor.scale;
     ctx.strokeStyle = editor.strokeStyle;
     ctx.fillStyle = editor.fillStyle;
   }

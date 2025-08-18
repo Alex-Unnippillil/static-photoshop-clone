@@ -7,18 +7,22 @@ export class LineTool extends DrawingTool {
   private imageData: ImageData | null = null;
 
   onPointerDown(e: PointerEvent, editor: Editor): void {
-    this.startX = e.offsetX;
-    this.startY = e.offsetY;
-
+    const start = editor.getCanvasPoint(e);
+    this.startX = start.x;
+    this.startY = start.y;
+    this.applyStroke(editor.ctx, editor);
+    this.imageData = editor.getSnapshot();
   }
 
   onPointerMove(e: PointerEvent, editor: Editor): void {
     if (e.buttons !== 1 || !this.imageData) return;
-
+    const ctx = editor.ctx;
+    editor.putSnapshot(this.imageData);
     this.applyStroke(ctx, editor);
+    const { x, y } = editor.getCanvasPoint(e);
     ctx.beginPath();
     ctx.moveTo(this.startX, this.startY);
-    ctx.lineTo(e.offsetX, e.offsetY);
+    ctx.lineTo(x, y);
     ctx.stroke();
     ctx.closePath();
   }
@@ -26,14 +30,16 @@ export class LineTool extends DrawingTool {
   onPointerUp(e: PointerEvent, editor: Editor): void {
     const ctx = editor.ctx;
     if (this.imageData) {
-
+      editor.putSnapshot(this.imageData);
     }
     this.applyStroke(ctx, editor);
+    const { x, y } = editor.getCanvasPoint(e);
     ctx.beginPath();
     ctx.moveTo(this.startX, this.startY);
-    ctx.lineTo(e.offsetX, e.offsetY);
+    ctx.lineTo(x, y);
     ctx.stroke();
     ctx.closePath();
     this.imageData = null;
   }
 }
+

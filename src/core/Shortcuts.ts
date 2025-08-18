@@ -4,7 +4,6 @@ import { RectangleTool } from "../tools/RectangleTool.js";
 import { LineTool } from "../tools/LineTool.js";
 import { CircleTool } from "../tools/CircleTool.js";
 import { TextTool } from "../tools/TextTool.js";
-import { EraserTool } from "../tools/EraserTool.js";
 
 /**
  * Keyboard shortcuts handler for the editor.

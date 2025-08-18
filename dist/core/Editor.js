@@ -17,13 +17,10 @@ export class Editor {
             this.canvas.releasePointerCapture(e.pointerId);
         };
         this.handleResize = () => {
-            const data = this.canvas.toDataURL();
+            const image = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+            this.saveState();
             this.adjustForPixelRatio();
-            const img = new Image();
-            img.src = data;
-            img.onload = () => {
-                this.ctx.drawImage(img, 0, 0, this.canvas.clientWidth, this.canvas.clientHeight);
-            };
+            this.ctx.putImageData(image, 0, 0);
         };
         this.canvas = canvas;
         const ctx = canvas.getContext("2d");

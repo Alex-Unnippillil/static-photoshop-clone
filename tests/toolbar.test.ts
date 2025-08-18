@@ -1,4 +1,4 @@
-import type { EditorHandle } from "../src/editor.js";
+import { initEditor, type EditorHandle } from "../src/editor.js";
 import { PencilTool } from "../src/tools/PencilTool.js";
 import { EraserTool } from "../src/tools/EraserTool.js";
 import { RectangleTool } from "../src/tools/RectangleTool.js";
@@ -11,6 +11,7 @@ describe("toolbar controls", () => {
   let canvas: HTMLCanvasElement;
   let ctx: Partial<CanvasRenderingContext2D>;
 
+  beforeEach(() => {
     document.body.innerHTML = `
       <canvas id="canvas"></canvas>
       <canvas id="canvas2"></canvas>
@@ -27,6 +28,7 @@ describe("toolbar controls", () => {
 
       <button id="undo"></button>
       <button id="redo"></button>
+      <select id="layerSelect"><option value="0">0</option><option value="1">1</option></select>
     `;
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;

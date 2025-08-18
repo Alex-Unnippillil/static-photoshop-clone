@@ -38,6 +38,10 @@ describe("layer opacity", () => {
       toJSON: () => {},
     });
 
+    const layer2 = document.getElementById("layer2") as HTMLCanvasElement;
+    layer2.getContext = jest.fn().mockReturnValue(ctx);
+    layer2.getBoundingClientRect = canvas.getBoundingClientRect;
+
     handle = initEditor();
   });
 

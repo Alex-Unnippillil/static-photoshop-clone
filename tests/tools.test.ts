@@ -29,7 +29,13 @@ describe("additional tools", () => {
       closePath: jest.fn(),
       scale: jest.fn(),
       setTransform: jest.fn(),
-
+      getImageData: jest
+        .fn()
+        .mockReturnValue({
+          data: new Uint8ClampedArray(),
+          width: 1,
+          height: 1,
+        } as ImageData),
       putImageData: jest.fn(),
     };
     canvas.getContext = jest
@@ -81,13 +87,13 @@ describe("additional tools", () => {
     expect(document.querySelector("textarea")).toBeNull();
   });
 
-  it("text tool commits text on blur", () => {
+  it("text tool cancels on blur", () => {
     const tool = new TextTool();
     tool.onPointerDown({ offsetX: 1, offsetY: 2 } as PointerEvent, editor);
     const textarea = document.querySelector("textarea") as HTMLTextAreaElement;
     textarea.value = "Blur";
     textarea.dispatchEvent(new Event("blur"));
-    expect(ctx.fillText).toHaveBeenCalledWith("Blur", 1, 2);
+    expect(ctx.fillText).not.toHaveBeenCalled();
     expect(document.querySelector("textarea")).toBeNull();
   });
 

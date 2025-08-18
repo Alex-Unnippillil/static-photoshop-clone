@@ -15,6 +15,8 @@ describe("TextTool", () => {
       <input id="colorPicker" value="#123456" />
       <input id="lineWidth" value="2" />
       <input id="fillMode" type="checkbox" />
+      <select id="fontFamily"><option value="serif">serif</option></select>
+      <input id="fontSize" value="20" />
     `;
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -68,6 +70,9 @@ describe("TextTool", () => {
       document.getElementById("colorPicker") as HTMLInputElement,
       document.getElementById("lineWidth") as HTMLInputElement,
       document.getElementById("fillMode") as HTMLInputElement,
+      undefined,
+      document.getElementById("fontFamily") as HTMLSelectElement,
+      document.getElementById("fontSize") as HTMLInputElement,
     );
   });
 
@@ -90,7 +95,8 @@ describe("TextTool", () => {
       return `rgb(${r}, ${g}, ${b})`;
     };
     expect(ta.style.color).toBe(hexToRgb(editor.strokeStyle));
-    expect(ta.style.fontSize).toBe(`${editor.lineWidthValue * 4}px`);
+    expect(ta.style.fontSize).toBe(`${editor.fontSizeValue}px`);
+    expect(ta.style.fontFamily).toBe(editor.fontFamilyValue);
   });
 
   it("commits text on Enter", () => {
@@ -99,6 +105,7 @@ describe("TextTool", () => {
     const ta = document.querySelector("textarea") as HTMLTextAreaElement;
     ta.value = "hello";
     ta.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    expect(ctx.font).toBe(`${editor.fontSizeValue}px ${editor.fontFamilyValue}`);
     expect(ctx.fillText).toHaveBeenCalledWith("hello", 5, 6);
     expect(document.querySelector("textarea")).toBeNull();
   });

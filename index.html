@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div class="toolbar">
+    <div id="toolbar">
       <input type="color" id="colorPicker" />
       <input type="number" id="lineWidth" min="1" value="1" />
       <label>
@@ -23,8 +23,11 @@
       <input type="file" id="imageLoader" accept="image/*" />
       <button id="undo" disabled>Undo</button>
       <button id="redo" disabled>Redo</button>
+      <select id="formatSelect">
+        <option value="png">PNG</option>
+        <option value="jpeg">JPEG</option>
+      </select>
       <button id="save">Save</button>
-      <button id="saveJpeg">Save JPEG</button>
     </div>
     <canvas id="canvas" width="800" height="600"></canvas>
     <script type="module" src="dist/index.js"></script>

@@ -28,5 +28,8 @@ export class EyedropperTool implements Tool {
   onPointerUp(_e: PointerEvent, _editor: Editor): void {
     // intentionally unused
   }
+=======
+  // No action needed on pointer up
+  onPointerUp(): void {}
 }
 

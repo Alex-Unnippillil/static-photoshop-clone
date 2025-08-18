@@ -22,8 +22,5 @@ export class EyedropperTool {
         this.onPointerDown(e, editor);
     }
     // No action needed on pointer up
-    onPointerUp(_e, _editor) {
-        void _e;
-        void _editor;
-    }
+    onPointerUp() { }
 }

@@ -30,13 +30,11 @@ export class BucketFillTool implements Tool {
     ctx.putImageData(image, 0, 0);
   }
 
-  onPointerMove(): void {}
-  onPointerUp(): void {}
-=======
   onPointerMove(_e: PointerEvent, _editor: Editor): void {
     void _e;
     void _editor;
   }
+
   onPointerUp(_e: PointerEvent, _editor: Editor): void {
     void _e;
     void _editor;

@@ -44,16 +44,43 @@ export function initEditor(): EditorHandle {
   const fontFamily = document.getElementById("fontFamily") as HTMLSelectElement | null;
   const fontSize = document.getElementById("fontSize") as HTMLInputElement | null;
   const layerSelect = document.getElementById("layerSelect") as HTMLSelectElement | null;
+  const toolbar = document.getElementById("toolbar") || document.body;
 
   if (layerSelect) {
     layerSelect.innerHTML = "";
-    canvases.forEach((c, i) => {
+  }
+
+  canvases.forEach((c, i) => {
+    const canvasId = c.id || `layer${i + 1}`;
+    const name = c.id || `Layer ${i + 1}`;
+
+    if (layerSelect) {
       const opt = document.createElement("option");
       opt.value = String(i);
-      opt.textContent = c.id || `Layer ${i + 1}`;
+      opt.textContent = name;
       layerSelect.appendChild(opt);
-    });
-  }
+    }
+
+    if (!document.getElementById(`${canvasId}Opacity`) && i > 0) {
+      const group = document.createElement("div");
+      group.className = "group";
+
+      const label = document.createElement("label");
+      label.htmlFor = `${canvasId}Opacity`;
+      label.textContent = `${name} Opacity`;
+
+      const input = document.createElement("input");
+      input.id = `${canvasId}Opacity`;
+      input.type = "number";
+      input.min = "0";
+      input.max = "100";
+      input.value = "100";
+
+      group.appendChild(label);
+      group.appendChild(input);
+      toolbar.appendChild(group);
+    }
+  });
 
   const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
   const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
@@ -247,6 +274,7 @@ export function initEditor(): EditorHandle {
     handle.editor = editor;
     shortcuts.switchEditor(editor);
     updateHistoryButtons();
+    if (layerSelect) layerSelect.value = String(index);
   }
 
   const handle: EditorHandle = {

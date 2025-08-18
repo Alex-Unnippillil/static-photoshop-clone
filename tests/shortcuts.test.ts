@@ -3,6 +3,10 @@ import { RectangleTool } from "../src/tools/RectangleTool.js";
 import { PencilTool } from "../src/tools/PencilTool.js";
 import { EraserTool } from "../src/tools/EraserTool.js";
 import { EyedropperTool } from "../src/tools/EyedropperTool.js";
+import { LineTool } from "../src/tools/LineTool.js";
+import { CircleTool } from "../src/tools/CircleTool.js";
+import { TextTool } from "../src/tools/TextTool.js";
+import { BucketFillTool } from "../src/tools/BucketFillTool.js";
 import { Shortcuts } from "../src/core/Shortcuts.js";
 import { Editor } from "../src/core/Editor.js";
 
@@ -49,25 +53,37 @@ describe("keyboard shortcuts", () => {
 
   it("switches tools with letter keys", () => {
     const spy = jest.spyOn(handle.editor, "setTool");
-    document.dispatchEvent(new KeyboardEvent("keydown", { key: "r" }));
-    expect(spy.mock.calls[0][0]).toBeInstanceOf(RectangleTool);
-      document.dispatchEvent(new KeyboardEvent("keydown", { key: "p" }));
-      expect(spy.mock.calls[1][0]).toBeInstanceOf(PencilTool);
-      document.dispatchEvent(new KeyboardEvent("keydown", { key: "e" }));
-      expect(spy.mock.calls[2][0]).toBeInstanceOf(EraserTool);
-      document.dispatchEvent(new KeyboardEvent("keydown", { key: "i" }));
-      expect(spy.mock.calls[3][0]).toBeInstanceOf(EyedropperTool);
+    const cases: [string, any][] = [
+      ["r", RectangleTool],
+      ["p", PencilTool],
+      ["e", EraserTool],
+      ["i", EyedropperTool],
+      ["l", LineTool],
+      ["c", CircleTool],
+      ["t", TextTool],
+      ["b", BucketFillTool],
+    ];
+
+    cases.forEach(([key, ToolClass], index) => {
+      const event = new KeyboardEvent("keydown", { key, cancelable: true });
+      document.dispatchEvent(event);
+      expect(spy.mock.calls[index][0]).toBeInstanceOf(ToolClass);
+      expect(event.defaultPrevented).toBe(true);
     });
+  });
 
   it("performs undo and redo with shortcuts", () => {
     const undo = jest.spyOn(handle.editor, "undo").mockImplementation(() => {});
     const redo = jest.spyOn(handle.editor, "redo").mockImplementation(() => {});
-    document.dispatchEvent(new KeyboardEvent("keydown", { key: "z", ctrlKey: true }));
+    const undoEvent = new KeyboardEvent("keydown", { key: "z", ctrlKey: true, cancelable: true });
+    document.dispatchEvent(undoEvent);
     expect(undo).toHaveBeenCalled();
-    document.dispatchEvent(
-      new KeyboardEvent("keydown", { key: "z", ctrlKey: true, shiftKey: true }),
-    );
+    expect(undoEvent.defaultPrevented).toBe(true);
+
+    const redoEvent = new KeyboardEvent("keydown", { key: "z", ctrlKey: true, shiftKey: true, cancelable: true });
+    document.dispatchEvent(redoEvent);
     expect(redo).toHaveBeenCalled();
+    expect(redoEvent.defaultPrevented).toBe(true);
   });
 
   it("switches active editor when requested", () => {

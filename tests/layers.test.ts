@@ -17,6 +17,15 @@ describe("layer-specific undo/redo", () => {
       <input id="lineWidth" value="2" />
       <input id="fillMode" type="checkbox" />
       <button id="pencil"></button>
+      <button id="eraser"></button>
+      <button id="rectangle"></button>
+      <button id="line"></button>
+      <button id="circle"></button>
+      <button id="text"></button>
+      <button id="bucket"></button>
+      <button id="eyedropper"></button>
+      <select id="formatSelect"><option value="png">PNG</option></select>
+      <button id="save"></button>
       <button id="undo"></button>
       <button id="redo"></button>
     `;

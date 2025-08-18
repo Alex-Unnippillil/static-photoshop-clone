@@ -27,6 +27,10 @@ describe("toolbar controls", () => {
       <button id="circle"></button>
       <button id="text"></button>
       <button id="eyedropper"></button>
+      <button id="bucket"></button>
+
+      <select id="formatSelect"><option value="png">PNG</option></select>
+      <button id="save"></button>
 
       <button id="undo"></button>
       <button id="redo"></button>

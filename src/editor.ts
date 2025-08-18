@@ -15,38 +15,6 @@ export interface EditorHandle {
   destroy(): void;
 }
 
-/**
- * Initialize the editor by wiring up DOM controls and returning an
- * {@link EditorHandle} that allows tests or callers to tear down the editor.
- *
- * @param canvasInputs Optional list of canvas elements or element ids. If not
- * provided, all `<canvas>` elements in the document will be used.
- */
-export function initEditor(
-  ...canvasInputs: Array<string | HTMLCanvasElement>
-): EditorHandle {
-  const canvases: HTMLCanvasElement[] =
-    canvasInputs.length > 0
-      ? canvasInputs
-          .map((c) =>
-            typeof c === "string"
-              ? (document.getElementById(c) as HTMLCanvasElement | null)
-              : c,
-          )
-          .filter((c): c is HTMLCanvasElement => !!c)
-      : Array.from(document.querySelectorAll<HTMLCanvasElement>("canvas"));
-
-  const listen = (
-    el: HTMLElement | Window | Document | null,
-    type: string,
-    handler: EventListenerOrEventListenerObject,
-    bucket: Array<() => void>,
-  ) => {
-    if (!el) return;
-    el.addEventListener(type, handler);
-    bucket.push(() => el.removeEventListener(type, handler));
-  };
-
   const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
   const fillMode = document.getElementById("fillMode") as HTMLInputElement;
@@ -56,8 +24,8 @@ export function initEditor(
 
   const listeners: Array<() => void> = [];
 
-  // helper to update undo/redo button states for current editor
-  let editor: Editor; // will be set after editors are created
+  let editor: Editor;
+
   const updateHistoryButtons = () => {
     if (undoBtn) undoBtn.disabled = !editor?.canUndo;
     if (redoBtn) redoBtn.disabled = !editor?.canRedo;
@@ -76,16 +44,12 @@ export function initEditor(
     }
   });
 
-  // active editor defaults to the first successfully created editor
   editor = editors[0];
 
-  // default tool
   editor.setTool(new PencilTool());
 
-  // keyboard shortcuts
   const shortcuts = new Shortcuts(editor);
 
-  // map button id to tool constructor
   const toolButtons: Record<string, new () => Tool> = {
     pencil: PencilTool,
     eraser: EraserTool,
@@ -124,7 +88,6 @@ export function initEditor(
     listeners,
   );
 
-  // saving
   const saveBtn = document.getElementById("save") as HTMLButtonElement | null;
   listen(
     saveBtn,
@@ -163,7 +126,6 @@ export function initEditor(
     listeners,
   );
 
-  // image loading
   const imageLoader = document.getElementById("imageLoader") as HTMLInputElement | null;
   listen(
     imageLoader,
@@ -184,7 +146,6 @@ export function initEditor(
     listeners,
   );
 
-  // layer opacity sliders: inputs ending with "Opacity" adjust corresponding canvas
   document
     .querySelectorAll<HTMLInputElement>('input[id$="Opacity"]')
     .forEach((input) => {
@@ -202,7 +163,6 @@ export function initEditor(
       );
     });
 
-  // layer selection
   const layerSelect = document.getElementById("layerSelect") as HTMLSelectElement | null;
   listen(
     layerSelect,

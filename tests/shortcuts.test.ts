@@ -13,8 +13,10 @@ describe("keyboard shortcuts", () => {
     document.body.innerHTML = `
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
-      <input id="lineWidth" value="2" />
-      <input id="fillMode" type="checkbox" />
+        <input id="lineWidth" value="2" />
+        <input id="fillMode" type="checkbox" />
+        <select id="fontFamily"><option value="sans-serif"></option></select>
+        <input id="fontSize" value="16" />
     `;
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
     (canvas as any).setPointerCapture = jest.fn();

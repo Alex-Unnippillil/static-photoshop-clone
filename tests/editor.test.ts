@@ -11,8 +11,10 @@ describe("editor toolbar controls", () => {
     document.body.innerHTML = `
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
-      <input id="lineWidth" value="2" />
-      <input id="fillMode" type="checkbox" />
+        <input id="lineWidth" value="2" />
+        <input id="fillMode" type="checkbox" />
+        <select id="fontFamily"><option value="sans-serif"></option></select>
+        <input id="fontSize" value="16" />
       <button id="pencil"></button>
       <button id="eraser"></button>
       <button id="rectangle"></button>

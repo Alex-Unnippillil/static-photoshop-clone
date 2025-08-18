@@ -15,8 +15,10 @@ describe("layer-specific undo/redo", () => {
       <canvas id="c2"></canvas>
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
-      <input id="fillMode" type="checkbox" />
-      <button id="pencil"></button>
+        <input id="fillMode" type="checkbox" />
+        <select id="fontFamily"><option value="sans-serif"></option></select>
+        <input id="fontSize" value="16" />
+        <button id="pencil"></button>
       <button id="undo"></button>
       <button id="redo"></button>
     `;

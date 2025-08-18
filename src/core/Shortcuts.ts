@@ -16,6 +16,8 @@ export class Shortcuts {
   private readonly handler: (e: KeyboardEvent) => void;
   private editor: Editor;
 
+  constructor(editor: Editor) {
+    this.editor = editor;
     this.handler = (e: KeyboardEvent) => this.onKeyDown(e);
     document.addEventListener("keydown", this.handler);
   }

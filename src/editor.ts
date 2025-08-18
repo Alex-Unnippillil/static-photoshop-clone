@@ -15,24 +15,6 @@ export interface EditorHandle {
   destroy(): void;
 }
 
-function listen(
-  target: EventTarget | null,
-  type: string,
-  handler: (e: Event) => void,
-  listeners: Array<() => void>,
-) {
-  if (!target) return;
-  target.addEventListener(type, handler);
-  listeners.push(() => target.removeEventListener(type, handler));
-}
-
-export function initEditor(canvasId?: string): EditorHandle {
-  const canvases: HTMLCanvasElement[] = canvasId
-    ? [document.getElementById(canvasId) as HTMLCanvasElement].filter(
-        (c): c is HTMLCanvasElement => Boolean(c),
-      )
-    : Array.from(document.querySelectorAll<HTMLCanvasElement>("canvas"));
-
   const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
   const fillMode = document.getElementById("fillMode") as HTMLInputElement;

@@ -9,6 +9,9 @@ import { CircleTool } from "./tools/CircleTool.js";
 import { TextTool } from "./tools/TextTool.js";
 
 
+import { BucketFillTool } from "./tools/BucketFillTool.js";
+import { EyedropperTool } from "./tools/EyedropperTool.js";
+import type { Tool } from "./tools/Tool.js";
 
 export interface EditorHandle {
   editor: Editor;
@@ -24,15 +27,31 @@ export interface EditorHandle {
  * {@link EditorHandle} that allows tests or callers to tear down the editor.
  */
 export function initEditor(): EditorHandle {
-
+  const canvases = Array.from(
+    document.querySelectorAll<HTMLCanvasElement>("canvas"),
+  );
   const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
   const fillMode = document.getElementById("fillMode") as HTMLInputElement;
+  const imageLoader = document.getElementById("imageLoader") as HTMLInputElement | null;
+
+  let editor: Editor;
 
   const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
   const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
 
   const listeners: Array<() => void> = [];
+
+  const listen = (
+    el: HTMLElement | null,
+    type: string,
+    handler: EventListenerOrEventListenerObject,
+    list: Array<() => void>,
+  ) => {
+    if (!el) return;
+    el.addEventListener(type, handler);
+    list.push(() => el.removeEventListener(type, handler));
+  };
 
   const updateHistoryButtons = () => {
     if (undoBtn) undoBtn.disabled = !editor?.canUndo;
@@ -68,6 +87,8 @@ export function initEditor(): EditorHandle {
     line: LineTool,
     circle: CircleTool,
     text: TextTool,
+    bucket: BucketFillTool,
+    eyedropper: EyedropperTool,
 
   };
 
@@ -187,8 +208,6 @@ export function initEditor(): EditorHandle {
 
   // layer selection
   const layerSelect = document.getElementById("layerSelect") as HTMLSelectElement | null;
-  let handle: EditorHandle;
-
   listen(
     layerSelect,
     "change",
@@ -207,7 +226,7 @@ export function initEditor(): EditorHandle {
     updateHistoryButtons();
   }
 
-  handle = {
+  const handle: EditorHandle = {
     editor,
     editors,
     activateLayer,

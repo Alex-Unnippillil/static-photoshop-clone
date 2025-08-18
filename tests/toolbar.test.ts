@@ -1,3 +1,4 @@
+import { initEditor } from "../src/editor.js";
 import type { EditorHandle } from "../src/editor.js";
 import { PencilTool } from "../src/tools/PencilTool.js";
 import { EraserTool } from "../src/tools/EraserTool.js";
@@ -5,12 +6,15 @@ import { RectangleTool } from "../src/tools/RectangleTool.js";
 import { LineTool } from "../src/tools/LineTool.js";
 import { CircleTool } from "../src/tools/CircleTool.js";
 import { TextTool } from "../src/tools/TextTool.js";
+import { BucketFillTool } from "../src/tools/BucketFillTool.js";
+import { EyedropperTool } from "../src/tools/EyedropperTool.js";
 
 describe("toolbar controls", () => {
   let handle: EditorHandle;
   let canvas: HTMLCanvasElement;
   let ctx: Partial<CanvasRenderingContext2D>;
 
+  beforeEach(() => {
     document.body.innerHTML = `
       <canvas id="canvas"></canvas>
       <canvas id="canvas2"></canvas>
@@ -23,10 +27,16 @@ describe("toolbar controls", () => {
       <button id="rectangle"></button>
       <button id="line"></button>
       <button id="circle"></button>
+      <button id="bucket"></button>
+      <button id="eyedropper"></button>
       <button id="text"></button>
 
       <button id="undo"></button>
       <button id="redo"></button>
+      <select id="layerSelect">
+        <option value="0"></option>
+        <option value="1"></option>
+      </select>
     `;
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -56,7 +66,6 @@ describe("toolbar controls", () => {
       });
     });
 
-
     handle = initEditor();
   });
 
@@ -81,8 +90,14 @@ describe("toolbar controls", () => {
       (document.getElementById("circle") as HTMLButtonElement).click();
       expect(spy.mock.calls[4][0]).toBeInstanceOf(CircleTool);
 
+      (document.getElementById("bucket") as HTMLButtonElement).click();
+      expect(spy.mock.calls[5][0]).toBeInstanceOf(BucketFillTool);
+
+      (document.getElementById("eyedropper") as HTMLButtonElement).click();
+      expect(spy.mock.calls[6][0]).toBeInstanceOf(EyedropperTool);
+
       (document.getElementById("text") as HTMLButtonElement).click();
-      expect(spy.mock.calls[5][0]).toBeInstanceOf(TextTool);
+      expect(spy.mock.calls[7][0]).toBeInstanceOf(TextTool);
     });
 
     it("routes tool changes to the selected layer", () => {

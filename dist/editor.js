@@ -7,13 +7,7 @@ import { LineTool } from "./tools/LineTool.js";
 import { CircleTool } from "./tools/CircleTool.js";
 import { TextTool } from "./tools/TextTool.js";
 import { BucketFillTool } from "./tools/BucketFillTool.js";
-/** Utility to listen to events and auto-remove on destroy. */
-function listen(el, type, handler, list) {
-    if (!el)
-        return;
-    el.addEventListener(type, handler);
-    list.push(() => el.removeEventListener(type, handler));
-}
+import { EyedropperTool } from "./tools/EyedropperTool.js";
 /**
  * Initialize the editor by wiring up DOM controls and returning an
  * {@link EditorHandle} that allows tests or callers to tear down the editor.
@@ -23,11 +17,17 @@ export function initEditor() {
     const colorPicker = document.getElementById("colorPicker");
     const lineWidth = document.getElementById("lineWidth");
     const fillMode = document.getElementById("fillMode");
+    const imageLoader = document.getElementById("imageLoader");
+    let editor;
     const undoBtn = document.getElementById("undo");
     const redoBtn = document.getElementById("redo");
     const listeners = [];
-    // helper to update undo/redo button states for current editor
-    let editor; // will be set after editors are created
+    const listen = (el, type, handler, list) => {
+        if (!el)
+            return;
+        el.addEventListener(type, handler);
+        list.push(() => el.removeEventListener(type, handler));
+    };
     const updateHistoryButtons = () => {
         if (undoBtn)
             undoBtn.disabled = !editor?.canUndo;
@@ -45,7 +45,6 @@ export function initEditor() {
             /* skip canvases without 2D context */
         }
     });
-    // active editor defaults to the first successfully created editor
     editor = editors[0];
     // default tool
     editor.setTool(new PencilTool());
@@ -60,6 +59,7 @@ export function initEditor() {
         circle: CircleTool,
         text: TextTool,
         bucket: BucketFillTool,
+        eyedropper: EyedropperTool,
     };
     Object.entries(toolButtons).forEach(([id, ToolCtor]) => listen(document.getElementById(id), "click", () => editor.setTool(new ToolCtor()), listeners));
     listen(undoBtn, "click", () => {
@@ -101,7 +101,6 @@ export function initEditor() {
         a.click();
     }, listeners);
     // image loading
-    const imageLoader = document.getElementById("imageLoader");
     listen(imageLoader, "change", (e) => {
         const file = e.target.files?.[0];
         if (!file)
@@ -116,7 +115,6 @@ export function initEditor() {
         };
         reader.readAsDataURL(file);
     }, listeners);
-    // layer opacity sliders: inputs ending with "Opacity" adjust corresponding canvas
     document
         .querySelectorAll('input[id$="Opacity"]')
         .forEach((input) => {

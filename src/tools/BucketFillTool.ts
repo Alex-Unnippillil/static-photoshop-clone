@@ -33,10 +33,10 @@ export class BucketFillTool implements Tool {
   onPointerMove(_e: PointerEvent, _editor: Editor): void {}
   onPointerUp(_e: PointerEvent, _editor: Editor): void {}
 
-  private getPixel(image: ImageData, x: number, y: number): [number, number, number, number] {
+  private getPixel(image: ImageData, x: number, y: number): [number, number, number] {
     const { width, data } = image;
     const idx = (Math.floor(y) * width + Math.floor(x)) * 4;
-    return [data[idx], data[idx + 1], data[idx + 2], data[idx + 3]];
+    return [data[idx], data[idx + 1], data[idx + 2]];
   }
 
   private setPixel(image: ImageData, x: number, y: number, color: [number, number, number]): void {
@@ -48,7 +48,7 @@ export class BucketFillTool implements Tool {
     data[idx + 3] = 255;
   }
 
-  private colorsMatch(a: [number, number, number, number], b: [number, number, number]): boolean {
+  private colorsMatch(a: [number, number, number], b: [number, number, number]): boolean {
     return a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
   }
 

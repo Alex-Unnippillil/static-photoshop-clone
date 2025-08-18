@@ -1,11 +1,15 @@
-import { Tool } from "./Tool.js";
-export class BucketFillTool implements Tool {
+/**
+ * Tool that fills a contiguous region of pixels with the current fill color.
+ * Uses a simple stack-based flood fill on the canvas' pixel data.
+ */
+export class BucketFillTool {
     onPointerDown(e, editor) {
         const ctx = editor.ctx;
         const { width, height } = editor.canvas;
         const image = ctx.getImageData(0, 0, width, height);
         const targetColor = this.getPixel(image, e.offsetX, e.offsetY);
         const fillColor = this.hexToRgb(editor.fillStyle);
+        // if target already the fill color, nothing to do
         if (this.colorsMatch(targetColor, fillColor))
             return;
         const stack = [[e.offsetX | 0, e.offsetY | 0]];
@@ -31,7 +35,7 @@ export class BucketFillTool implements Tool {
     getPixel(image, x, y) {
         const { width, data } = image;
         const idx = (Math.floor(y) * width + Math.floor(x)) * 4;
-        return [data[idx], data[idx + 1], data[idx + 2], data[idx + 3]];
+        return [data[idx], data[idx + 1], data[idx + 2]];
     }
     setPixel(image, x, y, color) {
         const { width, data } = image;

@@ -1,9 +1,9 @@
-import { PencilTool } from "../tools/PencilTool";
-import { RectangleTool } from "../tools/RectangleTool";
-import { LineTool } from "../tools/LineTool";
-import { CircleTool } from "../tools/CircleTool";
-import { TextTool } from "../tools/TextTool";
-import { EraserTool } from "../tools/EraserTool";
+import { PencilTool } from "../tools/PencilTool.js";
+import { RectangleTool } from "../tools/RectangleTool.js";
+import { LineTool } from "../tools/LineTool.js";
+import { CircleTool } from "../tools/CircleTool.js";
+import { TextTool } from "../tools/TextTool.js";
+import { EraserTool } from "../tools/EraserTool.js";
 /**
  * Keyboard shortcuts handler for the editor.
  * Maps specific key presses to tool changes or editor actions.
@@ -13,6 +13,10 @@ export class Shortcuts {
         this.editor = editor;
         this.handler = (e) => this.onKeyDown(e);
         document.addEventListener("keydown", this.handler);
+    }
+    /** Swap the editor that receives subsequent shortcut actions. */
+    switchEditor(newEditor) {
+        this.editor = newEditor;
     }
     onKeyDown(e) {
         if (e.ctrlKey || e.metaKey) {
@@ -48,6 +52,7 @@ export class Shortcuts {
                 break;
         }
     }
+    /** Remove keyboard listeners. */
     destroy() {
         document.removeEventListener("keydown", this.handler);
     }

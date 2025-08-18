@@ -1,8 +1,8 @@
-import { initEditor, EditorHandle } from "../src/editor";
-import { RectangleTool } from "../src/tools/RectangleTool";
-import { PencilTool } from "../src/tools/PencilTool";
-import { Shortcuts } from "../src/core/Shortcuts";
-import { Editor } from "../src/core/Editor";
+import { initEditor, EditorHandle } from "../src/editor.js";
+import { RectangleTool } from "../src/tools/RectangleTool.js";
+import { PencilTool } from "../src/tools/PencilTool.js";
+import { Shortcuts } from "../src/core/Shortcuts.js";
+import { Editor } from "../src/core/Editor.js";
 
 describe("keyboard shortcuts", () => {
   let handle: EditorHandle;

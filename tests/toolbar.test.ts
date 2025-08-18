@@ -1,10 +1,10 @@
-import { initEditor, EditorHandle } from "../src/editor";
-import { PencilTool } from "../src/tools/PencilTool";
-import { EraserTool } from "../src/tools/EraserTool";
-import { RectangleTool } from "../src/tools/RectangleTool";
-import { LineTool } from "../src/tools/LineTool";
-import { CircleTool } from "../src/tools/CircleTool";
-import { TextTool } from "../src/tools/TextTool";
+import { initEditor, EditorHandle } from "../src/editor.js";
+import { PencilTool } from "../src/tools/PencilTool.js";
+import { EraserTool } from "../src/tools/EraserTool.js";
+import { RectangleTool } from "../src/tools/RectangleTool.js";
+import { LineTool } from "../src/tools/LineTool.js";
+import { CircleTool } from "../src/tools/CircleTool.js";
+import { TextTool } from "../src/tools/TextTool.js";
 
 describe("toolbar controls", () => {
   let handle: EditorHandle;

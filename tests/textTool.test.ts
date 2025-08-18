@@ -1,5 +1,5 @@
-import { Editor } from "../src/core/Editor";
-import { TextTool } from "../src/tools/TextTool";
+import { Editor } from "../src/core/Editor.js";
+import { TextTool } from "../src/tools/TextTool.js";
 
 describe("TextTool", () => {
   let editor: Editor;

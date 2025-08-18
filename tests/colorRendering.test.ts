@@ -1,6 +1,6 @@
-import { Editor } from "../src/core/Editor";
-import { PencilTool } from "../src/tools/PencilTool";
-import { RectangleTool } from "../src/tools/RectangleTool";
+import { Editor } from "../src/core/Editor.js";
+import { PencilTool } from "../src/tools/PencilTool.js";
+import { RectangleTool } from "../src/tools/RectangleTool.js";
 
 describe("color rendering", () => {
   let canvas: HTMLCanvasElement;

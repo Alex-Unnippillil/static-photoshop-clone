@@ -1,4 +1,4 @@
-import { initEditor, EditorHandle } from "../src/editor";
+import { initEditor, EditorHandle } from "../src/editor.js";
 
 describe("layer-specific undo/redo", () => {
   let handle: EditorHandle;

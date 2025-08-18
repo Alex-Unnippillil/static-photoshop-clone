@@ -21,6 +21,9 @@ export class EyedropperTool implements Tool {
   }
 
   // No action needed on pointer up
-  onPointerUp(_e: PointerEvent, _editor: Editor): void {}
+  onPointerUp(_e: PointerEvent, _editor: Editor): void {
+    void _e;
+    void _editor;
+  }
 }
 

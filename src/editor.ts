@@ -1,10 +1,39 @@
+import { Editor } from "./core/Editor.js";
+import { Shortcuts } from "./core/Shortcuts.js";
+import { PencilTool } from "./tools/PencilTool.js";
+import { EraserTool } from "./tools/EraserTool.js";
+import { RectangleTool } from "./tools/RectangleTool.js";
+import { LineTool } from "./tools/LineTool.js";
+import { CircleTool } from "./tools/CircleTool.js";
+import { TextTool } from "./tools/TextTool.js";
+import { SprayTool } from "./tools/SprayTool.js";
+import { Tool } from "./tools/Tool.js";
 
+/** Utility to listen to events and auto-remove on destroy. */
+function listen(
+  el: EventTarget | null,
+  type: string,
+  handler: EventListenerOrEventListenerObject,
+  list: Array<() => void>,
+) {
+  if (!el) return;
+  el.addEventListener(type, handler);
+  list.push(() => el.removeEventListener(type, handler));
+}
 
 export interface EditorHandle {
   editor: Editor;
   editors: Editor[];
+  activateLayer(index: number): void;
+  destroy(): void;
+}
 
-
+/**
+ * Initialize the editor by wiring up DOM controls and returning an
+ * {@link EditorHandle} that allows tests or callers to tear down the editor.
+ */
+export function initEditor(): EditorHandle {
+  const canvases = Array.from(document.querySelectorAll("canvas"));
   const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
   const fillMode = document.getElementById("fillMode") as HTMLInputElement;
@@ -47,6 +76,7 @@ export interface EditorHandle {
     line: LineTool,
     circle: CircleTool,
     text: TextTool,
+    spray: SprayTool,
   };
 
   Object.entries(toolButtons).forEach(([id, ToolCtor]) =>

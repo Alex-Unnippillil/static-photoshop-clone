@@ -1,16 +1,6 @@
 import { Editor } from "../core/Editor.js";
 import { Tool } from "./Tool.js";
 
-      }
-    };
-
-    const cancel = () => {
-      this.cleanup();
-
-
-    this.blurListener = () => commit();
-    textarea.addEventListener("blur", this.blurListener);
-
 
     this.blurListener = commit;
     this.keydownListener = (ev: KeyboardEvent) => {
@@ -23,9 +13,11 @@ import { Tool } from "./Tool.js";
       }
     };
 
-    textarea.addEventListener("blur", this.blurListener);
-    textarea.addEventListener("keydown", this.keydownListener);
 
+  onPointerUp(_e: PointerEvent, _editor: Editor): void {
+    if (this.textarea && document.activeElement !== this.textarea) {
+      this.cleanup();
+    }
   }
 
   onPointerMove(): void {}
@@ -51,4 +43,5 @@ import { Tool } from "./Tool.js";
     this.blurListener = null;
     this.keydownListener = null;
   }
+
 

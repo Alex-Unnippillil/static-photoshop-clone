@@ -8,7 +8,6 @@ export class TextTool {
         this.cleanup();
         const textarea = document.createElement("textarea");
         textarea.style.position = "absolute";
-        const rect = editor.canvas.getBoundingClientRect();
         const parent = editor.canvas.parentElement || document.body;
         textarea.style.left = `${e.offsetX}px`;
         textarea.style.top = `${e.offsetY}px`;
@@ -53,6 +52,9 @@ export class TextTool {
     destroy() {
         this.cleanup();
     }
+    /**
+     * Remove textarea overlay and any registered listeners.
+     */
     cleanup() {
         if (!this.textarea)
             return;

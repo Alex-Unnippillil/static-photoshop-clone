@@ -6,13 +6,7 @@ import { RectangleTool } from "./tools/RectangleTool.js";
 import { LineTool } from "./tools/LineTool.js";
 import { CircleTool } from "./tools/CircleTool.js";
 import { TextTool } from "./tools/TextTool.js";
-import { Tool } from "./tools/Tool.js";
 
-/** Utility to listen to events and auto-remove on destroy. */
-function listen(
-  el: HTMLElement | null,
-  type: string,
-  handler: EventListenerOrEventListenerObject,
   list: Array<() => void>,
 ): void {
   if (!el) return;
@@ -32,7 +26,6 @@ export interface EditorHandle {
  * {@link EditorHandle} that allows tests or callers to tear down the editor.
  */
 export function initEditor(): EditorHandle {
-  const canvases = Array.from(document.querySelectorAll("canvas"));
 
   const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
@@ -43,8 +36,7 @@ export function initEditor(): EditorHandle {
 
   const listeners: Array<() => void> = [];
 
-  // helper to update undo/redo button states for current editor
-  let editor: Editor; // will be set after editors are created
+
   const updateHistoryButtons = () => {
     if (undoBtn) undoBtn.disabled = !editor?.canUndo;
     if (redoBtn) redoBtn.disabled = !editor?.canRedo;
@@ -63,7 +55,6 @@ export function initEditor(): EditorHandle {
     }
   });
 
-  // active editor defaults to the first successfully created editor
   editor = editors[0];
 
   // default tool
@@ -142,7 +133,7 @@ export function initEditor(): EditorHandle {
         exportCanvas = editor.canvas;
       }
 
-      const data = exportCanvas.toDataURL(mime, quality as any);
+      const data = exportCanvas.toDataURL(mime, quality);
       const a = document.createElement("a");
       a.href = data;
       a.download = `canvas.${format === "jpeg" ? "jpg" : "png"}`;
@@ -178,7 +169,7 @@ export function initEditor(): EditorHandle {
     listeners,
   );
 
-  // layer opacity sliders: inputs ending with "Opacity" adjust corresponding canvas
+
   document
     .querySelectorAll<HTMLInputElement>('input[id$="Opacity"]')
     .forEach((input) => {

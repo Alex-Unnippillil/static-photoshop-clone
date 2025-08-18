@@ -11,35 +11,52 @@ describe("toolbar controls", () => {
   let canvas: HTMLCanvasElement;
   let ctx: Partial<CanvasRenderingContext2D>;
 
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <canvas id="canvas"></canvas>
+      <canvas id="canvas2"></canvas>
+      <input id="colorPicker" value="#000000" />
+      <input id="lineWidth" value="2" />
+      <input id="fillMode" type="checkbox" />
+      <select id="layerSelect"></select>
+      <button id="pencil"></button>
+      <button id="eraser"></button>
+      <button id="rectangle"></button>
+      <button id="line"></button>
+      <button id="circle"></button>
+      <button id="text"></button>
+      <button id="undo"></button>
+      <button id="redo"></button>
+    `;
 
-      canvas = document.getElementById("canvas") as HTMLCanvasElement;
-      const canvas2 = document.getElementById("canvas2") as HTMLCanvasElement;
-      ctx = {
-        setTransform: jest.fn(),
-        scale: jest.fn(),
-        getImageData: jest.fn(),
-        putImageData: jest.fn(),
-        clearRect: jest.fn(),
-      };
-      const ctx2 = { ...ctx } as Partial<CanvasRenderingContext2D>;
-      canvas.getContext = jest.fn().mockReturnValue(ctx as CanvasRenderingContext2D);
-      canvas2.getContext = jest.fn().mockReturnValue(ctx2 as CanvasRenderingContext2D);
-      [canvas, canvas2].forEach((c) => {
-        c.getBoundingClientRect = () => ({
-          width: 100,
-          height: 100,
-          top: 0,
-          left: 0,
-          bottom: 100,
-          right: 100,
-          x: 0,
-          y: 0,
-          toJSON: () => {},
-        });
+    canvas = document.getElementById("canvas") as HTMLCanvasElement;
+    const canvas2 = document.getElementById("canvas2") as HTMLCanvasElement;
+    ctx = {
+      setTransform: jest.fn(),
+      scale: jest.fn(),
+      getImageData: jest.fn(),
+      putImageData: jest.fn(),
+      clearRect: jest.fn(),
+    };
+    const ctx2 = { ...ctx } as Partial<CanvasRenderingContext2D>;
+    canvas.getContext = jest.fn().mockReturnValue(ctx as CanvasRenderingContext2D);
+    canvas2.getContext = jest.fn().mockReturnValue(ctx2 as CanvasRenderingContext2D);
+    [canvas, canvas2].forEach((c) => {
+      c.getBoundingClientRect = () => ({
+        width: 100,
+        height: 100,
+        top: 0,
+        left: 0,
+        bottom: 100,
+        right: 100,
+        x: 0,
+        y: 0,
+        toJSON: () => {},
       });
-
-      handle = initEditor();
     });
+
+    handle = initEditor();
+  });
 
   afterEach(() => {
     handle.destroy();

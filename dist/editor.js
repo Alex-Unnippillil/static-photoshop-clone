@@ -1,11 +1,11 @@
-import { Editor } from "./core/Editor.js";
-import { Shortcuts } from "./core/Shortcuts.js";
-import { PencilTool } from "./tools/PencilTool.js";
-import { EraserTool } from "./tools/EraserTool.js";
-import { RectangleTool } from "./tools/RectangleTool.js";
-import { LineTool } from "./tools/LineTool.js";
-import { CircleTool } from "./tools/CircleTool.js";
-import { TextTool } from "./tools/TextTool.js";
+import { Editor } from "./core/Editor";
+import { Shortcuts } from "./core/Shortcuts";
+import { PencilTool } from "./tools/PencilTool";
+import { EraserTool } from "./tools/EraserTool";
+import { RectangleTool } from "./tools/RectangleTool";
+import { LineTool } from "./tools/LineTool";
+import { CircleTool } from "./tools/CircleTool";
+import { TextTool } from "./tools/TextTool";
 /** Utility to listen to events and auto-remove on destroy. */
 function listen(el, type, handler, list) {
     if (!el)

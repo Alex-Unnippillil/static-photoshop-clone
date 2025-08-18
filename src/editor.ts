@@ -1,13 +1,13 @@
 import { Editor } from "./core/Editor.js";
 import { Shortcuts } from "./core/Shortcuts.js";
-import { Tool } from "./tools/Tool.js";
+
 import { PencilTool } from "./tools/PencilTool.js";
 import { EraserTool } from "./tools/EraserTool.js";
 import { RectangleTool } from "./tools/RectangleTool.js";
 import { LineTool } from "./tools/LineTool.js";
 import { CircleTool } from "./tools/CircleTool.js";
 import { TextTool } from "./tools/TextTool.js";
-import { EyedropperTool } from "./tools/EyedropperTool.js";
+
 
 export interface EditorHandle {
   editor: Editor;
@@ -16,17 +16,7 @@ export interface EditorHandle {
   destroy(): void;
 }
 
-/** Utility to listen to events and auto-remove on destroy. */
-function listen(
-  el: HTMLElement | null,
-  type: string,
-  handler: EventListenerOrEventListenerObject,
-  list: Array<() => void>,
-): void {
-  if (!el) return;
-  el.addEventListener(type, handler as EventListener);
-  list.push(() => el.removeEventListener(type, handler as EventListener));
-}
+
 
 /**
  * Initialize the editor by wiring up DOM controls and returning an
@@ -45,7 +35,6 @@ export function initEditor(): EditorHandle {
 
   const listeners: Array<() => void> = [];
 
-  let editor: Editor; // will be set after editors are created
   const updateHistoryButtons = () => {
     if (undoBtn) undoBtn.disabled = !editor?.canUndo;
     if (redoBtn) redoBtn.disabled = !editor?.canRedo;
@@ -64,7 +53,6 @@ export function initEditor(): EditorHandle {
     }
   });
 
-  // active editor defaults to the first successfully created editor
   editor = editors[0];
 
   // default tool
@@ -144,7 +132,7 @@ export function initEditor(): EditorHandle {
         exportCanvas = editor.canvas;
       }
 
-      const data = exportCanvas.toDataURL(mime, quality as any);
+      const data = exportCanvas.toDataURL(mime, quality);
       const a = document.createElement("a");
       a.href = data;
       a.download = `canvas.${format === "jpeg" ? "jpg" : "png"}`;
@@ -154,9 +142,7 @@ export function initEditor(): EditorHandle {
   );
 
   // image loading
-  const imageLoader = document.getElementById(
-    "imageLoader",
-  ) as HTMLInputElement | null;
+
   listen(
     imageLoader,
     "change",
@@ -182,7 +168,7 @@ export function initEditor(): EditorHandle {
     listeners,
   );
 
-  // layer opacity sliders: inputs ending with "Opacity" adjust corresponding canvas
+
   document
     .querySelectorAll<HTMLInputElement>('input[id$="Opacity"]')
     .forEach((input) => {

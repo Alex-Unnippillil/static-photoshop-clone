@@ -55,7 +55,9 @@ export class Shortcuts {
         break;
       case "t":
         this.editor.setTool(new TextTool());
-
+        break;
+      case "e":
+        this.editor.setTool(new EraserTool());
         break;
       case "i":
         this.editor.setTool(new EyedropperTool());

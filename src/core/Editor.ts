@@ -9,6 +9,12 @@ export class Editor {
   colorPicker: HTMLInputElement;
   lineWidth: HTMLInputElement;
   fillMode: HTMLInputElement;
+  private selection:
+    | { data: ImageData; x: number; y: number; width: number; height: number }
+    | null = null;
+  private dragImage: ImageData | null = null;
+  private dragOffsetX = 0;
+  private dragOffsetY = 0;
   private onChange?: () => void;
 
   constructor(
@@ -132,6 +138,74 @@ export class Editor {
 
   get fillStyle() {
     return this.colorPicker.value;
+  }
+
+  copySelection(x: number, y: number, w: number, h: number) {
+    if (w < 0) {
+      x += w;
+      w = Math.abs(w);
+    }
+    if (h < 0) {
+      y += h;
+      h = Math.abs(h);
+    }
+    this.selection = {
+      data: this.ctx.getImageData(x, y, w, h),
+      x,
+      y,
+      width: w,
+      height: h,
+    };
+  }
+
+  clearSelection() {
+    if (!this.selection) return;
+    this.ctx.clearRect(
+      this.selection.x,
+      this.selection.y,
+      this.selection.width,
+      this.selection.height,
+    );
+  }
+
+  beginDragSelection(startX: number, startY: number) {
+    if (!this.selection) return;
+    this.dragImage = this.ctx.getImageData(
+      0,
+      0,
+      this.canvas.width,
+      this.canvas.height,
+    );
+    this.dragOffsetX = startX - this.selection.x;
+    this.dragOffsetY = startY - this.selection.y;
+  }
+
+  dragSelection(x: number, y: number) {
+    if (!this.selection || !this.dragImage) return;
+    const newX = x - this.dragOffsetX;
+    const newY = y - this.dragOffsetY;
+    this.ctx.putImageData(this.dragImage, 0, 0);
+    this.ctx.putImageData(this.selection.data, newX, newY);
+    this.selection.x = newX;
+    this.selection.y = newY;
+  }
+
+  endDragSelection() {
+    this.dragImage = null;
+  }
+
+  get hasSelection() {
+    return this.selection !== null;
+  }
+
+  isPointInSelection(x: number, y: number) {
+    if (!this.selection) return false;
+    return (
+      x >= this.selection.x &&
+      x <= this.selection.x + this.selection.width &&
+      y >= this.selection.y &&
+      y <= this.selection.y + this.selection.height
+    );
   }
 
   /**

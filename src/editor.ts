@@ -7,6 +7,7 @@ import { RectangleTool } from "./tools/RectangleTool.js";
 import { LineTool } from "./tools/LineTool.js";
 import { CircleTool } from "./tools/CircleTool.js";
 import { TextTool } from "./tools/TextTool.js";
+import { SelectionTool } from "./tools/SelectionTool.js";
 
 
 
@@ -68,6 +69,7 @@ export function initEditor(): EditorHandle {
     line: LineTool,
     circle: CircleTool,
     text: TextTool,
+    selection: SelectionTool,
 
   };
 

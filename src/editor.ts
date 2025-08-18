@@ -7,6 +7,7 @@ import { LineTool } from "./tools/LineTool.js";
 import { CircleTool } from "./tools/CircleTool.js";
 import { TextTool } from "./tools/TextTool.js";
 import { BucketFillTool } from "./tools/BucketFillTool.js";
+import { EyedropperTool } from "./tools/EyedropperTool.js";
 import type { Tool } from "./tools/Tool.js";
 
 /** Utility to listen to events and auto-remove on destroy. */
@@ -98,6 +99,7 @@ export function initEditor(): EditorHandle {
     circle: CircleTool,
     text: TextTool,
     bucket: BucketFillTool,
+    eyedropper: EyedropperTool,
   };
 
   Object.entries(toolButtons).forEach(([id, ToolCtor]) =>

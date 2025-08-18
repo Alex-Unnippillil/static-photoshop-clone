@@ -37,16 +37,32 @@ At least one `<canvas>` element with a 2D rendering context must be present in
 the DOM before calling `initEditor()`; initialization will throw an error
 otherwise.
 
-The editor also expects these inputs to exist:
+The editor also expects the following elements to exist:
 
 ```html
 <input type="color" id="colorPicker" />
 <input type="number" id="lineWidth" />
 <input type="checkbox" id="fillMode" />
+
+<button id="pencil"></button>
+<button id="eraser"></button>
+<button id="rectangle"></button>
+<button id="line"></button>
+<button id="circle"></button>
+<button id="text"></button>
+<button id="bucket"></button>
+<button id="eyedropper"></button>
+
+<select id="formatSelect"></select>
+<button id="save"></button>
 ```
 
 If any of these elements are missing, `initEditor()` throws an error such as
-`"Missing #colorPicker input"` and halts initialization.
+`"Missing #bucket button"` and halts initialization.
+
+Call `initEditor()` only after the DOM has been populated with these elements;
+the function returns an {@link EditorHandle} with a `destroy` method for
+cleanup.
 
 ## Installing Dependencies
 

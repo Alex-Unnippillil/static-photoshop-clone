@@ -12,7 +12,16 @@ describe("bucket tool integration", () => {
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="1" />
       <input id="fillMode" type="checkbox" />
+      <button id="pencil"></button>
+      <button id="eraser"></button>
+      <button id="rectangle"></button>
+      <button id="line"></button>
+      <button id="circle"></button>
+      <button id="text"></button>
       <button id="bucket">Bucket</button>
+      <button id="eyedropper"></button>
+      <select id="formatSelect"><option value="png">PNG</option></select>
+      <button id="save"></button>
     `;
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
     (canvas as any).setPointerCapture = jest.fn();

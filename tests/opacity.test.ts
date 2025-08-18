@@ -13,6 +13,15 @@ describe("layer opacity", () => {
       <input id="lineWidth" value="2" />
       <input id="fillMode" type="checkbox" />
       <input id="layer2Opacity" value="100" />
+      <button id="pencil"></button>
+      <button id="eraser"></button>
+      <button id="rectangle"></button>
+      <button id="line"></button>
+      <button id="circle"></button>
+      <button id="text"></button>
+      <button id="bucket"></button>
+      <button id="eyedropper"></button>
+      <select id="formatSelect"><option value="png">PNG</option></select>
       <button id="save"></button>
     `;
 

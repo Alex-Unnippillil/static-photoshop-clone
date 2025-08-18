@@ -38,6 +38,27 @@ export function initEditor(): EditorHandle {
   const canvases = Array.from(
     document.querySelectorAll<HTMLCanvasElement>("canvas"),
   );
+
+  const toolConstructors: Record<string, new () => Tool> = {
+    pencil: PencilTool,
+    eraser: EraserTool,
+    rectangle: RectangleTool,
+    line: LineTool,
+    circle: CircleTool,
+    text: TextTool,
+    bucket: BucketFillTool,
+    eyedropper: EyedropperTool,
+  };
+
+  const toolButtons: Record<string, HTMLButtonElement> = {};
+  Object.keys(toolConstructors).forEach((id) => {
+    const btn = document.getElementById(id) as HTMLButtonElement | null;
+    if (!btn) {
+      throw new Error(`Missing #${id} button`);
+    }
+    toolButtons[id] = btn;
+  });
+
   const colorPicker =
     document.getElementById("colorPicker") as HTMLInputElement | null;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement | null;
@@ -46,6 +67,9 @@ export function initEditor(): EditorHandle {
   const fontSize = document.getElementById("fontSize") as HTMLInputElement | null;
   const layerSelect = document.getElementById("layerSelect") as HTMLSelectElement | null;
   const toolbar = document.getElementById("toolbar") || document.body;
+  const saveBtn = document.getElementById("save") as HTMLButtonElement | null;
+  const formatSelect =
+    document.getElementById("formatSelect") as HTMLSelectElement | null;
 
   if (!colorPicker) {
     throw new Error("Missing #colorPicker input");
@@ -55,6 +79,12 @@ export function initEditor(): EditorHandle {
   }
   if (!fillMode) {
     throw new Error("Missing #fillMode input");
+  }
+  if (!saveBtn) {
+    throw new Error("Missing #save button");
+  }
+  if (!formatSelect) {
+    throw new Error("Missing #formatSelect select");
   }
 
   if (layerSelect) {
@@ -141,24 +171,8 @@ export function initEditor(): EditorHandle {
   const shortcuts = new Shortcuts(editor);
 
   // map button id to tool constructor
-  const toolButtons: Record<string, new () => Tool> = {
-    pencil: PencilTool,
-    eraser: EraserTool,
-    rectangle: RectangleTool,
-    line: LineTool,
-    circle: CircleTool,
-    text: TextTool,
-    bucket: BucketFillTool,
-    eyedropper: EyedropperTool,
-  };
-
-  Object.entries(toolButtons).forEach(([id, ToolCtor]) =>
-    listen(
-      document.getElementById(id) as HTMLButtonElement | null,
-      "click",
-      () => editor.setTool(new ToolCtor()),
-      listeners,
-    ),
+  Object.entries(toolConstructors).forEach(([id, ToolCtor]) =>
+    listen(toolButtons[id], "click", () => editor.setTool(new ToolCtor()), listeners),
   );
 
   listen(
@@ -182,16 +196,12 @@ export function initEditor(): EditorHandle {
   );
 
   // saving
-  const saveBtn = document.getElementById("save") as HTMLButtonElement | null;
   listen(
     saveBtn,
     "click",
     () => {
-      const formatSelect = document.getElementById(
-        "formatSelect",
-      ) as HTMLSelectElement | null;
       const format =
-        formatSelect?.value?.toLowerCase() === "jpeg" ? "jpeg" : "png";
+        formatSelect.value.toLowerCase() === "jpeg" ? "jpeg" : "png";
       const mime = format === "jpeg" ? "image/jpeg" : "image/png";
       const quality = format === "jpeg" ? 0.9 : undefined;
 

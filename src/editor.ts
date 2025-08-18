@@ -38,12 +38,23 @@ export function initEditor(): EditorHandle {
   const canvases = Array.from(
     document.querySelectorAll<HTMLCanvasElement>("canvas"),
   );
-  const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
-  const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
-  const fillMode = document.getElementById("fillMode") as HTMLInputElement;
+  const colorPicker =
+    document.getElementById("colorPicker") as HTMLInputElement | null;
+  const lineWidth = document.getElementById("lineWidth") as HTMLInputElement | null;
+  const fillMode = document.getElementById("fillMode") as HTMLInputElement | null;
   const fontFamily = document.getElementById("fontFamily") as HTMLSelectElement | null;
   const fontSize = document.getElementById("fontSize") as HTMLInputElement | null;
   const layerSelect = document.getElementById("layerSelect") as HTMLSelectElement | null;
+
+  if (!colorPicker) {
+    throw new Error("Missing #colorPicker input");
+  }
+  if (!lineWidth) {
+    throw new Error("Missing #lineWidth input");
+  }
+  if (!fillMode) {
+    throw new Error("Missing #fillMode input");
+  }
 
   if (layerSelect) {
     layerSelect.innerHTML = "";
@@ -198,6 +209,7 @@ export function initEditor(): EditorHandle {
       reader.onload = () => {
         const img = new Image();
         img.onload = () => {
+          editor.saveState();
           editor.ctx.drawImage(
             img,
             0,
@@ -205,6 +217,7 @@ export function initEditor(): EditorHandle {
             editor.canvas.width,
             editor.canvas.height,
           );
+          updateHistoryButtons();
         };
         img.src = reader.result as string;
       };

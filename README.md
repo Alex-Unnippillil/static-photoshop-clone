@@ -37,6 +37,17 @@ At least one `<canvas>` element with a 2D rendering context must be present in
 the DOM before calling `initEditor()`; initialization will throw an error
 otherwise.
 
+The editor also expects these inputs to exist:
+
+```html
+<input type="color" id="colorPicker" />
+<input type="number" id="lineWidth" />
+<input type="checkbox" id="fillMode" />
+```
+
+If any of these elements are missing, `initEditor()` throws an error such as
+`"Missing #colorPicker input"` and halts initialization.
+
 ## Installing Dependencies
 
 Install the project dependencies using npm:

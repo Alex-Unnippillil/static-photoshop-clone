@@ -42,7 +42,6 @@ export class BucketFillTool implements Tool {
     void _editor;
   }
 
-
   private getPixel(image: ImageData, x: number, y: number): [number, number, number, number] {
     const { width, data } = image;
     const idx = (Math.floor(y) * width + Math.floor(x)) * 4;

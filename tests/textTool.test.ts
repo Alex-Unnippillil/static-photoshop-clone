@@ -5,6 +5,7 @@ describe("TextTool", () => {
   let editor: Editor;
   let ctx: Partial<CanvasRenderingContext2D>;
   let canvas: HTMLCanvasElement;
+  let mockImage: ImageData;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -21,8 +22,17 @@ describe("TextTool", () => {
     (canvas as any).releasePointerCapture = jest.fn();
     const container = document.getElementById("container") as HTMLElement;
 
+    mockImage = {
+      data: new Uint8ClampedArray(),
+      width: 1,
+      height: 1,
+    } as ImageData;
+
     ctx = {
       fillText: jest.fn(),
+      clearRect: jest.fn(),
+      getImageData: jest.fn(() => mockImage),
+      putImageData: jest.fn(),
       setTransform: jest.fn(),
       scale: jest.fn(),
     };
@@ -101,6 +111,21 @@ describe("TextTool", () => {
     ta.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
     expect(ctx.fillText).not.toHaveBeenCalled();
     expect(document.querySelector("textarea")).toBeNull();
+  });
+
+  it("supports undo after committing text", () => {
+    const tool = new TextTool();
+    editor.saveState();
+    tool.onPointerDown({ offsetX: 9, offsetY: 10 } as PointerEvent, editor);
+    const ta = document.querySelector("textarea") as HTMLTextAreaElement;
+    ta.value = "undo";
+    ta.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Enter", bubbles: true }),
+    );
+    expect(ctx.fillText).toHaveBeenCalledWith("undo", 9, 10);
+    editor.undo();
+    expect(ctx.clearRect).toHaveBeenCalledTimes(1);
+    expect(ctx.putImageData).toHaveBeenCalledTimes(1);
   });
 });
 

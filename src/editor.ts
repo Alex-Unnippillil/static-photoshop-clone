@@ -1,9 +1,38 @@
+import { Editor } from "./core/Editor.js";
+import { Shortcuts } from "./core/Shortcuts.js";
+import { PencilTool } from "./tools/PencilTool.js";
+import { EraserTool } from "./tools/EraserTool.js";
+import { RectangleTool } from "./tools/RectangleTool.js";
+import { LineTool } from "./tools/LineTool.js";
+import { CircleTool } from "./tools/CircleTool.js";
+import { TextTool } from "./tools/TextTool.js";
+import type { Tool } from "./tools/Tool.js";
 
+/** Utility to listen to events and auto-remove on destroy. */
+function listen<T extends HTMLElement, K extends keyof HTMLElementEventMap>(
+  el: T | null,
+  type: K,
+  handler: (this: T, ev: HTMLElementEventMap[K]) => void,
+  list: Array<() => void>,
+): void {
+  if (!el) return;
+  el.addEventListener(type, handler);
+  list.push(() => el.removeEventListener(type, handler));
+}
 
 export interface EditorHandle {
   editor: Editor;
   editors: Editor[];
+  activateLayer(index: number): void;
+  destroy(): void;
+}
 
+/**
+ * Initialize the editor by wiring up DOM controls and returning an
+ * {@link EditorHandle} that allows tests or callers to tear down the editor.
+ */
+export function initEditor(): EditorHandle {
+  const canvases = Array.from(document.querySelectorAll<HTMLCanvasElement>("canvas"));
 
   const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
@@ -14,6 +43,7 @@ export interface EditorHandle {
 
   const listeners: Array<() => void> = [];
 
+  // active editor instance
   let editor: Editor;
 
   const updateHistoryButtons = () => {
@@ -34,12 +64,16 @@ export interface EditorHandle {
     }
   });
 
+  // default to first editor
   editor = editors[0];
 
+  // default tool
   editor.setTool(new PencilTool());
 
+  // keyboard shortcuts
   const shortcuts = new Shortcuts(editor);
 
+  // map button id to tool constructor
   const toolButtons: Record<string, new () => Tool> = {
     pencil: PencilTool,
     eraser: EraserTool,
@@ -78,6 +112,7 @@ export interface EditorHandle {
     listeners,
   );
 
+  // saving
   const saveBtn = document.getElementById("save") as HTMLButtonElement | null;
   listen(
     saveBtn,
@@ -107,7 +142,7 @@ export interface EditorHandle {
         exportCanvas = editor.canvas;
       }
 
-      const data = exportCanvas.toDataURL(mime, quality as any);
+      const data = exportCanvas.toDataURL(mime, quality);
       const a = document.createElement("a");
       a.href = data;
       a.download = `canvas.${format === "jpeg" ? "jpg" : "png"}`;
@@ -116,6 +151,7 @@ export interface EditorHandle {
     listeners,
   );
 
+  // image loading
   const imageLoader = document.getElementById("imageLoader") as HTMLInputElement | null;
   listen(
     imageLoader,
@@ -142,6 +178,7 @@ export interface EditorHandle {
     listeners,
   );
 
+  // layer opacity sliders
   document
     .querySelectorAll<HTMLInputElement>('input[id$="Opacity"]')
     .forEach((input) => {
@@ -159,6 +196,7 @@ export interface EditorHandle {
       );
     });
 
+  // layer selection
   const layerSelect = document.getElementById("layerSelect") as HTMLSelectElement | null;
   listen(
     layerSelect,

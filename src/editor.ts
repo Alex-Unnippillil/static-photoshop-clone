@@ -1,12 +1,8 @@
-import { Editor } from "./core/Editor";
-import { Shortcuts } from "./core/Shortcuts";
-import { PencilTool } from "./tools/PencilTool";
-import { EraserTool } from "./tools/EraserTool";
-import { RectangleTool } from "./tools/RectangleTool";
-import { LineTool } from "./tools/LineTool";
-import { CircleTool } from "./tools/CircleTool";
-import { TextTool } from "./tools/TextTool";
 
+
+export interface EditorHandle {
+  editor: Editor;
+  editors: Editor[];
 
 
   const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
@@ -18,8 +14,8 @@ import { TextTool } from "./tools/TextTool";
 
   const listeners: Array<() => void> = [];
 
-  // helper to update undo/redo button states for current editor
-  let editor: Editor; // will be set after editors are created
+  let editor: Editor;
+
   const updateHistoryButtons = () => {
     if (undoBtn) undoBtn.disabled = !editor?.canUndo;
     if (redoBtn) redoBtn.disabled = !editor?.canRedo;
@@ -38,16 +34,12 @@ import { TextTool } from "./tools/TextTool";
     }
   });
 
-  // active editor defaults to the first successfully created editor
   editor = editors[0];
 
-  // default tool
   editor.setTool(new PencilTool());
 
-  // keyboard shortcuts
   const shortcuts = new Shortcuts(editor);
 
-  // map button id to tool constructor
   const toolButtons: Record<string, new () => Tool> = {
     pencil: PencilTool,
     eraser: EraserTool,
@@ -66,17 +58,26 @@ import { TextTool } from "./tools/TextTool";
     ),
   );
 
-  listen(undoBtn, "click", () => {
-    editor.undo();
-    updateHistoryButtons();
-  }, listeners);
+  listen(
+    undoBtn,
+    "click",
+    () => {
+      editor.undo();
+      updateHistoryButtons();
+    },
+    listeners,
+  );
 
-  listen(redoBtn, "click", () => {
-    editor.redo();
-    updateHistoryButtons();
-  }, listeners);
+  listen(
+    redoBtn,
+    "click",
+    () => {
+      editor.redo();
+      updateHistoryButtons();
+    },
+    listeners,
+  );
 
-  // saving
   const saveBtn = document.getElementById("save") as HTMLButtonElement | null;
   listen(
     saveBtn,
@@ -115,7 +116,6 @@ import { TextTool } from "./tools/TextTool";
     listeners,
   );
 
-  // image loading
   const imageLoader = document.getElementById("imageLoader") as HTMLInputElement | null;
   listen(
     imageLoader,
@@ -127,7 +127,13 @@ import { TextTool } from "./tools/TextTool";
       reader.onload = () => {
         const img = new Image();
         img.onload = () => {
-          editor.ctx.drawImage(img, 0, 0, editor.canvas.width, editor.canvas.height);
+          editor.ctx.drawImage(
+            img,
+            0,
+            0,
+            editor.canvas.width,
+            editor.canvas.height,
+          );
         };
         img.src = reader.result as string;
       };
@@ -136,7 +142,6 @@ import { TextTool } from "./tools/TextTool";
     listeners,
   );
 
-  // layer opacity sliders: inputs ending with "Opacity" adjust corresponding canvas
   document
     .querySelectorAll<HTMLInputElement>('input[id$="Opacity"]')
     .forEach((input) => {
@@ -154,13 +159,12 @@ import { TextTool } from "./tools/TextTool";
       );
     });
 
-  // layer selection
   const layerSelect = document.getElementById("layerSelect") as HTMLSelectElement | null;
   listen(
     layerSelect,
     "change",
     () => {
-      const idx = parseInt(layerSelect.value, 10);
+      const idx = parseInt(layerSelect!.value, 10);
       activateLayer(idx);
     },
     listeners,
@@ -189,3 +193,4 @@ import { TextTool } from "./tools/TextTool";
 
   return handle;
 }
+

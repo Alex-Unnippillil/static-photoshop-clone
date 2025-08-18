@@ -1,46 +1,6 @@
-import { Editor } from "../core/Editor";
-import { Tool } from "./Tool";
+import { Editor } from "../core/Editor.js";
+import { Tool } from "./Tool.js";
 
-/**
- * Tool that lets the user place text on the canvas by creating an overlay
- * textarea. The text is committed to the canvas when the user presses Enter
- * or the textarea loses focus. Pressing Escape cancels the operation.
- */
-export class TextTool implements Tool {
-  private textarea: HTMLTextAreaElement | null = null;
-  private blurListener: ((e: FocusEvent) => void) | null = null;
-  private keydownListener: ((e: KeyboardEvent) => void) | null = null;
-
-  onPointerDown(e: PointerEvent, editor: Editor): void {
-    this.cleanup();
-
-    const textarea = document.createElement("textarea");
-    textarea.style.position = "absolute";
-    textarea.style.left = `${e.offsetX}px`;
-    textarea.style.top = `${e.offsetY}px`;
-    textarea.style.color = this.hexToRgb(editor.strokeStyle);
-    textarea.style.fontSize = `${editor.lineWidthValue * 4}px`;
-    (editor.canvas.parentElement || document.body).appendChild(textarea);
-    textarea.focus();
-
-    const x = e.offsetX;
-    const y = e.offsetY;
-
-    const commit = () => {
-      if (!this.textarea) return;
-      const text = this.textarea.value;
-      if (text) {
-        const ctx = editor.ctx;
-        ctx.fillStyle = editor.strokeStyle;
-        ctx.font = `${editor.lineWidthValue * 4}px sans-serif`;
-        ctx.fillText(text, x, y);
-      }
-      this.cleanup();
-    };
-
-    const cancel = () => {
-      this.cleanup();
-    };
 
     this.blurListener = commit;
     this.keydownListener = (ev: KeyboardEvent) => {
@@ -53,14 +13,6 @@ export class TextTool implements Tool {
       }
     };
 
-    textarea.addEventListener("blur", this.blurListener);
-    textarea.addEventListener("keydown", this.keydownListener);
-    this.textarea = textarea;
-  }
-
-  onPointerMove(_e: PointerEvent, _editor: Editor): void {
-    // required by Tool interface; no preview for text tool
-  }
 
   onPointerUp(_e: PointerEvent, _editor: Editor): void {
     if (this.textarea && document.activeElement !== this.textarea) {
@@ -68,10 +20,16 @@ export class TextTool implements Tool {
     }
   }
 
+  onPointerMove(): void {}
+  onPointerUp(): void {}
+
   destroy(): void {
     this.cleanup();
   }
 
+  /**
+   * Remove textarea overlay and any registered listeners.
+   */
   private cleanup(): void {
     if (!this.textarea) return;
     if (this.blurListener) {
@@ -86,12 +44,4 @@ export class TextTool implements Tool {
     this.keydownListener = null;
   }
 
-  private hexToRgb(hex: string): string {
-    const v = hex.replace("#", "");
-    const r = parseInt(v.substring(0, 2), 16);
-    const g = parseInt(v.substring(2, 4), 16);
-    const b = parseInt(v.substring(4, 6), 16);
-    return `rgb(${r}, ${g}, ${b})`;
-  }
-}
 

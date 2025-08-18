@@ -1,8 +1,3 @@
-/**
- * Tool that lets the user place text on the canvas by creating an overlay
- * textarea. The text is committed to the canvas when the user presses Enter
- * or the textarea loses focus. Pressing Escape cancels the operation.
- */
 export class TextTool {
     constructor() {
         this.textarea = null;
@@ -13,30 +8,33 @@ export class TextTool {
         this.cleanup();
         const textarea = document.createElement("textarea");
         textarea.style.position = "absolute";
+        const rect = editor.canvas.getBoundingClientRect();
+        const parent = editor.canvas.parentElement || document.body;
         textarea.style.left = `${e.offsetX}px`;
         textarea.style.top = `${e.offsetY}px`;
-        textarea.style.color = this.hexToRgb(editor.strokeStyle);
+        textarea.style.color = editor.strokeStyle;
         textarea.style.fontSize = `${editor.lineWidthValue * 4}px`;
-        document.body.appendChild(textarea);
+        textarea.style.fontFamily = "sans-serif";
+        textarea.style.background = "transparent";
+        textarea.style.border = "none";
+        textarea.style.outline = "none";
+        parent.appendChild(textarea);
         textarea.focus();
-        const x = e.offsetX;
-        const y = e.offsetY;
         const commit = () => {
-            if (!this.textarea)
-                return;
-            const text = this.textarea.value;
-            if (text) {
-                const ctx = editor.ctx;
-                ctx.fillStyle = editor.strokeStyle;
-                ctx.font = `${editor.lineWidthValue * 4}px sans-serif`;
-                ctx.fillText(text, x, y);
-            }
+            const text = textarea.value;
             this.cleanup();
+            if (text) {
+                editor.ctx.fillStyle = editor.strokeStyle;
+                editor.ctx.font = `${editor.lineWidthValue * 4}px sans-serif`;
+                editor.ctx.fillText(text, e.offsetX, e.offsetY);
+                editor.saveState();
+            }
         };
         const cancel = () => {
             this.cleanup();
         };
-        this.blurListener = commit;
+        this.blurListener = cancel;
+        textarea.addEventListener("blur", this.blurListener);
         this.keydownListener = (ev) => {
             if (ev.key === "Enter") {
                 ev.preventDefault();
@@ -47,22 +45,11 @@ export class TextTool {
                 cancel();
             }
         };
-        textarea.addEventListener("blur", this.blurListener);
         textarea.addEventListener("keydown", this.keydownListener);
         this.textarea = textarea;
     }
-    onPointerMove(e, editor) {
-        // parameters required by interface
-        void e;
-        void editor;
-    }
-    onPointerUp(e, editor) {
-        void e;
-        void editor;
-        if (this.textarea && document.activeElement !== this.textarea) {
-            this.cleanup();
-        }
-    }
+    onPointerMove() { }
+    onPointerUp() { }
     destroy() {
         this.cleanup();
     }
@@ -79,12 +66,5 @@ export class TextTool {
         this.textarea = null;
         this.blurListener = null;
         this.keydownListener = null;
-    }
-    hexToRgb(hex) {
-        const v = hex.replace("#", "");
-        const r = parseInt(v.substring(0, 2), 16);
-        const g = parseInt(v.substring(2, 4), 16);
-        const b = parseInt(v.substring(4, 6), 16);
-        return `rgb(${r}, ${g}, ${b})`;
     }
 }

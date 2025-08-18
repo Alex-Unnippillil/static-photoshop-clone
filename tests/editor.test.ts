@@ -1,4 +1,4 @@
-import { initEditor, EditorHandle } from "../src/editor";
+import { initEditor, EditorHandle } from "../src/editor.js";
 
 // Integration tests ensuring toolbar controls are wired to the editor
 // and trigger the expected behavior.

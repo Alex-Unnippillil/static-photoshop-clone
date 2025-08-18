@@ -1,5 +1,5 @@
-import { Editor } from "../src/core/Editor";
-import { LineTool } from "../src/tools/LineTool";
+import { Editor } from "../src/core/Editor.js";
+import { LineTool } from "../src/tools/LineTool.js";
 
 describe("LineTool", () => {
   let editor: Editor;
@@ -15,10 +15,15 @@ describe("LineTool", () => {
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
     (canvas as any).setPointerCapture = jest.fn();
     (canvas as any).releasePointerCapture = jest.fn();
-    const imageData = {} as ImageData;
+    const imageData = {
+      data: new Uint8ClampedArray(),
+      width: 100,
+      height: 100,
+    } as ImageData;
     ctx = {
       getImageData: jest.fn().mockReturnValue(imageData),
       putImageData: jest.fn(),
+      clearRect: jest.fn(),
       beginPath: jest.fn(),
       moveTo: jest.fn(),
       lineTo: jest.fn(),
@@ -41,7 +46,7 @@ describe("LineTool", () => {
     );
   });
 
-  it("uses editor settings and restores image before drawing", () => {
+
     const tool = new LineTool();
     tool.onPointerDown({ offsetX: 1, offsetY: 2 } as PointerEvent, editor);
     tool.onPointerMove({
@@ -64,5 +69,27 @@ describe("LineTool", () => {
     expect(ctx.strokeStyle).toBe(editor.strokeStyle);
     expect(ctx.fillStyle).toBe(editor.fillStyle);
     expect(ctx.lineWidth).toBe(editor.lineWidthValue);
+  });
+
+  it("draws line on pointer up", () => {
+    const tool = new LineTool();
+    tool.onPointerDown({ offsetX: 1, offsetY: 2 } as PointerEvent, editor);
+    tool.onPointerUp({ offsetX: 5, offsetY: 6 } as PointerEvent, editor);
+    expect(ctx.putImageData).toHaveBeenCalled();
+    expect(ctx.beginPath).toHaveBeenCalled();
+    expect(ctx.moveTo).toHaveBeenCalledWith(1, 2);
+    expect(ctx.lineTo).toHaveBeenCalledWith(5, 6);
+    expect(ctx.stroke).toHaveBeenCalled();
+    expect(ctx.closePath).toHaveBeenCalled();
+  });
+
+  it("supports undo after drawing", () => {
+    const tool = new LineTool();
+    editor.saveState();
+    tool.onPointerDown({ offsetX: 0, offsetY: 0 } as PointerEvent, editor);
+    tool.onPointerUp({ offsetX: 1, offsetY: 1 } as PointerEvent, editor);
+    editor.undo();
+    expect(ctx.clearRect).toHaveBeenCalledTimes(1);
+    expect(ctx.putImageData).toHaveBeenCalledTimes(2);
   });
 });

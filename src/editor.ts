@@ -74,6 +74,12 @@ export function initEditor(): EditorHandle {
     }
   });
 
+  if (editors.length === 0) {
+    throw new Error(
+      "initEditor() requires at least one <canvas> element with a 2D context",
+    );
+  }
+
   // active editor defaults to the first successfully created editor
   editor = editors[0];
 

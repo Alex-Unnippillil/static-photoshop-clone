@@ -9,6 +9,8 @@ import { CircleTool } from "./tools/CircleTool.js";
 import { TextTool } from "./tools/TextTool.js";
 
 
+import { BucketFillTool } from "./tools/BucketFillTool.js";
+
 export interface EditorHandle {
   editor: Editor;
   editors: Editor[];
@@ -69,7 +71,7 @@ export function initEditor(): EditorHandle {
     line: LineTool,
     circle: CircleTool,
     text: TextTool,
-    eyedropper: EyedropperTool,
+
   };
 
   Object.entries(toolButtons).forEach(([id, ToolCtor]) =>

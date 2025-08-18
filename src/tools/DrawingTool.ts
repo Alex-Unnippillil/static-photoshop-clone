@@ -1,5 +1,5 @@
-import { Editor } from "../core/Editor";
-import { Tool } from "./Tool";
+import { Editor } from "../core/Editor.js";
+import { Tool } from "./Tool.js";
 
 /**
  * Base class for drawing tools. It exposes a helper that applies the

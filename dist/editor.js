@@ -1,99 +1,156 @@
-import { Editor } from "./core/Editor";
-import { Shortcuts } from "./core/Shortcuts";
-import { PencilTool } from "./tools/PencilTool";
-import { EraserTool } from "./tools/EraserTool";
-import { RectangleTool } from "./tools/RectangleTool";
-import { LineTool } from "./tools/LineTool";
-import { CircleTool } from "./tools/CircleTool";
-import { TextTool } from "./tools/TextTool";
+import { Editor } from "./core/Editor.js";
+import { Shortcuts } from "./core/Shortcuts.js";
+import { PencilTool } from "./tools/PencilTool.js";
+import { EraserTool } from "./tools/EraserTool.js";
+import { RectangleTool } from "./tools/RectangleTool.js";
+import { LineTool } from "./tools/LineTool.js";
+import { CircleTool } from "./tools/CircleTool.js";
+import { TextTool } from "./tools/TextTool.js";
+/** Utility to listen to events and auto-remove on destroy. */
+function listen(el, type, handler, list) {
+    if (!el)
+        return;
+    el.addEventListener(type, handler);
+    list.push(() => el.removeEventListener(type, handler));
+}
 /**
  * Initialize the editor by wiring up DOM controls and returning an
  * {@link EditorHandle} that allows tests or callers to tear down the editor.
  */
 export function initEditor() {
-    const canvas = document.getElementById("canvas");
+    const canvases = Array.from(document.querySelectorAll("canvas"));
     const colorPicker = document.getElementById("colorPicker");
     const lineWidth = document.getElementById("lineWidth");
     const fillMode = document.getElementById("fillMode");
-    const editor = new Editor(canvas, colorPicker, lineWidth, fillMode);
-    // Default tool
-    editor.setTool(new PencilTool());
-    const shortcuts = new Shortcuts(editor);
-    // Tool buttons
-    const pencilBtn = document.getElementById("pencil");
-    const eraserBtn = document.getElementById("eraser");
-    const rectangleBtn = document.getElementById("rectangle");
-    const lineBtn = document.getElementById("line");
-    const circleBtn = document.getElementById("circle");
-    const textBtn = document.getElementById("text");
     const undoBtn = document.getElementById("undo");
     const redoBtn = document.getElementById("redo");
-    const saveBtn = document.getElementById("save");
-    const saveJpegBtn = document.getElementById("saveJpeg");
-    const imageLoader = document.getElementById("imageLoader");
     const listeners = [];
-    function addListener(el, type, handler) {
-        if (!el)
-            return;
-        el.addEventListener(type, handler);
-        listeners.push(() => el.removeEventListener(type, handler));
-    }
-    addListener(pencilBtn, "click", () => editor.setTool(new PencilTool()));
-    addListener(eraserBtn, "click", () => editor.setTool(new EraserTool()));
-    addListener(rectangleBtn, "click", () => editor.setTool(new RectangleTool()));
-    addListener(lineBtn, "click", () => editor.setTool(new LineTool()));
-    addListener(circleBtn, "click", () => editor.setTool(new CircleTool()));
-    addListener(textBtn, "click", () => editor.setTool(new TextTool()));
-    addListener(undoBtn, "click", () => editor.undo());
-    addListener(redoBtn, "click", () => editor.redo());
-    function saveAs(type, fileName) {
-        const data = canvas.toDataURL(type);
+    // helper to update undo/redo button states for current editor
+    let editor; // will be set after editors are created
+    const updateHistoryButtons = () => {
+        if (undoBtn)
+            undoBtn.disabled = !editor?.canUndo;
+        if (redoBtn)
+            redoBtn.disabled = !editor?.canRedo;
+    };
+    const editors = [];
+    canvases.forEach((c) => {
+        try {
+            editors.push(new Editor(c, colorPicker, lineWidth, fillMode, () => {
+                updateHistoryButtons();
+            }));
+        }
+        catch {
+            /* skip canvases without 2D context */
+        }
+    });
+    // active editor defaults to the first successfully created editor
+    editor = editors[0];
+    // default tool
+    editor.setTool(new PencilTool());
+    // keyboard shortcuts
+    const shortcuts = new Shortcuts(editor);
+    // map button id to tool constructor
+    const toolButtons = {
+        pencil: PencilTool,
+        eraser: EraserTool,
+        rectangle: RectangleTool,
+        line: LineTool,
+        circle: CircleTool,
+        text: TextTool,
+    };
+    Object.entries(toolButtons).forEach(([id, ToolCtor]) => listen(document.getElementById(id), "click", () => editor.setTool(new ToolCtor()), listeners));
+    listen(undoBtn, "click", () => {
+        editor.undo();
+        updateHistoryButtons();
+    }, listeners);
+    listen(redoBtn, "click", () => {
+        editor.redo();
+        updateHistoryButtons();
+    }, listeners);
+    // saving
+    const saveBtn = document.getElementById("save");
+    listen(saveBtn, "click", () => {
+        const formatSelect = document.getElementById("formatSelect");
+        const format = formatSelect?.value?.toLowerCase() === "jpeg" ? "jpeg" : "png";
+        const mime = format === "jpeg" ? "image/jpeg" : "image/png";
+        const quality = format === "jpeg" ? 0.9 : undefined;
+        let exportCanvas;
+        if (canvases.length > 1) {
+            // composite all layers respecting their opacity
+            exportCanvas = document.createElement("canvas");
+            exportCanvas.width = canvases[0].width;
+            exportCanvas.height = canvases[0].height;
+            const tempCtx = exportCanvas.getContext("2d");
+            canvases.forEach((cv) => {
+                const opacity = parseFloat(cv.style.opacity) || 1;
+                tempCtx.globalAlpha = opacity;
+                tempCtx.drawImage(cv, 0, 0);
+            });
+            tempCtx.globalAlpha = 1;
+        }
+        else {
+            exportCanvas = editor.canvas;
+        }
+        const data = exportCanvas.toDataURL(mime, quality);
         const a = document.createElement("a");
         a.href = data;
-        a.download = fileName;
+        a.download = `canvas.${format === "jpeg" ? "jpg" : "png"}`;
         a.click();
-    }
-    addListener(saveBtn, "click", () => saveAs("image/png", "canvas.png"));
-    addListener(saveJpegBtn, "click", () => saveAs("image/jpeg", "canvas.jpg"));
-    function loadImage(src) {
-        const img = new Image();
-        img.onload = () => {
-            editor.ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        };
-        img.src = src;
-    }
-    addListener(imageLoader, "change", (e) => {
+    }, listeners);
+    // image loading
+    const imageLoader = document.getElementById("imageLoader");
+    listen(imageLoader, "change", (e) => {
         const file = e.target.files?.[0];
         if (!file)
             return;
         const reader = new FileReader();
         reader.onload = () => {
-            const result = reader.result;
-            loadImage(result);
+            const img = new Image();
+            img.onload = () => {
+                editor.ctx.drawImage(img, 0, 0, editor.canvas.width, editor.canvas.height);
+            };
+            img.src = reader.result;
         };
         reader.readAsDataURL(file);
-    });
-    // Support drag & drop image loading
-    addListener(canvas, "dragover", (e) => {
-        e.preventDefault();
-    });
-    addListener(canvas, "drop", (e) => {
-        e.preventDefault();
-        const file = e.dataTransfer?.files?.[0];
-        if (!file)
+    }, listeners);
+    // layer opacity sliders: inputs ending with "Opacity" adjust corresponding canvas
+    document
+        .querySelectorAll('input[id$="Opacity"]')
+        .forEach((input) => {
+        const targetId = input.id.replace(/Opacity$/, "");
+        const layer = document.getElementById(targetId);
+        if (!layer)
             return;
-        const reader = new FileReader();
-        reader.onload = () => {
-            loadImage(reader.result);
-        };
-        reader.readAsDataURL(file);
+        listen(input, "input", () => {
+            const value = parseFloat(input.value);
+            layer.style.opacity = isNaN(value) ? "1" : String(value / 100);
+        }, listeners);
     });
-    return {
+    // layer selection
+    const layerSelect = document.getElementById("layerSelect");
+    listen(layerSelect, "change", () => {
+        const idx = parseInt(layerSelect.value, 10);
+        activateLayer(idx);
+    }, listeners);
+    function activateLayer(index) {
+        if (index < 0 || index >= editors.length)
+            return;
+        editor = editors[index];
+        handle.editor = editor;
+        shortcuts.switchEditor(editor);
+        updateHistoryButtons();
+    }
+    const handle = {
         editor,
-        destroy: () => {
+        editors,
+        activateLayer,
+        destroy() {
             listeners.forEach((fn) => fn());
             shortcuts.destroy();
-            editor.destroy();
+            editors.forEach((e) => e.destroy());
         },
     };
+    updateHistoryButtons();
+    return handle;
 }

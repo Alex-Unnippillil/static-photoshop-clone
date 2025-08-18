@@ -1,5 +1,5 @@
-import { Editor } from "../src/core/Editor";
-import { EraserTool } from "../src/tools/EraserTool";
+import { Editor } from "../src/core/Editor.js";
+import { EraserTool } from "../src/tools/EraserTool.js";
 
 describe("EraserTool", () => {
   let editor: Editor;

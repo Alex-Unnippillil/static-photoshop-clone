@@ -1,5 +1,5 @@
-import { Editor } from "../src/core/Editor";
-import { CircleTool } from "../src/tools/CircleTool";
+import { Editor } from "../src/core/Editor.js";
+import { CircleTool } from "../src/tools/CircleTool.js";
 
 describe("CircleTool", () => {
   let editor: Editor;

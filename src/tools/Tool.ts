@@ -1,4 +1,4 @@
-import { Editor } from "../core/Editor";
+import { Editor } from "../core/Editor.js";
 
 export interface Tool {
   cursor?: string;

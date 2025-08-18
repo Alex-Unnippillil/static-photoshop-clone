@@ -1,4 +1,4 @@
-import { DrawingTool } from "./DrawingTool";
+import { DrawingTool } from "./DrawingTool.js";
 export class LineTool extends DrawingTool {
     constructor() {
         super(...arguments);

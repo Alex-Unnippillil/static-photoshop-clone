@@ -1,4 +1,4 @@
-import { DrawingTool } from "./DrawingTool";
+import { DrawingTool } from "./DrawingTool.js";
 export class PencilTool extends DrawingTool {
     onPointerDown(e, editor) {
         this.applyStroke(editor.ctx, editor);

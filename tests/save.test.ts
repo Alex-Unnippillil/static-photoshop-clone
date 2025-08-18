@@ -1,4 +1,4 @@
-import { initEditor } from "../src/editor";
+import { initEditor } from "../src/editor.js";
 
 describe("save button", () => {
   it("calls toDataURL on click", () => {

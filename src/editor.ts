@@ -1,19 +1,9 @@
-import { Editor } from "./core/Editor";
-import { Shortcuts } from "./core/Shortcuts";
-import { PencilTool } from "./tools/PencilTool";
-import { EraserTool } from "./tools/EraserTool";
-import { RectangleTool } from "./tools/RectangleTool";
-import { LineTool } from "./tools/LineTool";
-import { CircleTool } from "./tools/CircleTool";
-import { TextTool } from "./tools/TextTool";
-import { Tool } from "./tools/Tool";
+
 
 export interface EditorHandle {
   editor: Editor;
   editors: Editor[];
-  activateLayer(index: number): void;
-  destroy(): void;
-}
+
 
   const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
@@ -137,7 +127,13 @@ export interface EditorHandle {
       reader.onload = () => {
         const img = new Image();
         img.onload = () => {
-          editor.ctx.drawImage(img, 0, 0, editor.canvas.width, editor.canvas.height);
+          editor.ctx.drawImage(
+            img,
+            0,
+            0,
+            editor.canvas.width,
+            editor.canvas.height,
+          );
         };
         img.src = reader.result as string;
       };
@@ -168,7 +164,7 @@ export interface EditorHandle {
     layerSelect,
     "change",
     () => {
-      const idx = parseInt(layerSelect.value, 10);
+      const idx = parseInt(layerSelect!.value, 10);
       activateLayer(idx);
     },
     listeners,

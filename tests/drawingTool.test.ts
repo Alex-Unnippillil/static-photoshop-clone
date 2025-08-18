@@ -1,8 +1,8 @@
-import { DrawingTool } from "../src/tools/DrawingTool";
-import { PencilTool } from "../src/tools/PencilTool";
-import { RectangleTool } from "../src/tools/RectangleTool";
-import { LineTool } from "../src/tools/LineTool";
-import { CircleTool } from "../src/tools/CircleTool";
+import { DrawingTool } from "../src/tools/DrawingTool.js";
+import { PencilTool } from "../src/tools/PencilTool.js";
+import { RectangleTool } from "../src/tools/RectangleTool.js";
+import { LineTool } from "../src/tools/LineTool.js";
+import { CircleTool } from "../src/tools/CircleTool.js";
 
 describe("DrawingTool subclasses", () => {
   it("PencilTool extends DrawingTool", () => {

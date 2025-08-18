@@ -1,4 +1,4 @@
-import { DrawingTool } from "./DrawingTool";
+import { DrawingTool } from "./DrawingTool.js";
 export class EraserTool extends DrawingTool {
     onPointerDown(e, editor) {
         const ctx = editor.ctx;

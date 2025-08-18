@@ -1,5 +1,5 @@
-import { Editor } from "../core/Editor";
-import { DrawingTool } from "./DrawingTool";
+import { Editor } from "../core/Editor.js";
+import { DrawingTool } from "./DrawingTool.js";
 
 export class CircleTool extends DrawingTool {
   private startX = 0;

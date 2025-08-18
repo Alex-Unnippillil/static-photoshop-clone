@@ -1,16 +1,14 @@
-import { Editor } from "./Editor";
-import { PencilTool } from "../tools/PencilTool";
-import { RectangleTool } from "../tools/RectangleTool";
-import { LineTool } from "../tools/LineTool";
-import { CircleTool } from "../tools/CircleTool";
-import { TextTool } from "../tools/TextTool";
-import { EraserTool } from "../tools/EraserTool";
+import { Editor } from "./Editor.js";
+import { PencilTool } from "../tools/PencilTool.js";
+import { RectangleTool } from "../tools/RectangleTool.js";
+import { LineTool } from "../tools/LineTool.js";
+import { CircleTool } from "../tools/CircleTool.js";
+import { TextTool } from "../tools/TextTool.js";
+import { EraserTool } from "../tools/EraserTool.js";
 
 /**
- * Keyboard shortcut manager. Binds to `keydown` events and translates key
- * presses into editor actions such as switching tools or performing undo/redo.
- * A single instance can be shared across multiple editors by calling
- * {@link switchEditor} when the active editor changes.
+ * Keyboard shortcuts handler for the editor.
+ * Maps specific key presses to tool changes or editor actions.
  */
 export class Shortcuts {
   private readonly handler: (e: KeyboardEvent) => void;
@@ -28,53 +26,37 @@ export class Shortcuts {
   }
 
   private onKeyDown(e: KeyboardEvent) {
-    // undo/redo shortcuts
+
     if (e.ctrlKey || e.metaKey) {
       if (e.key.toLowerCase() === "z") {
-        e.preventDefault();
         if (e.shiftKey) {
           this.editor.redo();
         } else {
           this.editor.undo();
         }
+        e.preventDefault();
       }
       return;
     }
 
-    // Tool switching via letter keys
     switch (e.key.toLowerCase()) {
       case "p":
         this.editor.setTool(new PencilTool());
-        this.activate("pencil");
         break;
       case "r":
         this.editor.setTool(new RectangleTool());
-        this.activate("rectangle");
         break;
       case "l":
         this.editor.setTool(new LineTool());
-        this.activate("line");
         break;
       case "c":
         this.editor.setTool(new CircleTool());
-        this.activate("circle");
         break;
       case "t":
         this.editor.setTool(new TextTool());
-        this.activate("text");
-        break;
-      case "e":
-        this.editor.setTool(new EraserTool());
-        this.activate("eraser");
+
         break;
     }
-  }
-
-  /** Highlight toolbar button corresponding to the tool id. */
-  private activate(id: string) {
-    const buttons = document.querySelectorAll("#toolbar .tool-button");
-    buttons.forEach((b) => b.classList.remove("active"));
-    document.getElementById(id)?.classList.add("active");
   }
 
   /** Remove keyboard listeners. */
@@ -82,4 +64,3 @@ export class Shortcuts {
     document.removeEventListener("keydown", this.handler);
   }
 }
-

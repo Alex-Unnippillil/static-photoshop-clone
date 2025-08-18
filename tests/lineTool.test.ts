@@ -1,5 +1,5 @@
-import { Editor } from "../src/core/Editor";
-import { LineTool } from "../src/tools/LineTool";
+import { Editor } from "../src/core/Editor.js";
+import { LineTool } from "../src/tools/LineTool.js";
 
 describe("LineTool", () => {
   let editor: Editor;

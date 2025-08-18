@@ -198,6 +198,7 @@ export function initEditor(): EditorHandle {
       reader.onload = () => {
         const img = new Image();
         img.onload = () => {
+          editor.saveState();
           editor.ctx.drawImage(
             img,
             0,
@@ -205,6 +206,7 @@ export function initEditor(): EditorHandle {
             editor.canvas.width,
             editor.canvas.height,
           );
+          updateHistoryButtons();
         };
         img.src = reader.result as string;
       };

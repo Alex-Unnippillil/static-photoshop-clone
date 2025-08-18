@@ -9,6 +9,8 @@ export class Editor {
   colorPicker: HTMLInputElement;
   lineWidth: HTMLInputElement;
   fillMode: HTMLInputElement;
+  fontFamily: HTMLSelectElement | null;
+  fontSize: HTMLInputElement | null;
   private onChange?: () => void;
 
   constructor(
@@ -17,6 +19,8 @@ export class Editor {
     lineWidth: HTMLInputElement,
     fillMode: HTMLInputElement,
     onChange?: () => void,
+    fontFamily?: HTMLSelectElement | null,
+    fontSize?: HTMLInputElement | null,
   ) {
     this.canvas = canvas;
     const ctx = canvas.getContext("2d");
@@ -26,6 +30,8 @@ export class Editor {
     this.lineWidth = lineWidth;
     this.fillMode = fillMode;
     this.onChange = onChange;
+    this.fontFamily = fontFamily ?? null;
+    this.fontSize = fontSize ?? null;
     this.adjustForPixelRatio();
     window.addEventListener("resize", this.handleResize);
 
@@ -132,6 +138,14 @@ export class Editor {
 
   get fillStyle() {
     return this.colorPicker.value;
+  }
+
+  get fontFamilyValue() {
+    return this.fontFamily?.value || "sans-serif";
+  }
+
+  get fontSizeValue() {
+    return parseInt(this.fontSize?.value ?? "", 10) || 16;
   }
 
   /**

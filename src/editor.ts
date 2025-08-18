@@ -1,14 +1,25 @@
 import { Editor } from "./core/Editor.js";
 import { Shortcuts } from "./core/Shortcuts.js";
-
 import { PencilTool } from "./tools/PencilTool.js";
 import { EraserTool } from "./tools/EraserTool.js";
 import { RectangleTool } from "./tools/RectangleTool.js";
 import { LineTool } from "./tools/LineTool.js";
 import { CircleTool } from "./tools/CircleTool.js";
 import { TextTool } from "./tools/TextTool.js";
+import { BucketFillTool } from "./tools/BucketFillTool.js";
+import type { Tool } from "./tools/Tool.js";
 
-
+/** Utility to listen to events and auto-remove on destroy. */
+function listen<T extends Event>(
+  el: HTMLElement | null,
+  type: string,
+  handler: (e: T) => void,
+  list: Array<() => void>,
+) {
+  if (!el) return;
+  el.addEventListener(type, handler);
+  list.push(() => el.removeEventListener(type, handler));
+}
 
 export interface EditorHandle {
   editor: Editor;
@@ -17,22 +28,25 @@ export interface EditorHandle {
   destroy(): void;
 }
 
-
-
 /**
  * Initialize the editor by wiring up DOM controls and returning an
  * {@link EditorHandle} that allows tests or callers to tear down the editor.
  */
 export function initEditor(): EditorHandle {
-
+  const canvases = Array.from(
+    document.querySelectorAll<HTMLCanvasElement>("canvas"),
+  );
   const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
   const fillMode = document.getElementById("fillMode") as HTMLInputElement;
+  const fontFamily = document.getElementById("fontFamily") as HTMLSelectElement | null;
+  const fontSize = document.getElementById("fontSize") as HTMLInputElement | null;
 
   const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
   const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
-
   const listeners: Array<() => void> = [];
+
+  let editor: Editor; // set after editors created
 
   const updateHistoryButtons = () => {
     if (undoBtn) undoBtn.disabled = !editor?.canUndo;
@@ -43,15 +57,24 @@ export function initEditor(): EditorHandle {
   canvases.forEach((c) => {
     try {
       editors.push(
-        new Editor(c, colorPicker, lineWidth, fillMode, () => {
-          updateHistoryButtons();
-        }),
+        new Editor(
+          c,
+          colorPicker,
+          lineWidth,
+          fillMode,
+          () => {
+            updateHistoryButtons();
+          },
+          fontFamily ?? undefined,
+          fontSize ?? undefined,
+        ),
       );
     } catch {
       /* skip canvases without 2D context */
     }
   });
 
+  // active editor defaults to the first successfully created editor
   editor = editors[0];
 
   // default tool
@@ -68,7 +91,7 @@ export function initEditor(): EditorHandle {
     line: LineTool,
     circle: CircleTool,
     text: TextTool,
-
+    bucket: BucketFillTool,
   };
 
   Object.entries(toolButtons).forEach(([id, ToolCtor]) =>
@@ -131,7 +154,10 @@ export function initEditor(): EditorHandle {
         exportCanvas = editor.canvas;
       }
 
-      const data = exportCanvas.toDataURL(mime, quality);
+      const data =
+        quality !== undefined
+          ? exportCanvas.toDataURL(mime, quality)
+          : exportCanvas.toDataURL(mime);
       const a = document.createElement("a");
       a.href = data;
       a.download = `canvas.${format === "jpeg" ? "jpg" : "png"}`;
@@ -141,11 +167,11 @@ export function initEditor(): EditorHandle {
   );
 
   // image loading
-
+  const imageLoader = document.getElementById("imageLoader") as HTMLInputElement | null;
   listen(
     imageLoader,
     "change",
-    (e) => {
+    (e: Event) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
       const reader = new FileReader();
@@ -167,7 +193,6 @@ export function initEditor(): EditorHandle {
     listeners,
   );
 
-
   document
     .querySelectorAll<HTMLInputElement>('input[id$="Opacity"]')
     .forEach((input) => {
@@ -187,8 +212,6 @@ export function initEditor(): EditorHandle {
 
   // layer selection
   const layerSelect = document.getElementById("layerSelect") as HTMLSelectElement | null;
-  let handle: EditorHandle;
-
   listen(
     layerSelect,
     "change",
@@ -207,7 +230,7 @@ export function initEditor(): EditorHandle {
     updateHistoryButtons();
   }
 
-  handle = {
+  const handle: EditorHandle = {
     editor,
     editors,
     activateLayer,
@@ -221,4 +244,3 @@ export function initEditor(): EditorHandle {
   updateHistoryButtons();
   return handle;
 }
-

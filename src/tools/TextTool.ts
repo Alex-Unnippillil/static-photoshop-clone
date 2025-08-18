@@ -3,8 +3,8 @@ import { Tool } from "./Tool";
 
 
 
-    (editor.canvas.parentElement || document.body).appendChild(textarea);
-    textarea.focus();
+    const textarea = document.createElement("textarea");
+    this.textarea = textarea;
 
 
     this.keydownListener = (ev: KeyboardEvent) => {
@@ -16,6 +16,10 @@ import { Tool } from "./Tool";
         cancel();
       }
     };
+    textarea.addEventListener("keydown", this.keydownListener);
+  }
+
+    textarea.addEventListener("blur", this.blurListener);
     textarea.addEventListener("keydown", this.keydownListener);
   }
 

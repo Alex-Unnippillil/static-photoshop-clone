@@ -1,10 +1,41 @@
-
+import { Editor } from "./core/Editor.js";
+import { Shortcuts } from "./core/Shortcuts.js";
+import { Tool } from "./tools/Tool.js";
+import { PencilTool } from "./tools/PencilTool.js";
+import { EraserTool } from "./tools/EraserTool.js";
+import { RectangleTool } from "./tools/RectangleTool.js";
+import { LineTool } from "./tools/LineTool.js";
+import { CircleTool } from "./tools/CircleTool.js";
+import { TextTool } from "./tools/TextTool.js";
+import { EyedropperTool } from "./tools/EyedropperTool.js";
 
 export interface EditorHandle {
   editor: Editor;
   editors: Editor[];
+  activateLayer(index: number): void;
+  destroy(): void;
+}
 
+/** Utility to listen to events and auto-remove on destroy. */
+function listen(
+  el: HTMLElement | null,
+  type: string,
+  handler: EventListenerOrEventListenerObject,
+  list: Array<() => void>,
+): void {
+  if (!el) return;
+  el.addEventListener(type, handler as EventListener);
+  list.push(() => el.removeEventListener(type, handler as EventListener));
+}
 
+/**
+ * Initialize the editor by wiring up DOM controls and returning an
+ * {@link EditorHandle} that allows tests or callers to tear down the editor.
+ */
+export function initEditor(): EditorHandle {
+  const canvases = Array.from(
+    document.querySelectorAll<HTMLCanvasElement>("canvas"),
+  );
   const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
   const fillMode = document.getElementById("fillMode") as HTMLInputElement;
@@ -14,8 +45,7 @@ export interface EditorHandle {
 
   const listeners: Array<() => void> = [];
 
-  let editor: Editor;
-
+  let editor: Editor; // will be set after editors are created
   const updateHistoryButtons = () => {
     if (undoBtn) undoBtn.disabled = !editor?.canUndo;
     if (redoBtn) redoBtn.disabled = !editor?.canRedo;
@@ -34,12 +64,16 @@ export interface EditorHandle {
     }
   });
 
+  // active editor defaults to the first successfully created editor
   editor = editors[0];
 
+  // default tool
   editor.setTool(new PencilTool());
 
+  // keyboard shortcuts
   const shortcuts = new Shortcuts(editor);
 
+  // map button id to tool constructor
   const toolButtons: Record<string, new () => Tool> = {
     pencil: PencilTool,
     eraser: EraserTool,
@@ -47,6 +81,7 @@ export interface EditorHandle {
     line: LineTool,
     circle: CircleTool,
     text: TextTool,
+    eyedropper: EyedropperTool,
   };
 
   Object.entries(toolButtons).forEach(([id, ToolCtor]) =>
@@ -78,6 +113,7 @@ export interface EditorHandle {
     listeners,
   );
 
+  // saving
   const saveBtn = document.getElementById("save") as HTMLButtonElement | null;
   listen(
     saveBtn,
@@ -86,7 +122,8 @@ export interface EditorHandle {
       const formatSelect = document.getElementById(
         "formatSelect",
       ) as HTMLSelectElement | null;
-      const format = formatSelect?.value?.toLowerCase() === "jpeg" ? "jpeg" : "png";
+      const format =
+        formatSelect?.value?.toLowerCase() === "jpeg" ? "jpeg" : "png";
       const mime = format === "jpeg" ? "image/jpeg" : "image/png";
       const quality = format === "jpeg" ? 0.9 : undefined;
 
@@ -116,7 +153,10 @@ export interface EditorHandle {
     listeners,
   );
 
-  const imageLoader = document.getElementById("imageLoader") as HTMLInputElement | null;
+  // image loading
+  const imageLoader = document.getElementById(
+    "imageLoader",
+  ) as HTMLInputElement | null;
   listen(
     imageLoader,
     "change",
@@ -142,6 +182,7 @@ export interface EditorHandle {
     listeners,
   );
 
+  // layer opacity sliders: inputs ending with "Opacity" adjust corresponding canvas
   document
     .querySelectorAll<HTMLInputElement>('input[id$="Opacity"]')
     .forEach((input) => {
@@ -159,6 +200,7 @@ export interface EditorHandle {
       );
     });
 
+  // layer selection
   const layerSelect = document.getElementById("layerSelect") as HTMLSelectElement | null;
   listen(
     layerSelect,
@@ -190,7 +232,6 @@ export interface EditorHandle {
   };
 
   updateHistoryButtons();
-
   return handle;
 }
 

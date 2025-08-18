@@ -1,8 +1,50 @@
 import { Editor } from "../core/Editor.js";
 import { Tool } from "./Tool.js";
 
+/**
+ * Tool allowing users to place text on the canvas by typing into a temporary
+ * textarea overlay. Text is committed on Enter or blur and can be cancelled
+ * with Escape.
+ */
+export class TextTool implements Tool {
+  private textarea: HTMLTextAreaElement | null = null;
+  private blurListener: ((e: Event) => void) | null = null;
+  private keydownListener: ((e: KeyboardEvent) => void) | null = null;
 
-    this.blurListener = commit;
+  onPointerDown(e: PointerEvent, editor: Editor): void {
+    this.cleanup();
+    const textarea = document.createElement("textarea");
+    textarea.style.position = "absolute";
+    const rect = editor.canvas.getBoundingClientRect();
+    const parent = editor.canvas.parentElement || document.body;
+    textarea.style.left = `${e.offsetX}px`;
+    textarea.style.top = `${e.offsetY}px`;
+    textarea.style.color = editor.strokeStyle;
+    textarea.style.fontSize = `${editor.lineWidthValue * 4}px`;
+    textarea.style.fontFamily = "sans-serif";
+    textarea.style.background = "transparent";
+    textarea.style.border = "none";
+    textarea.style.outline = "none";
+    parent.appendChild(textarea);
+    textarea.focus();
+
+    const commit = () => {
+      const text = textarea.value;
+      this.cleanup();
+      if (text) {
+        editor.ctx.fillStyle = editor.strokeStyle;
+        editor.ctx.font = `${editor.lineWidthValue * 4}px sans-serif`;
+        editor.ctx.fillText(text, e.offsetX, e.offsetY);
+        editor.saveState();
+      }
+    };
+
+    const cancel = () => {
+      this.cleanup();
+    };
+
+    this.blurListener = cancel;
+    textarea.addEventListener("blur", this.blurListener);
     this.keydownListener = (ev: KeyboardEvent) => {
       if (ev.key === "Enter") {
         ev.preventDefault();
@@ -12,7 +54,12 @@ import { Tool } from "./Tool.js";
         cancel();
       }
     };
+    textarea.addEventListener("keydown", this.keydownListener);
 
+    this.textarea = textarea;
+  }
+
+  onPointerMove(_e: PointerEvent, _editor: Editor): void {}
 
   onPointerUp(_e: PointerEvent, _editor: Editor): void {
     if (this.textarea && document.activeElement !== this.textarea) {
@@ -20,16 +67,11 @@ import { Tool } from "./Tool.js";
     }
   }
 
-  onPointerMove(): void {}
-  onPointerUp(): void {}
-
   destroy(): void {
     this.cleanup();
   }
 
-  /**
-   * Remove textarea overlay and any registered listeners.
-   */
+  /** Remove textarea overlay and any registered listeners. */
   private cleanup(): void {
     if (!this.textarea) return;
     if (this.blurListener) {
@@ -43,5 +85,5 @@ import { Tool } from "./Tool.js";
     this.blurListener = null;
     this.keydownListener = null;
   }
-
+}
 

@@ -12,9 +12,11 @@ describe("TextTool", () => {
       <div id="container">
         <canvas id="canvas"></canvas>
       </div>
-      <input id="colorPicker" value="#123456" />
-      <input id="lineWidth" value="2" />
-      <input id="fillMode" type="checkbox" />
+        <input id="colorPicker" value="#123456" />
+        <input id="lineWidth" value="2" />
+        <input id="fillMode" type="checkbox" />
+        <select id="fontFamily"><option value="sans-serif"></option></select>
+        <input id="fontSize" value="16" />
     `;
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -63,12 +65,14 @@ describe("TextTool", () => {
       toJSON: () => {},
     });
 
-    editor = new Editor(
-      canvas,
-      document.getElementById("colorPicker") as HTMLInputElement,
-      document.getElementById("lineWidth") as HTMLInputElement,
-      document.getElementById("fillMode") as HTMLInputElement,
-    );
+      editor = new Editor(
+        canvas,
+        document.getElementById("colorPicker") as HTMLInputElement,
+        document.getElementById("lineWidth") as HTMLInputElement,
+        document.getElementById("fillMode") as HTMLInputElement,
+        document.getElementById("fontFamily") as HTMLSelectElement,
+        document.getElementById("fontSize") as HTMLInputElement,
+      );
   });
 
   afterEach(() => {
@@ -90,7 +94,8 @@ describe("TextTool", () => {
       return `rgb(${r}, ${g}, ${b})`;
     };
     expect(ta.style.color).toBe(hexToRgb(editor.strokeStyle));
-    expect(ta.style.fontSize).toBe(`${editor.lineWidthValue * 4}px`);
+      expect(ta.style.fontSize).toBe(`${editor.fontSizeValue}px`);
+      expect(ta.style.fontFamily).toBe(editor.fontFamilyValue);
   });
 
   it("commits text on Enter", () => {

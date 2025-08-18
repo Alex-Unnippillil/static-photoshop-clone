@@ -11,22 +11,27 @@ describe("layer opacity", () => {
       </div>
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
-      <input id="fillMode" type="checkbox" />
-      <input id="layer2Opacity" value="100" />
+        <input id="fillMode" type="checkbox" />
+        <select id="fontFamily"><option value="sans-serif"></option></select>
+        <input id="fontSize" value="16" />
+        <input id="layer2Opacity" value="100" />
       <button id="save"></button>
     `;
 
-    const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-    const ctx = {
-      drawImage: jest.fn(),
-      setTransform: jest.fn(),
-      scale: jest.fn(),
-      getImageData: jest.fn(),
-      putImageData: jest.fn(),
-      clearRect: jest.fn(),
-    } as any;
-    canvas.getContext = jest.fn().mockReturnValue(ctx);
-    canvas.getBoundingClientRect = () => ({
+      const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+      const layer2 = document.getElementById("layer2") as HTMLCanvasElement;
+      const ctx = {
+        drawImage: jest.fn(),
+        setTransform: jest.fn(),
+        scale: jest.fn(),
+        getImageData: jest.fn(),
+        putImageData: jest.fn(),
+        clearRect: jest.fn(),
+      } as any;
+      const ctx2 = { ...ctx } as any;
+      canvas.getContext = jest.fn().mockReturnValue(ctx);
+      layer2.getContext = jest.fn().mockReturnValue(ctx2);
+      canvas.getBoundingClientRect = () => ({
       width: 100,
       height: 100,
       top: 0,
@@ -85,7 +90,7 @@ describe("layer opacity", () => {
 
     expect(tempCtx.drawImage).toHaveBeenCalledTimes(2);
     expect(tempCtxAlpha).toEqual([1, 0.5]);
-    expect(tempCanvas.toDataURL).toHaveBeenCalledWith("image/png");
+      expect(tempCanvas.toDataURL).toHaveBeenCalledWith("image/png", undefined);
 
     createSpy.mockRestore();
   });

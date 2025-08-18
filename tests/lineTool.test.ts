@@ -11,6 +11,8 @@ describe("LineTool", () => {
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
       <input id="fillMode" type="checkbox" />
+      <select id="fontFamily"><option value="sans-serif"></option></select>
+      <input id="fontSize" value="16" />
     `;
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
     (canvas as any).setPointerCapture = jest.fn();
@@ -35,25 +37,35 @@ describe("LineTool", () => {
       fillStyle: "blue",
       lineWidth: 5,
     };
-    canvas.getContext = jest
-      .fn()
-      .mockReturnValue(ctx as CanvasRenderingContext2D);
+    canvas.getContext = jest.fn().mockReturnValue(ctx as CanvasRenderingContext2D);
+    canvas.getBoundingClientRect = () => ({
+      width: 100,
+      height: 100,
+      top: 0,
+      left: 0,
+      bottom: 100,
+      right: 100,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    });
     editor = new Editor(
       canvas,
       document.getElementById("colorPicker") as HTMLInputElement,
       document.getElementById("lineWidth") as HTMLInputElement,
       document.getElementById("fillMode") as HTMLInputElement,
+      document.getElementById("fontFamily") as HTMLSelectElement,
+      document.getElementById("fontSize") as HTMLInputElement,
     );
   });
 
-
+  it("previews line during pointer move", () => {
     const tool = new LineTool();
     tool.onPointerDown({ offsetX: 1, offsetY: 2 } as PointerEvent, editor);
-    tool.onPointerMove({
-      offsetX: 3,
-      offsetY: 4,
-      buttons: 1,
-    } as PointerEvent, editor);
+    tool.onPointerMove(
+      { offsetX: 3, offsetY: 4, buttons: 1 } as PointerEvent,
+      editor,
+    );
     tool.onPointerUp({ offsetX: 3, offsetY: 4 } as PointerEvent, editor);
 
     expect(ctx.getImageData).toHaveBeenCalled();
@@ -93,3 +105,4 @@ describe("LineTool", () => {
     expect(ctx.putImageData).toHaveBeenCalledTimes(2);
   });
 });
+

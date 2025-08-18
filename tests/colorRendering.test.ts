@@ -15,8 +15,10 @@ describe("color rendering", () => {
     document.body.innerHTML = `
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#111111" />
-      <input id="lineWidth" value="2" />
-      <input id="fillMode" type="checkbox" />
+        <input id="lineWidth" value="2" />
+        <input id="fillMode" type="checkbox" />
+        <select id="fontFamily"><option value="sans-serif"></option></select>
+        <input id="fontSize" value="16" />
     `;
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -59,12 +61,14 @@ describe("color rendering", () => {
       toJSON: () => {},
     });
 
-    editor = new Editor(
-      canvas,
-      document.getElementById("colorPicker") as HTMLInputElement,
-      document.getElementById("lineWidth") as HTMLInputElement,
-      document.getElementById("fillMode") as HTMLInputElement,
-    );
+      editor = new Editor(
+        canvas,
+        document.getElementById("colorPicker") as HTMLInputElement,
+        document.getElementById("lineWidth") as HTMLInputElement,
+        document.getElementById("fillMode") as HTMLInputElement,
+        document.getElementById("fontFamily") as HTMLSelectElement,
+        document.getElementById("fontSize") as HTMLInputElement,
+      );
   });
 
   afterEach(() => {

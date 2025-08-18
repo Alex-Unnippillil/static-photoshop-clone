@@ -1,21 +1,82 @@
-
+import { Editor } from "./core/Editor.js";
+import { Shortcuts } from "./core/Shortcuts.js";
+import { PencilTool } from "./tools/PencilTool.js";
+import { EraserTool } from "./tools/EraserTool.js";
+import { RectangleTool } from "./tools/RectangleTool.js";
+import { LineTool } from "./tools/LineTool.js";
+import { CircleTool } from "./tools/CircleTool.js";
+import { TextTool } from "./tools/TextTool.js";
+import type { Tool } from "./tools/Tool.js";
 
 export interface EditorHandle {
   editor: Editor;
   editors: Editor[];
+  activateLayer: (index: number) => void;
+  destroy(): void;
+}
 
+/** Utility to listen to events and auto-remove on destroy. */
+function listen(
+  el: Element | null | undefined,
+  type: string,
+  handler: EventListenerOrEventListenerObject,
+  list: Array<() => void>,
+): void {
+  if (!el) return;
+  el.addEventListener(type, handler);
+  list.push(() => el.removeEventListener(type, handler));
+}
 
-  const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
+/**
+ * Initialize the editor by wiring up DOM controls and returning an
+ * {@link EditorHandle} that allows tests or callers to tear down the editor.
+ */
+export function initEditor(): EditorHandle {
+  const canvases = Array.from(
+    document.querySelectorAll<HTMLCanvasElement>("canvas"),
+  );
+
+  const colorPicker = document.getElementById(
+    "colorPicker",
+  ) as HTMLInputElement;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
   const fillMode = document.getElementById("fillMode") as HTMLInputElement;
+  const fontFamily = document.getElementById(
+    "fontFamily",
+  ) as HTMLSelectElement;
+  const fontSize = document.getElementById("fontSize") as HTMLInputElement;
 
-  const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
-  const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
+  const undoBtn = document.getElementById("undo") as
+    | HTMLButtonElement
+    | null;
+  const redoBtn = document.getElementById("redo") as
+    | HTMLButtonElement
+    | null;
 
   const listeners: Array<() => void> = [];
 
-  let editor: Editor;
+  // Load persisted font settings
+  const storedFamily = localStorage.getItem("fontFamily");
+  if (storedFamily) fontFamily.value = storedFamily;
+  const storedSize = localStorage.getItem("fontSize");
+  if (storedSize) fontSize.value = storedSize;
 
+  // Persist changes
+  listen(
+    fontFamily,
+    "change",
+    () => localStorage.setItem("fontFamily", fontFamily.value),
+    listeners,
+  );
+  listen(
+    fontSize,
+    "change",
+    () => localStorage.setItem("fontSize", fontSize.value),
+    listeners,
+  );
+
+  // helper to update undo/redo button states for current editor
+  let editor: Editor; // will be set after editors are created
   const updateHistoryButtons = () => {
     if (undoBtn) undoBtn.disabled = !editor?.canUndo;
     if (redoBtn) redoBtn.disabled = !editor?.canRedo;
@@ -25,21 +86,33 @@ export interface EditorHandle {
   canvases.forEach((c) => {
     try {
       editors.push(
-        new Editor(c, colorPicker, lineWidth, fillMode, () => {
-          updateHistoryButtons();
-        }),
+        new Editor(
+          c,
+          colorPicker,
+          lineWidth,
+          fillMode,
+          fontFamily,
+          fontSize,
+          () => {
+            updateHistoryButtons();
+          },
+        ),
       );
     } catch {
       /* skip canvases without 2D context */
     }
   });
 
+  // active editor defaults to the first successfully created editor
   editor = editors[0];
 
+  // default tool
   editor.setTool(new PencilTool());
 
+  // keyboard shortcuts
   const shortcuts = new Shortcuts(editor);
 
+  // map button id to tool constructor
   const toolButtons: Record<string, new () => Tool> = {
     pencil: PencilTool,
     eraser: EraserTool,
@@ -78,6 +151,7 @@ export interface EditorHandle {
     listeners,
   );
 
+  // saving
   const saveBtn = document.getElementById("save") as HTMLButtonElement | null;
   listen(
     saveBtn,
@@ -86,7 +160,8 @@ export interface EditorHandle {
       const formatSelect = document.getElementById(
         "formatSelect",
       ) as HTMLSelectElement | null;
-      const format = formatSelect?.value?.toLowerCase() === "jpeg" ? "jpeg" : "png";
+      const format =
+        formatSelect?.value?.toLowerCase() === "jpeg" ? "jpeg" : "png";
       const mime = format === "jpeg" ? "image/jpeg" : "image/png";
       const quality = format === "jpeg" ? 0.9 : undefined;
 
@@ -116,7 +191,10 @@ export interface EditorHandle {
     listeners,
   );
 
-  const imageLoader = document.getElementById("imageLoader") as HTMLInputElement | null;
+  // image loading
+  const imageLoader = document.getElementById("imageLoader") as
+    | HTMLInputElement
+    | null;
   listen(
     imageLoader,
     "change",
@@ -142,6 +220,7 @@ export interface EditorHandle {
     listeners,
   );
 
+  // layer opacity sliders: inputs ending with "Opacity" adjust corresponding canvas
   document
     .querySelectorAll<HTMLInputElement>('input[id$="Opacity"]')
     .forEach((input) => {
@@ -159,7 +238,10 @@ export interface EditorHandle {
       );
     });
 
-  const layerSelect = document.getElementById("layerSelect") as HTMLSelectElement | null;
+  // layer selection
+  const layerSelect = document.getElementById("layerSelect") as
+    | HTMLSelectElement
+    | null;
   listen(
     layerSelect,
     "change",

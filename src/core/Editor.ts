@@ -6,25 +6,31 @@ export class Editor {
   private undoStack: ImageData[] = [];
   private redoStack: ImageData[] = [];
   private currentTool: Tool | null = null;
-  colorPicker: HTMLInputElement;
-  lineWidth: HTMLInputElement;
-  fillMode: HTMLInputElement;
+    colorPicker: HTMLInputElement;
+    lineWidth: HTMLInputElement;
+    fillMode: HTMLInputElement;
+    fontFamily: HTMLSelectElement;
+    fontSize: HTMLInputElement;
   private onChange?: () => void;
 
   constructor(
     canvas: HTMLCanvasElement,
-    colorPicker: HTMLInputElement,
-    lineWidth: HTMLInputElement,
-    fillMode: HTMLInputElement,
-    onChange?: () => void,
+      colorPicker: HTMLInputElement,
+      lineWidth: HTMLInputElement,
+      fillMode: HTMLInputElement,
+      fontFamily: HTMLSelectElement,
+      fontSize: HTMLInputElement,
+      onChange?: () => void,
   ) {
     this.canvas = canvas;
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Unable to get 2D context");
     this.ctx = ctx;
     this.colorPicker = colorPicker;
-    this.lineWidth = lineWidth;
-    this.fillMode = fillMode;
+      this.lineWidth = lineWidth;
+      this.fillMode = fillMode;
+      this.fontFamily = fontFamily;
+      this.fontSize = fontSize;
     this.onChange = onChange;
     this.adjustForPixelRatio();
     window.addEventListener("resize", this.handleResize);
@@ -122,17 +128,25 @@ export class Editor {
     return this.colorPicker.value;
   }
 
-  get lineWidthValue() {
-    return parseInt(this.lineWidth.value, 10) || 1;
-  }
+    get lineWidthValue() {
+      return parseInt(this.lineWidth.value, 10) || 1;
+    }
 
-  get fill() {
-    return this.fillMode.checked;
-  }
+    get fill() {
+      return this.fillMode.checked;
+    }
 
-  get fillStyle() {
-    return this.colorPicker.value;
-  }
+    get fillStyle() {
+      return this.colorPicker.value;
+    }
+
+    get fontFamilyValue() {
+      return this.fontFamily.value || "sans-serif";
+    }
+
+    get fontSizeValue() {
+      return parseInt(this.fontSize.value, 10) || 16;
+    }
 
   /**
    * Remove all event listeners registered by the editor.

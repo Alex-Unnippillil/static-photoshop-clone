@@ -16,6 +16,8 @@ export class Shortcuts {
   private readonly handler: (e: KeyboardEvent) => void;
   private editor: Editor;
 
+  constructor(editor: Editor) {
+    this.editor = editor;
     this.handler = (e: KeyboardEvent) => this.onKeyDown(e);
     document.addEventListener("keydown", this.handler);
   }
@@ -26,7 +28,7 @@ export class Shortcuts {
   }
 
   private onKeyDown(e: KeyboardEvent) {
-
+    // undo/redo shortcuts
     if (e.ctrlKey || e.metaKey) {
       if (e.key.toLowerCase() === "z") {
         e.preventDefault();
@@ -42,11 +44,9 @@ export class Shortcuts {
     // Tool switching via letter keys
     switch (e.key.toLowerCase()) {
       case "p":
-
         this.editor.setTool(new PencilTool());
         this.activate("pencil");
         break;
-
       case "r":
         this.editor.setTool(new RectangleTool());
         this.activate("rectangle");
@@ -62,7 +62,10 @@ export class Shortcuts {
       case "t":
         this.editor.setTool(new TextTool());
         this.activate("text");
-
+        break;
+      case "e":
+        this.editor.setTool(new EraserTool());
+        this.activate("eraser");
         break;
     }
   }

@@ -19,32 +19,6 @@ export class TextTool implements Tool {
   private startX = 0;
   private startY = 0;
 
-  onPointerDown(e: PointerEvent, editor: Editor): void {
-    // Ensure any previous overlays are removed before creating a new one.
-    this.cleanup();
-
-    this.startX = e.offsetX;
-    this.startY = e.offsetY;
-
-    const textarea = document.createElement("textarea");
-    textarea.style.position = "absolute";
-    textarea.style.left = `${e.offsetX}px`;
-    textarea.style.top = `${e.offsetY}px`;
-    textarea.style.padding = "0";
-    textarea.style.margin = "0";
-    textarea.style.border = "1px dashed #666";
-    textarea.style.background = "transparent";
-    textarea.style.resize = "none";
-    textarea.style.overflow = "hidden";
-    textarea.style.outline = "none";
-    textarea.style.lineHeight = "1";
-    textarea.style.color = editor.strokeStyle;
-    textarea.style.fontSize = `${editor.lineWidthValue * 4}px`;
-    textarea.rows = 1;
-
-    const parent = editor.canvas.parentElement || document.body;
-    parent.appendChild(textarea);
-    textarea.focus();
 
     const commit = () => {
       const value = textarea.value;
@@ -66,6 +40,8 @@ export class TextTool implements Tool {
     this.blurListener = () => commit();
     textarea.addEventListener("blur", this.blurListener);
 
+
+    this.blurListener = commit;
     this.keydownListener = (ev: KeyboardEvent) => {
       if (ev.key === "Enter") {
         ev.preventDefault();
@@ -75,9 +51,11 @@ export class TextTool implements Tool {
         cancel();
       }
     };
+
+    textarea.addEventListener("blur", this.blurListener);
     textarea.addEventListener("keydown", this.keydownListener);
 
-    this.textarea = textarea;
+
   }
 
   // Text tool does not react to pointer moves.
@@ -89,6 +67,9 @@ export class TextTool implements Tool {
   onPointerUp(_e: PointerEvent, _editor: Editor): void {
     /* no-op */
   }
+
+  onPointerMove(): void {}
+  onPointerUp(): void {}
 
   destroy(): void {
     this.cleanup();
@@ -110,5 +91,12 @@ export class TextTool implements Tool {
     this.blurListener = null;
     this.keydownListener = null;
   }
-}
+
+  private hexToRgb(hex: string): string {
+    const v = hex.replace("#", "");
+    const r = parseInt(v.substring(0, 2), 16);
+    const g = parseInt(v.substring(2, 4), 16);
+    const b = parseInt(v.substring(4, 6), 16);
+    return `rgb(${r}, ${g}, ${b})`;
+
 

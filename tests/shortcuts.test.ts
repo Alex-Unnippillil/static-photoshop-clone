@@ -2,6 +2,7 @@ import { initEditor, EditorHandle } from "../src/editor.js";
 import { RectangleTool } from "../src/tools/RectangleTool.js";
 import { PencilTool } from "../src/tools/PencilTool.js";
 import { EraserTool } from "../src/tools/EraserTool.js";
+import { EyedropperTool } from "../src/tools/EyedropperTool.js";
 import { Shortcuts } from "../src/core/Shortcuts.js";
 import { Editor } from "../src/core/Editor.js";
 
@@ -50,11 +51,13 @@ describe("keyboard shortcuts", () => {
     const spy = jest.spyOn(handle.editor, "setTool");
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "r" }));
     expect(spy.mock.calls[0][0]).toBeInstanceOf(RectangleTool);
-    document.dispatchEvent(new KeyboardEvent("keydown", { key: "p" }));
-    expect(spy.mock.calls[1][0]).toBeInstanceOf(PencilTool);
-    document.dispatchEvent(new KeyboardEvent("keydown", { key: "e" }));
-    expect(spy.mock.calls[2][0]).toBeInstanceOf(EraserTool);
-  });
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "p" }));
+      expect(spy.mock.calls[1][0]).toBeInstanceOf(PencilTool);
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "e" }));
+      expect(spy.mock.calls[2][0]).toBeInstanceOf(EraserTool);
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "i" }));
+      expect(spy.mock.calls[3][0]).toBeInstanceOf(EyedropperTool);
+    });
 
   it("performs undo and redo with shortcuts", () => {
     const undo = jest.spyOn(handle.editor, "undo").mockImplementation(() => {});

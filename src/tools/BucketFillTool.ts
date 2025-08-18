@@ -37,6 +37,7 @@ export class BucketFillTool implements Tool {
     void _e;
     void _editor;
   }
+
   onPointerUp(_e: PointerEvent, _editor: Editor): void {
     void _e;
     void _editor;

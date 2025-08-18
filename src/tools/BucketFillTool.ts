@@ -33,14 +33,14 @@ export class BucketFillTool implements Tool {
     ctx.putImageData(image, 0, 0);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onPointerMove(_e: PointerEvent, _editor: Editor): void {
-    void _e;
-    void _editor;
+    // intentionally unused
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onPointerUp(_e: PointerEvent, _editor: Editor): void {
-    void _e;
-    void _editor;
+    // intentionally unused
   }
 
   private getPixel(image: ImageData, x: number, y: number): [number, number, number, number] {

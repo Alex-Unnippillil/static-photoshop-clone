@@ -6,8 +6,46 @@ import { RectangleTool } from "./tools/RectangleTool";
 import { LineTool } from "./tools/LineTool";
 import { CircleTool } from "./tools/CircleTool";
 import { TextTool } from "./tools/TextTool";
+import { Tool } from "./tools/Tool";
 
+export interface EditorHandle {
+  editor: Editor;
+  editors: Editor[];
+  activateLayer(index: number): void;
+  destroy(): void;
+}
 
+/**
+ * Initialize the editor by wiring up DOM controls and returning an
+ * {@link EditorHandle} that allows tests or callers to tear down the editor.
+ *
+ * @param canvasInputs Optional list of canvas elements or element ids. If not
+ * provided, all `<canvas>` elements in the document will be used.
+ */
+export function initEditor(
+  ...canvasInputs: Array<string | HTMLCanvasElement>
+): EditorHandle {
+  const canvases: HTMLCanvasElement[] =
+    canvasInputs.length > 0
+      ? canvasInputs
+          .map((c) =>
+            typeof c === "string"
+              ? (document.getElementById(c) as HTMLCanvasElement | null)
+              : c,
+          )
+          .filter((c): c is HTMLCanvasElement => !!c)
+      : Array.from(document.querySelectorAll<HTMLCanvasElement>("canvas"));
+
+  const listen = (
+    el: HTMLElement | Window | Document | null,
+    type: string,
+    handler: EventListenerOrEventListenerObject,
+    bucket: Array<() => void>,
+  ) => {
+    if (!el) return;
+    el.addEventListener(type, handler);
+    bucket.push(() => el.removeEventListener(type, handler));
+  };
 
   const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement;
@@ -66,15 +104,25 @@ import { TextTool } from "./tools/TextTool";
     ),
   );
 
-  listen(undoBtn, "click", () => {
-    editor.undo();
-    updateHistoryButtons();
-  }, listeners);
+  listen(
+    undoBtn,
+    "click",
+    () => {
+      editor.undo();
+      updateHistoryButtons();
+    },
+    listeners,
+  );
 
-  listen(redoBtn, "click", () => {
-    editor.redo();
-    updateHistoryButtons();
-  }, listeners);
+  listen(
+    redoBtn,
+    "click",
+    () => {
+      editor.redo();
+      updateHistoryButtons();
+    },
+    listeners,
+  );
 
   // saving
   const saveBtn = document.getElementById("save") as HTMLButtonElement | null;
@@ -189,3 +237,4 @@ import { TextTool } from "./tools/TextTool";
 
   return handle;
 }
+

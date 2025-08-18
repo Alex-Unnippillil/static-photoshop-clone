@@ -12,38 +12,6 @@ export class TextTool implements Tool {
   onPointerDown(e: PointerEvent, editor: Editor): void {
     this.cleanup();
 
-    this.startX = e.offsetX;
-    this.startY = e.offsetY;
-
-    const textarea = document.createElement("textarea");
-    this.textarea = textarea;
-    textarea.style.position = "absolute";
-    textarea.style.left = `${this.startX}px`;
-    textarea.style.top = `${this.startY}px`;
-    textarea.style.padding = "0";
-    textarea.style.margin = "0";
-    textarea.style.border = "1px dashed #000";
-    textarea.style.background = "transparent";
-    textarea.style.color = this.hexToRgb(editor.strokeStyle);
-    textarea.style.fontSize = `${editor.lineWidthValue * 4}px`;
-    textarea.style.fontFamily = "sans-serif";
-    textarea.style.lineHeight = "1";
-
-    const commit = () => {
-      const value = textarea.value;
-      if (value) {
-        editor.ctx.fillStyle = editor.fillStyle;
-        editor.ctx.fillText(value, this.startX, this.startY);
-        try {
-          editor.saveState();
-        } catch {
-          /* ignore if context doesn't support getImageData */
-        }
-      }
-      this.cleanup();
-    };
-
-    const cancel = () => this.cleanup();
 
     this.blurListener = () => commit();
     textarea.addEventListener("blur", this.blurListener);
@@ -58,6 +26,7 @@ export class TextTool implements Tool {
       }
     };
     textarea.addEventListener("keydown", this.keydownListener);
+
 
     (editor.canvas.parentElement || document.body).appendChild(textarea);
     textarea.focus();

@@ -1,9 +1,10 @@
 export class Editor {
-    constructor(canvas, colorPicker, lineWidth, fillMode, onChange) {
+    constructor(canvas, colorPicker, lineWidth, fillMode, onChange, fontFamily, fontSize) {
         this.undoStack = [];
         this.redoStack = [];
         this.currentTool = null;
         this.handlePointerDown = (e) => {
+            // Capture the pointer once before recording canvas state
             this.canvas.setPointerCapture(e.pointerId);
             this.saveState();
             this.currentTool?.onPointerDown(e, this);
@@ -33,6 +34,8 @@ export class Editor {
         this.lineWidth = lineWidth;
         this.fillMode = fillMode;
         this.onChange = onChange;
+        this.fontFamily = fontFamily ?? null;
+        this.fontSize = fontSize ?? null;
         this.adjustForPixelRatio();
         window.addEventListener("resize", this.handleResize);
         this.canvas.addEventListener("pointerdown", this.handlePointerDown);
@@ -92,6 +95,12 @@ export class Editor {
     }
     get fillStyle() {
         return this.colorPicker.value;
+    }
+    get fontFamilyValue() {
+        return this.fontFamily?.value || "sans-serif";
+    }
+    get fontSizeValue() {
+        return parseInt(this.fontSize?.value ?? "", 10) || 16;
     }
     /**
      * Remove all event listeners registered by the editor.

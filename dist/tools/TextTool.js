@@ -12,8 +12,8 @@ export class TextTool {
         textarea.style.left = `${e.offsetX}px`;
         textarea.style.top = `${e.offsetY}px`;
         textarea.style.color = editor.strokeStyle;
-        textarea.style.fontSize = `${editor.lineWidthValue * 4}px`;
-        textarea.style.fontFamily = "sans-serif";
+        textarea.style.fontSize = `${editor.fontSizeValue}px`;
+        textarea.style.fontFamily = editor.fontFamilyValue;
         textarea.style.background = "transparent";
         textarea.style.border = "none";
         textarea.style.outline = "none";
@@ -24,7 +24,7 @@ export class TextTool {
             this.cleanup();
             if (text) {
                 editor.ctx.fillStyle = editor.strokeStyle;
-                editor.ctx.font = `${editor.lineWidthValue * 4}px sans-serif`;
+                editor.ctx.font = `${editor.fontSizeValue}px ${editor.fontFamilyValue}`;
                 editor.ctx.fillText(text, e.offsetX, e.offsetY);
                 editor.saveState();
             }
@@ -47,7 +47,11 @@ export class TextTool {
         textarea.addEventListener("keydown", this.keydownListener);
         this.textarea = textarea;
     }
-    onPointerMove(_e, _editor) { }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    onPointerMove(_e, _editor) {
+        /* no-op */
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     onPointerUp(_e, _editor) {
         if (this.textarea && document.activeElement !== this.textarea) {
             this.cleanup();
@@ -56,9 +60,6 @@ export class TextTool {
     destroy() {
         this.cleanup();
     }
-    /**
-     * Remove textarea overlay and any registered listeners.
-     */
     cleanup() {
         if (!this.textarea)
             return;

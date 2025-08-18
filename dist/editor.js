@@ -11,8 +11,9 @@ import { BucketFillTool } from "./tools/BucketFillTool.js";
 function listen(el, type, handler, list) {
     if (!el)
         return;
-    el.addEventListener(type, handler);
-    list.push(() => el.removeEventListener(type, handler));
+    const wrapped = handler;
+    el.addEventListener(type, wrapped);
+    list.push(() => el.removeEventListener(type, wrapped));
 }
 /**
  * Initialize the editor by wiring up DOM controls and returning an
@@ -23,11 +24,22 @@ export function initEditor() {
     const colorPicker = document.getElementById("colorPicker");
     const lineWidth = document.getElementById("lineWidth");
     const fillMode = document.getElementById("fillMode");
+    const fontFamily = document.getElementById("fontFamily");
+    const fontSize = document.getElementById("fontSize");
+    const layerSelect = document.getElementById("layerSelect");
+    if (layerSelect) {
+        layerSelect.innerHTML = "";
+        canvases.forEach((c, i) => {
+            const opt = document.createElement("option");
+            opt.value = String(i);
+            opt.textContent = c.id || `Layer ${i + 1}`;
+            layerSelect.appendChild(opt);
+        });
+    }
     const undoBtn = document.getElementById("undo");
     const redoBtn = document.getElementById("redo");
     const listeners = [];
-    // helper to update undo/redo button states for current editor
-    let editor; // will be set after editors are created
+    let editor; // set after editors created
     const updateHistoryButtons = () => {
         if (undoBtn)
             undoBtn.disabled = !editor?.canUndo;
@@ -39,7 +51,7 @@ export function initEditor() {
         try {
             editors.push(new Editor(c, colorPicker, lineWidth, fillMode, () => {
                 updateHistoryButtons();
-            }));
+            }, fontFamily ?? undefined, fontSize ?? undefined));
         }
         catch {
             /* skip canvases without 2D context */
@@ -94,7 +106,9 @@ export function initEditor() {
         else {
             exportCanvas = editor.canvas;
         }
-        const data = exportCanvas.toDataURL(mime, quality);
+        const data = quality !== undefined
+            ? exportCanvas.toDataURL(mime, quality)
+            : exportCanvas.toDataURL(mime);
         const a = document.createElement("a");
         a.href = data;
         a.download = `canvas.${format === "jpeg" ? "jpg" : "png"}`;
@@ -116,7 +130,6 @@ export function initEditor() {
         };
         reader.readAsDataURL(file);
     }, listeners);
-    // layer opacity sliders: inputs ending with "Opacity" adjust corresponding canvas
     document
         .querySelectorAll('input[id$="Opacity"]')
         .forEach((input) => {
@@ -130,7 +143,6 @@ export function initEditor() {
         }, listeners);
     });
     // layer selection
-    const layerSelect = document.getElementById("layerSelect");
     listen(layerSelect, "change", () => {
         const idx = parseInt(layerSelect.value, 10);
         activateLayer(idx);

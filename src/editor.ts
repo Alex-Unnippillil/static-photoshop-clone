@@ -17,8 +17,9 @@ function listen<T extends Event>(
   list: Array<() => void>,
 ) {
   if (!el) return;
-  el.addEventListener(type, handler);
-  list.push(() => el.removeEventListener(type, handler));
+  const wrapped = handler as EventListener;
+  el.addEventListener(type, wrapped);
+  list.push(() => el.removeEventListener(type, wrapped));
 }
 
 export interface EditorHandle {
@@ -41,6 +42,17 @@ export function initEditor(): EditorHandle {
   const fillMode = document.getElementById("fillMode") as HTMLInputElement;
   const fontFamily = document.getElementById("fontFamily") as HTMLSelectElement | null;
   const fontSize = document.getElementById("fontSize") as HTMLInputElement | null;
+  const layerSelect = document.getElementById("layerSelect") as HTMLSelectElement | null;
+
+  if (layerSelect) {
+    layerSelect.innerHTML = "";
+    canvases.forEach((c, i) => {
+      const opt = document.createElement("option");
+      opt.value = String(i);
+      opt.textContent = c.id || `Layer ${i + 1}`;
+      layerSelect.appendChild(opt);
+    });
+  }
 
   const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
   const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
@@ -211,7 +223,6 @@ export function initEditor(): EditorHandle {
     });
 
   // layer selection
-  const layerSelect = document.getElementById("layerSelect") as HTMLSelectElement | null;
   listen(
     layerSelect,
     "change",

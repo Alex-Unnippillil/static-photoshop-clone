@@ -30,6 +30,21 @@
       <input type="file" id="imageLoader" accept="image/*" />
       <button id="undo" disabled>Undo</button>
       <button id="redo" disabled>Redo</button>
+
+      <div class="group">
+        <label for="layerSelect">Layer</label>
+        <select id="layerSelect"></select>
+      </div>
+      <div class="group">
+        <label for="layer2Opacity">Layer 2 Opacity</label>
+        <input
+          id="layer2Opacity"
+          type="number"
+          min="0"
+          max="100"
+          value="100"
+        />
+      </div>
       <select id="formatSelect">
         <option value="png">PNG</option>
         <option value="jpeg">JPEG</option>
@@ -37,7 +52,10 @@
       <button id="save">Save</button>
 
     </div>
-    <canvas id="canvas" width="800" height="600"></canvas>
+    <div id="canvasContainer">
+      <canvas id="canvas" width="800" height="600"></canvas>
+      <canvas id="layer2" width="800" height="600"></canvas>
+    </div>
     <script type="module" src="dist/index.js"></script>
   </body>
 </html>

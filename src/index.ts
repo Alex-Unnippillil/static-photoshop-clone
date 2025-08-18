@@ -1,7 +1,7 @@
 import { initEditor } from "./editor";
 
-const handles = [initEditor("layer1"), initEditor("layer2")];
-window.addEventListener("beforeunload", () =>
-  handles.forEach((h) => h.destroy()),
-);
+// Initialize a single editor instance for the existing #canvas element
+// and clean it up when the page unloads.
+const handle = initEditor();
+window.addEventListener("beforeunload", () => handle.destroy());
 

@@ -46,8 +46,11 @@ export class BucketFillTool implements Tool {
   onPointerUp(_e: PointerEvent, _editor: Editor): void {
     // intentionally unused
   }
+
 =======
 =======
+=======
+
 
   private getPixel(image: ImageData, x: number, y: number): [number, number, number, number] {
     const { width, data } = image;

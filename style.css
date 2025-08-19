@@ -40,8 +40,8 @@ body {
 }
 
 .tool-button.active {
-  background: #e0e0e0;
-  outline: 2px solid #007bff;
+  background: #007bff;
+  color: #fff;
 }
 
 #canvasContainer {

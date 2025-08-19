@@ -59,6 +59,21 @@ export function initEditor(): EditorHandle {
     toolButtons[id] = btn;
   });
 
+  let activeButton: HTMLButtonElement | null = null;
+  const setActiveButton = (btn: HTMLButtonElement | null) => {
+    if (activeButton) activeButton.classList.remove("active");
+    if (btn) btn.classList.add("active");
+    activeButton = btn;
+  };
+  const buttonForTool = (tool: Tool): HTMLButtonElement | null => {
+    for (const [id, ToolCtor] of Object.entries(toolConstructors)) {
+      if (tool instanceof ToolCtor) {
+        return toolButtons[id];
+      }
+    }
+    return null;
+  };
+
   const colorPicker =
     document.getElementById("colorPicker") as HTMLInputElement | null;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement | null;
@@ -160,6 +175,14 @@ export function initEditor(): EditorHandle {
       "initEditor() requires at least one <canvas> element with a 2D context",
     );
   }
+
+  editors.forEach((e) => {
+    const original = e.setTool.bind(e);
+    e.setTool = (tool: Tool) => {
+      original(tool);
+      setActiveButton(buttonForTool(tool));
+    };
+  });
 
   // active editor defaults to the first successfully created editor
   editor = editors[0];

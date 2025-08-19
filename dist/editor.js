@@ -7,6 +7,7 @@ import { LineTool } from "./tools/LineTool.js";
 import { CircleTool } from "./tools/CircleTool.js";
 import { TextTool } from "./tools/TextTool.js";
 import { BucketFillTool } from "./tools/BucketFillTool.js";
+import { EyedropperTool } from "./tools/EyedropperTool.js";
 /** Utility to listen to events and auto-remove on destroy. */
 function listen(el, type, handler, list) {
     if (!el)
@@ -21,21 +22,91 @@ function listen(el, type, handler, list) {
  */
 export function initEditor() {
     const canvases = Array.from(document.querySelectorAll("canvas"));
+    const toolConstructors = {
+        pencil: PencilTool,
+        eraser: EraserTool,
+        rectangle: RectangleTool,
+        line: LineTool,
+        circle: CircleTool,
+        text: TextTool,
+        bucket: BucketFillTool,
+        eyedropper: EyedropperTool,
+    };
+    const toolButtons = {};
+    const constructorToId = new Map();
+    Object.entries(toolConstructors).forEach(([id, Ctor]) => {
+        const btn = document.getElementById(id);
+        if (!btn) {
+            throw new Error(`Missing #${id} button`);
+        }
+        toolButtons[id] = btn;
+        constructorToId.set(Ctor, id);
+    });
+    let activeButton = null;
+    function setActiveButton(tool) {
+        const id = constructorToId.get(tool.constructor);
+        if (!id)
+            return;
+        const btn = toolButtons[id];
+        if (!btn)
+            return;
+        activeButton?.classList.remove("active");
+        btn.classList.add("active");
+        activeButton = btn;
+    }
     const colorPicker = document.getElementById("colorPicker");
     const lineWidth = document.getElementById("lineWidth");
     const fillMode = document.getElementById("fillMode");
     const fontFamily = document.getElementById("fontFamily");
     const fontSize = document.getElementById("fontSize");
     const layerSelect = document.getElementById("layerSelect");
+    const toolbar = document.getElementById("toolbar") || document.body;
+    const saveBtn = document.getElementById("save");
+    const formatSelect = document.getElementById("formatSelect");
+    if (!colorPicker) {
+        throw new Error("Missing #colorPicker input");
+    }
+    if (!lineWidth) {
+        throw new Error("Missing #lineWidth input");
+    }
+    if (!fillMode) {
+        throw new Error("Missing #fillMode input");
+    }
+    if (!saveBtn) {
+        throw new Error("Missing #save button");
+    }
+    if (!formatSelect) {
+        throw new Error("Missing #formatSelect select");
+    }
     if (layerSelect) {
         layerSelect.innerHTML = "";
-        canvases.forEach((c, i) => {
+    }
+    canvases.forEach((c, i) => {
+        const canvasId = c.id || `layer${i + 1}`;
+        const name = c.id || `Layer ${i + 1}`;
+        if (layerSelect) {
             const opt = document.createElement("option");
             opt.value = String(i);
-            opt.textContent = c.id || `Layer ${i + 1}`;
+            opt.textContent = name;
             layerSelect.appendChild(opt);
-        });
-    }
+        }
+        if (!document.getElementById(`${canvasId}Opacity`) && i > 0) {
+            const group = document.createElement("div");
+            group.className = "group";
+            const label = document.createElement("label");
+            label.htmlFor = `${canvasId}Opacity`;
+            label.textContent = `${name} Opacity`;
+            const input = document.createElement("input");
+            input.id = `${canvasId}Opacity`;
+            input.type = "number";
+            input.min = "0";
+            input.max = "100";
+            input.value = "100";
+            group.appendChild(label);
+            group.appendChild(input);
+            toolbar.appendChild(group);
+        }
+    });
     const undoBtn = document.getElementById("undo");
     const redoBtn = document.getElementById("redo");
     const listeners = [];
@@ -49,14 +120,23 @@ export function initEditor() {
     const editors = [];
     canvases.forEach((c) => {
         try {
-            editors.push(new Editor(c, colorPicker, lineWidth, fillMode, () => {
+            const e = new Editor(c, colorPicker, lineWidth, fillMode, () => {
                 updateHistoryButtons();
-            }, fontFamily ?? undefined, fontSize ?? undefined));
+            }, fontFamily ?? undefined, fontSize ?? undefined);
+            const originalSetTool = e.setTool.bind(e);
+            e.setTool = (tool) => {
+                originalSetTool(tool);
+                setActiveButton(tool);
+            };
+            editors.push(e);
         }
         catch {
             /* skip canvases without 2D context */
         }
     });
+    if (editors.length === 0) {
+        throw new Error("initEditor() requires at least one <canvas> element with a 2D context");
+    }
     // active editor defaults to the first successfully created editor
     editor = editors[0];
     // default tool
@@ -64,16 +144,7 @@ export function initEditor() {
     // keyboard shortcuts
     const shortcuts = new Shortcuts(editor);
     // map button id to tool constructor
-    const toolButtons = {
-        pencil: PencilTool,
-        eraser: EraserTool,
-        rectangle: RectangleTool,
-        line: LineTool,
-        circle: CircleTool,
-        text: TextTool,
-        bucket: BucketFillTool,
-    };
-    Object.entries(toolButtons).forEach(([id, ToolCtor]) => listen(document.getElementById(id), "click", () => editor.setTool(new ToolCtor()), listeners));
+    Object.entries(toolConstructors).forEach(([id, ToolCtor]) => listen(toolButtons[id], "click", () => editor.setTool(new ToolCtor()), listeners));
     listen(undoBtn, "click", () => {
         editor.undo();
         updateHistoryButtons();
@@ -83,10 +154,8 @@ export function initEditor() {
         updateHistoryButtons();
     }, listeners);
     // saving
-    const saveBtn = document.getElementById("save");
     listen(saveBtn, "click", () => {
-        const formatSelect = document.getElementById("formatSelect");
-        const format = formatSelect?.value?.toLowerCase() === "jpeg" ? "jpeg" : "png";
+        const format = formatSelect.value.toLowerCase() === "jpeg" ? "jpeg" : "png";
         const mime = format === "jpeg" ? "image/jpeg" : "image/png";
         const quality = format === "jpeg" ? 0.9 : undefined;
         let exportCanvas;
@@ -124,7 +193,9 @@ export function initEditor() {
         reader.onload = () => {
             const img = new Image();
             img.onload = () => {
+                editor.saveState();
                 editor.ctx.drawImage(img, 0, 0, editor.canvas.width, editor.canvas.height);
+                updateHistoryButtons();
             };
             img.src = reader.result;
         };
@@ -154,6 +225,8 @@ export function initEditor() {
         handle.editor = editor;
         shortcuts.switchEditor(editor);
         updateHistoryButtons();
+        if (layerSelect)
+            layerSelect.value = String(index);
     }
     const handle = {
         editor,

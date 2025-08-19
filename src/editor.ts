@@ -51,13 +51,26 @@ export function initEditor(): EditorHandle {
   };
 
   const toolButtons: Record<string, HTMLButtonElement> = {};
-  Object.keys(toolConstructors).forEach((id) => {
+  const constructorToId = new Map<new () => Tool, string>();
+  Object.entries(toolConstructors).forEach(([id, Ctor]) => {
     const btn = document.getElementById(id) as HTMLButtonElement | null;
     if (!btn) {
       throw new Error(`Missing #${id} button`);
     }
     toolButtons[id] = btn;
+    constructorToId.set(Ctor, id);
   });
+
+  let activeButton: HTMLButtonElement | null = null;
+  function setActiveButton(tool: Tool) {
+    const id = constructorToId.get(tool.constructor as new () => Tool);
+    if (!id) return;
+    const btn = toolButtons[id];
+    if (!btn) return;
+    activeButton?.classList.remove("active");
+    btn.classList.add("active");
+    activeButton = btn;
+  }
 
   const colorPicker =
     document.getElementById("colorPicker") as HTMLInputElement | null;
@@ -137,19 +150,23 @@ export function initEditor(): EditorHandle {
   const editors: Editor[] = [];
   canvases.forEach((c) => {
     try {
-      editors.push(
-        new Editor(
-          c,
-          colorPicker,
-          lineWidth,
-          fillMode,
-          () => {
-            updateHistoryButtons();
-          },
-          fontFamily ?? undefined,
-          fontSize ?? undefined,
-        ),
+      const e = new Editor(
+        c,
+        colorPicker,
+        lineWidth,
+        fillMode,
+        () => {
+          updateHistoryButtons();
+        },
+        fontFamily ?? undefined,
+        fontSize ?? undefined,
       );
+      const originalSetTool = e.setTool.bind(e);
+      e.setTool = (tool: Tool) => {
+        originalSetTool(tool);
+        setActiveButton(tool);
+      };
+      editors.push(e);
     } catch {
       /* skip canvases without 2D context */
     }

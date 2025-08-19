@@ -33,6 +33,10 @@ export class BucketFillTool implements Tool {
     ctx.putImageData(image, 0, 0);
   }
 
+  onPointerMove(): void {}
+
+  onPointerUp(): void {}
+=======
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onPointerMove(_e: PointerEvent, _editor: Editor): void {
     // intentionally unused

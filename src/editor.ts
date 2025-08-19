@@ -255,6 +255,7 @@ export function initEditor(): EditorHandle {
             editor.canvas.height,
           );
           updateHistoryButtons();
+          if (imageLoader) imageLoader.value = "";
         };
         img.src = reader.result as string;
       };

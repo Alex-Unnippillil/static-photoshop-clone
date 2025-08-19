@@ -14,6 +14,10 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 - Color picker for stroke selection
 - Adjustable line width
 - Undo/redo support
+- Bucket fill tool for coloring regions
+- Eyedropper tool for sampling colors
+- Image import/export
+- Multi-layer support
 
 
 ### Keyboard Shortcuts
@@ -63,6 +67,9 @@ If any of these elements are missing, `initEditor()` throws an error such as
 Call `initEditor()` only after the DOM has been populated with these elements;
 the function returns an {@link EditorHandle} with a `destroy` method for
 cleanup.
+
+Layer selectors and opacity sliders are generated dynamically, enabling
+switching between layers and adjusting their transparency on the fly.
 
 ## Installing Dependencies
 

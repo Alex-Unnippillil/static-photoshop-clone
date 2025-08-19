@@ -29,4 +29,3 @@ export class EyedropperTool implements Tool {
     // intentionally unused
   }
 }
-

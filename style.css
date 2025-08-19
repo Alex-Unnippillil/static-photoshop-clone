@@ -28,9 +28,20 @@ body {
   gap: 8px;
 }
 
+.tool-button {
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+}
+
+.tool-button:hover {
+  background: #f0f0f0;
+}
+
 .tool-button.active {
-  background: #e0e0e0;
-  outline: 2px solid #007bff;
+  background: #007bff;
+  color: #fff;
 }
 
 #canvasContainer {
@@ -46,6 +57,10 @@ body {
   background: #fff;
   border: 1px solid #ccc;
   box-shadow: 0 0 4px rgba(0,0,0,.1);
+=======
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 

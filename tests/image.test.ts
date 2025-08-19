@@ -124,6 +124,36 @@ describe("image load and save", () => {
     expect(ctx.putImageData).toHaveBeenCalledTimes(2);
   });
 
+  it("reloads the same image after undo", async () => {
+    const file = new File([""], "test.png", { type: "image/png" });
+    const loader = document.getElementById("imageLoader") as HTMLInputElement;
+    const selectFile = async () => {
+      const prev = loader.value;
+      Object.defineProperty(loader, "files", {
+        value: [file],
+        configurable: true,
+      });
+      Object.defineProperty(loader, "value", {
+        value: `C:/fakepath/${file.name}`,
+        configurable: true,
+        writable: true,
+      });
+      if (loader.value !== prev) {
+        loader.dispatchEvent(new Event("change"));
+        await new Promise((r) => setTimeout(r, 0));
+      }
+    };
+
+    await selectFile();
+    expect(ctx.drawImage).toHaveBeenCalledTimes(1);
+
+    handle.editor.undo();
+    expect(handle.editor.canRedo).toBe(true);
+
+    await selectFile();
+    expect(ctx.drawImage).toHaveBeenCalledTimes(2);
+  });
+
   it("saves the canvas as an image", () => {
 
     const save = document.getElementById("save") as HTMLButtonElement;

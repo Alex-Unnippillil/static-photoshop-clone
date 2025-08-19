@@ -11,9 +11,16 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 - Rectangle tool for shape creation
 - Circle tool for drawing circles and ellipses
 - Text tool for adding labels
+- Bucket fill tool for painting contiguous areas
+- Eyedropper tool for sampling colors from the canvas
 - Color picker for stroke selection
+- Layer selection and opacity controls
 - Adjustable line width
 - Undo/redo support
+- Bucket fill tool for coloring regions
+- Eyedropper tool for sampling colors
+- Image import/export
+- Multi-layer support
 
 
 ### Keyboard Shortcuts
@@ -37,7 +44,7 @@ At least one `<canvas>` element with a 2D rendering context must be present in
 the DOM before calling `initEditor()`; initialization will throw an error
 otherwise.
 
-The editor also expects the following elements to exist:
+The editor also expects the following toolbar elements to exist:
 
 ```html
 <input type="color" id="colorPicker" />
@@ -53,6 +60,10 @@ The editor also expects the following elements to exist:
 <button id="bucket"></button>
 <button id="eyedropper"></button>
 
+<button id="undo"></button>
+<button id="redo"></button>
+<select id="layerSelect"></select>
+<input type="file" id="imageLoader" />
 <select id="formatSelect"></select>
 <button id="save"></button>
 ```
@@ -60,9 +71,15 @@ The editor also expects the following elements to exist:
 If any of these elements are missing, `initEditor()` throws an error such as
 `"Missing #bucket button"` and halts initialization.
 
+For additional layers, opacity inputs with IDs like `layer2Opacity` control
+the transparency of each canvas; these are created automatically if absent.
+
 Call `initEditor()` only after the DOM has been populated with these elements;
 the function returns an {@link EditorHandle} with a `destroy` method for
 cleanup.
+
+Layer selectors and opacity sliders are generated dynamically, enabling
+switching between layers and adjusting their transparency on the fly.
 
 ## Installing Dependencies
 

@@ -26,5 +26,9 @@ export class EyedropperTool implements Tool {
 
   // No action needed on pointer up
   onPointerUp(): void {}
+=======
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  onPointerUp(_e: PointerEvent, _editor: Editor): void {
+    // intentionally unused
+  }
 }
-

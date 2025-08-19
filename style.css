@@ -43,6 +43,9 @@ body {
   top: 0;
   left: 0;
   display: block;
+  background: #fff;
+  border: 1px solid #ccc;
+  box-shadow: 0 0 4px rgba(0,0,0,.1);
 }
 
 

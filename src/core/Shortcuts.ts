@@ -44,36 +44,36 @@ export class Shortcuts {
 
     switch (e.key.toLowerCase()) {
       case "p":
-        this.editor.setTool(new PencilTool());
         e.preventDefault();
+        this.editor.setTool(new PencilTool());
         break;
       case "r":
-        this.editor.setTool(new RectangleTool());
         e.preventDefault();
+        this.editor.setTool(new RectangleTool());
         break;
       case "l":
-        this.editor.setTool(new LineTool());
         e.preventDefault();
+        this.editor.setTool(new LineTool());
         break;
       case "c":
-        this.editor.setTool(new CircleTool());
         e.preventDefault();
+        this.editor.setTool(new CircleTool());
         break;
       case "e":
-        this.editor.setTool(new EraserTool());
         e.preventDefault();
+        this.editor.setTool(new EraserTool());
         break;
       case "t":
-        this.editor.setTool(new TextTool());
         e.preventDefault();
+        this.editor.setTool(new TextTool());
         break;
       case "b":
-        this.editor.setTool(new BucketFillTool());
         e.preventDefault();
+        this.editor.setTool(new BucketFillTool());
         break;
       case "i":
-        this.editor.setTool(new EyedropperTool());
         e.preventDefault();
+        this.editor.setTool(new EyedropperTool());
         break;
     }
   }

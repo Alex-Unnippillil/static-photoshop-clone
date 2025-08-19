@@ -33,8 +33,14 @@ export class BucketFillTool {
         }
         ctx.putImageData(image, 0, 0);
     }
-    onPointerMove() { }
-    onPointerUp() { }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    onPointerMove(_e, _editor) {
+        // intentionally unused
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    onPointerUp(_e, _editor) {
+        // intentionally unused
+    }
     getPixel(image, x, y) {
         const { width, data } = image;
         const idx = (Math.floor(y) * width + Math.floor(x)) * 4;

@@ -52,6 +52,7 @@ export class BucketFillTool implements Tool {
     // intentionally unused
   }
 =======
+=======
 
   private getPixel(
     image: ImageData,

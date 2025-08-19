@@ -47,6 +47,13 @@ export class BucketFillTool implements Tool {
     // intentionally unused
   }
 
+  private getPixel(
+    image: ImageData,
+    x: number,
+    y: number,
+  ): [number, number, number, number] {
+=======
+
 =======
 =======
 =======
@@ -58,7 +65,12 @@ export class BucketFillTool implements Tool {
     return [data[idx], data[idx + 1], data[idx + 2], data[idx + 3]];
   }
 
-  private setPixel(image: ImageData, x: number, y: number, color: [number, number, number]): void {
+  private setPixel(
+    image: ImageData,
+    x: number,
+    y: number,
+    color: [number, number, number],
+  ): void {
     const { width, data } = image;
     const idx = (Math.floor(y) * width + Math.floor(x)) * 4;
     data[idx] = color[0];

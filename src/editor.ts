@@ -62,16 +62,6 @@ export function initEditor(): EditorHandle {
   });
 
   let activeButton: HTMLButtonElement | null = null;
-  function setActiveButton(tool: Tool) {
-    const id = constructorToId.get(tool.constructor as new () => Tool);
-    if (!id) return;
-    const btn = toolButtons[id];
-    if (!btn) return;
-    activeButton?.classList.remove("active");
-    btn.classList.add("active");
-    activeButton = btn;
-  }
-=======
   const setActiveButton = (btn: HTMLButtonElement | null) => {
     if (activeButton) activeButton.classList.remove("active");
     if (btn) btn.classList.add("active");
@@ -175,11 +165,6 @@ export function initEditor(): EditorHandle {
         fontFamily ?? undefined,
         fontSize ?? undefined,
       );
-      const originalSetTool = e.setTool.bind(e);
-      e.setTool = (tool: Tool) => {
-        originalSetTool(tool);
-        setActiveButton(tool);
-      };
       editors.push(e);
     } catch {
       /* skip canvases without 2D context */

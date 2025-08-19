@@ -19,14 +19,16 @@ export class EyedropperTool implements Tool {
     editor.colorPicker.value = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  onPointerMove(_e: PointerEvent, _editor: Editor): void {
-    // intentionally unused
+  onPointerMove(e: PointerEvent, editor: Editor): void {
+    if (e.buttons !== 1) return;
+    this.onPointerDown(e, editor);
   }
 
+  // No action needed on pointer up
+  onPointerUp(): void {}
+=======
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onPointerUp(_e: PointerEvent, _editor: Editor): void {
     // intentionally unused
   }
 }
-

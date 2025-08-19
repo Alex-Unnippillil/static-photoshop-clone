@@ -120,7 +120,7 @@ describe("TextTool", () => {
     expect(document.querySelector("textarea")).toBeNull();
   });
 
-  it("supports undo after committing text", () => {
+  it("supports undo with a single step after committing text", () => {
     const tool = new TextTool();
     editor.saveState();
     tool.onPointerDown({ offsetX: 9, offsetY: 10 } as PointerEvent, editor);
@@ -130,6 +130,7 @@ describe("TextTool", () => {
       new KeyboardEvent("keydown", { key: "Enter", bubbles: true }),
     );
     expect(ctx.fillText).toHaveBeenCalledWith("undo", 9, 10);
+    // Only one undo should revert the text addition
     editor.undo();
     expect(ctx.clearRect).toHaveBeenCalledTimes(1);
     expect(ctx.putImageData).toHaveBeenCalledTimes(1);

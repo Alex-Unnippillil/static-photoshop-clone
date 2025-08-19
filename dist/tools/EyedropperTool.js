@@ -16,11 +16,12 @@ export class EyedropperTool {
         const toHex = (v) => v.toString(16).padStart(2, "0");
         editor.colorPicker.value = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
     }
-    onPointerMove(e, editor) {
-        if (e.buttons !== 1)
-            return;
-        this.onPointerDown(e, editor);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    onPointerMove(_e, _editor) {
+        // intentionally unused
     }
-    // No action needed on pointer up
-    onPointerUp() { }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    onPointerUp(_e, _editor) {
+        // intentionally unused
+    }
 }

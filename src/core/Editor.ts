@@ -73,15 +73,14 @@ export class Editor {
   }
 
   private handleResize = () => {
-    const image = this.ctx.getImageData(
+    const data = this.ctx.getImageData(
       0,
       0,
       this.canvas.width,
       this.canvas.height,
     );
-    this.saveState();
     this.adjustForPixelRatio();
-    this.ctx.putImageData(image, 0, 0);
+    this.ctx.putImageData(data, 0, 0);
   };
 
   saveState() {

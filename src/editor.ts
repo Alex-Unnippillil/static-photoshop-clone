@@ -71,6 +71,20 @@ export function initEditor(): EditorHandle {
     btn.classList.add("active");
     activeButton = btn;
   }
+=======
+  const setActiveButton = (btn: HTMLButtonElement | null) => {
+    if (activeButton) activeButton.classList.remove("active");
+    if (btn) btn.classList.add("active");
+    activeButton = btn;
+  };
+  const buttonForTool = (tool: Tool): HTMLButtonElement | null => {
+    for (const [id, ToolCtor] of Object.entries(toolConstructors)) {
+      if (tool instanceof ToolCtor) {
+        return toolButtons[id];
+      }
+    }
+    return null;
+  };
 
   const colorPicker =
     document.getElementById("colorPicker") as HTMLInputElement | null;
@@ -178,6 +192,14 @@ export function initEditor(): EditorHandle {
     );
   }
 
+  editors.forEach((e) => {
+    const original = e.setTool.bind(e);
+    e.setTool = (tool: Tool) => {
+      original(tool);
+      setActiveButton(buttonForTool(tool));
+    };
+  });
+
   // active editor defaults to the first successfully created editor
   editor = editors[0];
 
@@ -272,6 +294,7 @@ export function initEditor(): EditorHandle {
             editor.canvas.height,
           );
           updateHistoryButtons();
+          if (imageLoader) imageLoader.value = "";
         };
         img.src = reader.result as string;
       };

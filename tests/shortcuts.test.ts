@@ -76,8 +76,10 @@ describe("keyboard shortcuts", () => {
 
     cases.forEach(([key, ToolClass], index) => {
       const event = new KeyboardEvent("keydown", { key, cancelable: true });
+      const prevent = jest.spyOn(event, "preventDefault");
       document.dispatchEvent(event);
       expect(spy.mock.calls[index][0]).toBeInstanceOf(ToolClass);
+      expect(prevent).toHaveBeenCalled();
       expect(event.defaultPrevented).toBe(true);
     });
   });

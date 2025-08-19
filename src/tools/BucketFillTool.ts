@@ -55,9 +55,6 @@ export class BucketFillTool implements Tool {
   ): [number, number, number, number] {
 =======
 
-=======
-=======
-=======
 
 
   private getPixel(image: ImageData, x: number, y: number): [number, number, number, number] {

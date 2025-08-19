@@ -51,27 +51,15 @@ export function initEditor(): EditorHandle {
   };
 
   const toolButtons: Record<string, HTMLButtonElement> = {};
-  const constructorToId = new Map<new () => Tool, string>();
-  Object.entries(toolConstructors).forEach(([id, Ctor]) => {
+  Object.keys(toolConstructors).forEach((id) => {
     const btn = document.getElementById(id) as HTMLButtonElement | null;
     if (!btn) {
       throw new Error(`Missing #${id} button`);
     }
     toolButtons[id] = btn;
-    constructorToId.set(Ctor, id);
   });
 
   let activeButton: HTMLButtonElement | null = null;
-  function setActiveButton(tool: Tool) {
-    const id = constructorToId.get(tool.constructor as new () => Tool);
-    if (!id) return;
-    const btn = toolButtons[id];
-    if (!btn) return;
-    activeButton?.classList.remove("active");
-    btn.classList.add("active");
-    activeButton = btn;
-  }
-=======
   const setActiveButton = (btn: HTMLButtonElement | null) => {
     if (activeButton) activeButton.classList.remove("active");
     if (btn) btn.classList.add("active");
@@ -178,7 +166,7 @@ export function initEditor(): EditorHandle {
       const originalSetTool = e.setTool.bind(e);
       e.setTool = (tool: Tool) => {
         originalSetTool(tool);
-        setActiveButton(tool);
+        setActiveButton(buttonForTool(tool));
       };
       editors.push(e);
     } catch {
@@ -191,14 +179,6 @@ export function initEditor(): EditorHandle {
       "initEditor() requires at least one <canvas> element with a 2D context",
     );
   }
-
-  editors.forEach((e) => {
-    const original = e.setTool.bind(e);
-    e.setTool = (tool: Tool) => {
-      original(tool);
-      setActiveButton(buttonForTool(tool));
-    };
-  });
 
   // active editor defaults to the first successfully created editor
   editor = editors[0];

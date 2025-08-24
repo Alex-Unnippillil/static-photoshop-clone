@@ -21,17 +21,37 @@
         <input type="checkbox" id="fillMode" />
         Fill
       </label>
-      <button id="pencil" class="tool-button">Pencil</button>
-      <button id="eraser" class="tool-button">Eraser</button>
-      <button id="rectangle" class="tool-button">Rectangle</button>
-      <button id="line" class="tool-button">Line</button>
-      <button id="circle" class="tool-button">Circle</button>
-      <button id="text" class="tool-button">Text</button>
-      <button id="eyedropper" class="tool-button">Eyedropper</button>
-      <button id="bucket" class="tool-button">Bucket</button>
+      <button id="pencil" class="tool-button" title="Pencil">
+        <img src="icons/pencil.svg" alt="Pencil" />
+      </button>
+      <button id="eraser" class="tool-button" title="Eraser">
+        <img src="icons/eraser.svg" alt="Eraser" />
+      </button>
+      <button id="rectangle" class="tool-button" title="Rectangle">
+        <img src="icons/rectangle-horizontal.svg" alt="Rectangle" />
+      </button>
+      <button id="line" class="tool-button" title="Line">
+        <img src="icons/slash.svg" alt="Line" />
+      </button>
+      <button id="circle" class="tool-button" title="Circle">
+        <img src="icons/circle.svg" alt="Circle" />
+      </button>
+      <button id="text" class="tool-button" title="Text">
+        <img src="icons/type.svg" alt="Text" />
+      </button>
+      <button id="eyedropper" class="tool-button" title="Eyedropper">
+        <img src="icons/pipette.svg" alt="Eyedropper" />
+      </button>
+      <button id="bucket" class="tool-button" title="Bucket">
+        <img src="icons/paint-bucket.svg" alt="Bucket" />
+      </button>
       <input type="file" id="imageLoader" accept="image/*" />
-      <button id="undo" class="tool-button" disabled>Undo</button>
-      <button id="redo" class="tool-button" disabled>Redo</button>
+      <button id="undo" class="tool-button" title="Undo" disabled>
+        <img src="icons/undo.svg" alt="Undo" />
+      </button>
+      <button id="redo" class="tool-button" title="Redo" disabled>
+        <img src="icons/redo.svg" alt="Redo" />
+      </button>
 
       <div class="group">
         <label for="layerSelect">Layer</label>
@@ -41,7 +61,9 @@
         <option value="png">PNG</option>
         <option value="jpeg">JPEG</option>
       </select>
-      <button id="save" class="tool-button">Save</button>
+      <button id="save" class="tool-button" title="Save">
+        <img src="icons/save.svg" alt="Save" />
+      </button>
 
     </div>
     <div id="canvasContainer">

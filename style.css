@@ -48,10 +48,21 @@ body {
 }
 
 .tool-button {
-  padding: 4px 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
   border: 1px solid #ccc;
   background: #fff;
   cursor: pointer;
+}
+
+.tool-button img {
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
 }
 
 .tool-button:hover {
@@ -60,7 +71,10 @@ body {
 
 .tool-button.active {
   background: #007bff;
-  color: #fff;
+}
+
+.tool-button.active img {
+  filter: brightness(0) invert(1);
 }
 
 #canvasContainer {

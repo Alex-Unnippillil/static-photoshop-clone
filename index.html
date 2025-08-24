@@ -35,6 +35,8 @@
       <div class="group">
         <label for="layerSelect">Layer</label>
         <select id="layerSelect"></select>
+        <button id="addLayer" class="tool-button">Add Layer</button>
+        <button id="deleteLayer" class="tool-button">Delete Layer</button>
       </div>
       <select id="formatSelect">
         <option value="png">PNG</option>
@@ -45,7 +47,6 @@
     </div>
     <div id="canvasContainer">
       <canvas id="canvas" width="800" height="600"></canvas>
-      <canvas id="layer2" width="800" height="600"></canvas>
     </div>
     <script type="module" src="dist/index.js"></script>
   </body>

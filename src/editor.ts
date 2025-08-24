@@ -35,9 +35,19 @@ export interface EditorHandle {
  * {@link EditorHandle} that allows tests or callers to tear down the editor.
  */
 export function initEditor(): EditorHandle {
-  const canvases = Array.from(
+  let canvases = Array.from(
     document.querySelectorAll<HTMLCanvasElement>("canvas"),
   );
+  const canvasContainer = document.getElementById(
+    "canvasContainer",
+  ) as HTMLElement | null;
+  const addLayerBtn = document.getElementById("addLayer") as
+    | HTMLButtonElement
+    | null;
+  const deleteLayerBtn = document.getElementById("deleteLayer") as
+    | HTMLButtonElement
+    | null;
+  let layerCounter = canvases.length;
 
   const toolConstructors: Record<string, new () => Tool> = {
     pencil: PencilTool,
@@ -87,6 +97,9 @@ export function initEditor(): EditorHandle {
   const saveBtn = document.getElementById("save") as HTMLButtonElement | null;
   const formatSelect =
     document.getElementById("formatSelect") as HTMLSelectElement | null;
+  const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
+  const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
+  const listeners: Array<() => void> = [];
 
   if (!colorPicker) {
     throw new Error("Missing #colorPicker input");
@@ -109,40 +122,10 @@ export function initEditor(): EditorHandle {
   }
 
   canvases.forEach((c, i) => {
-    const canvasId = c.id || `layer${i + 1}`;
-    const name = c.id || `Layer ${i + 1}`;
-
-    if (layerSelect) {
-      const opt = document.createElement("option");
-      opt.value = String(i);
-      opt.textContent = name;
-      layerSelect.appendChild(opt);
-    }
-
-    if (!document.getElementById(`${canvasId}Opacity`) && i > 0) {
-      const group = document.createElement("div");
-      group.className = "group";
-
-      const label = document.createElement("label");
-      label.htmlFor = `${canvasId}Opacity`;
-      label.textContent = `${name} Opacity`;
-
-      const input = document.createElement("input");
-      input.id = `${canvasId}Opacity`;
-      input.type = "number";
-      input.min = "0";
-      input.max = "100";
-      input.value = "100";
-
-      group.appendChild(label);
-      group.appendChild(input);
-      toolbar.appendChild(group);
-    }
+    c.dataset.name = c.id || `Layer ${i + 1}`;
   });
-
-  const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
-  const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
-  const listeners: Array<() => void> = [];
+  canvases.slice(1).forEach((c) => createOpacityControl(c));
+  refreshLayerOptions();
 
   let editor: Editor; // set after editors created
 
@@ -288,23 +271,6 @@ export function initEditor(): EditorHandle {
     listeners,
   );
 
-  document
-    .querySelectorAll<HTMLInputElement>('input[id$="Opacity"]')
-    .forEach((input) => {
-      const targetId = input.id.replace(/Opacity$/, "");
-      const layer = document.getElementById(targetId) as HTMLCanvasElement | null;
-      if (!layer) return;
-      listen(
-        input,
-        "input",
-        () => {
-          const value = parseFloat(input.value);
-          layer.style.opacity = isNaN(value) ? "1" : String(value / 100);
-        },
-        listeners,
-      );
-    });
-
   // layer selection
   listen(
     layerSelect,
@@ -316,6 +282,70 @@ export function initEditor(): EditorHandle {
     listeners,
   );
 
+  listen(addLayerBtn, "click", () => addLayer(), listeners);
+  listen(
+    deleteLayerBtn,
+    "click",
+    () => {
+      const idx = parseInt(layerSelect?.value ?? "0", 10);
+      deleteLayer(idx);
+    },
+    listeners,
+  );
+
+  let draggedIndex = -1;
+  listen(
+    layerSelect,
+    "dragstart",
+    (e: Event) => {
+      const opt = e.target as HTMLOptionElement | null;
+      if (opt) draggedIndex = parseInt(opt.value, 10);
+    },
+    listeners,
+  );
+  listen(
+    layerSelect,
+    "dragover",
+    (e: Event) => {
+      e.preventDefault();
+    },
+    listeners,
+  );
+  listen(
+    layerSelect,
+    "drop",
+    (e: Event) => {
+      e.preventDefault();
+      const opt = e.target as HTMLOptionElement | null;
+      if (opt && draggedIndex !== -1) {
+        const target = parseInt(opt.value, 10);
+        reorderLayers(draggedIndex, target);
+        draggedIndex = -1;
+      }
+    },
+    listeners,
+  );
+
+  listen(
+    layerSelect,
+    "dblclick",
+    (e: Event) => {
+      const opt = e.target as HTMLOptionElement | null;
+      if (!opt) return;
+      const idx = parseInt(opt.value, 10);
+      const newName = prompt(
+        "Layer name",
+        canvases[idx].dataset.name || opt.textContent || "",
+      );
+      if (newName) {
+        canvases[idx].dataset.name = newName;
+        refreshLayerOptions();
+        layerSelect!.value = String(idx);
+      }
+    },
+    listeners,
+  );
+
   function activateLayer(index: number) {
     if (index < 0 || index >= editors.length) return;
     editor = editors[index];
@@ -323,6 +353,125 @@ export function initEditor(): EditorHandle {
     shortcuts.switchEditor(editor);
     updateHistoryButtons();
     if (layerSelect) layerSelect.value = String(index);
+  }
+
+  function refreshLayerOptions() {
+    if (!layerSelect) return;
+    layerSelect.innerHTML = "";
+    canvases.forEach((cv, i) => {
+      const opt = document.createElement("option");
+      opt.value = String(i);
+      opt.textContent = cv.dataset.name || cv.id || `Layer ${i + 1}`;
+      opt.draggable = true;
+      layerSelect.appendChild(opt);
+    });
+  }
+
+  function createOpacityControl(c: HTMLCanvasElement) {
+    let input = document.getElementById(`${c.id}Opacity`) as HTMLInputElement | null;
+    if (!input) {
+      const group = document.createElement("div");
+      group.className = "group";
+      const label = document.createElement("label");
+      label.htmlFor = `${c.id}Opacity`;
+      label.textContent = `${c.dataset.name ?? c.id} Opacity`;
+      input = document.createElement("input");
+      input.id = `${c.id}Opacity`;
+      input.type = "number";
+      input.min = "0";
+      input.max = "100";
+      input.value = "100";
+      group.appendChild(label);
+      group.appendChild(input);
+      toolbar.appendChild(group);
+    }
+    listen(
+      input,
+      "input",
+      () => {
+        const value = parseFloat(input!.value);
+        c.style.opacity = isNaN(value) ? "1" : String(value / 100);
+      },
+      listeners,
+    );
+  }
+
+  function refreshOpacityControls() {
+    canvases.forEach((c, i) => {
+      const input = document.getElementById(`${c.id}Opacity`);
+      if (i === 0) {
+        input?.parentElement?.remove();
+      } else if (!input) {
+        createOpacityControl(c);
+      }
+    });
+  }
+
+  function addLayer() {
+    if (!canvasContainer) return;
+    const base = canvases[0];
+    const canvas = document.createElement("canvas");
+    canvas.width = base.width;
+    canvas.height = base.height;
+    canvas.id = `layer${++layerCounter}`;
+    canvas.dataset.name = `Layer ${layerCounter}`;
+    canvasContainer.appendChild(canvas);
+    canvases.push(canvas);
+    try {
+      const e = new Editor(
+        canvas,
+        colorPicker,
+        lineWidth,
+        fillMode,
+        () => {
+          updateHistoryButtons();
+        },
+        fontFamily ?? undefined,
+        fontSize ?? undefined,
+      );
+      editors.push(e);
+    } catch {
+      /* skip if no context */
+    }
+    createOpacityControl(canvas);
+    refreshLayerOptions();
+    activateLayer(canvases.length - 1);
+  }
+
+  function deleteLayer(index: number) {
+    if (canvases.length <= 1) return;
+    const canvas = canvases.splice(index, 1)[0];
+    canvas.remove();
+    const ed = editors.splice(index, 1)[0];
+    ed.destroy();
+    document.getElementById(`${canvas.id}Opacity`)?.parentElement?.remove();
+    if (layerSelect) {
+      layerSelect.remove(index);
+      Array.from(layerSelect.options).forEach((o, i) => (o.value = String(i)));
+    }
+    refreshOpacityControls();
+    activateLayer(Math.max(0, index - 1));
+  }
+
+  function reorderLayers(from: number, to: number) {
+    if (from === to) return;
+    const canvas = canvases.splice(from, 1)[0];
+    canvases.splice(to, 0, canvas);
+    const ed = editors.splice(from, 1)[0];
+    editors.splice(to, 0, ed);
+    if (canvasContainer) {
+      const ref = canvasContainer.children[to] || null;
+      canvasContainer.insertBefore(canvas, ref);
+    }
+    if (layerSelect) {
+      const opt = layerSelect.options[from];
+      const refOpt = layerSelect.options[to] || null;
+      layerSelect.removeChild(opt);
+      layerSelect.insertBefore(opt, refOpt);
+      Array.from(layerSelect.options).forEach((o, i) => (o.value = String(i)));
+    }
+    refreshOpacityControls();
+    activateLayer(parseInt(layerSelect?.value ?? "0", 10));
   }
 
   const handle: EditorHandle = {

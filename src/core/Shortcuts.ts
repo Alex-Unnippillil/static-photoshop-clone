@@ -16,9 +16,20 @@ import { EyedropperTool } from "../tools/EyedropperTool.js";
 export class Shortcuts {
   private readonly handler: (e: KeyboardEvent) => void;
   private editor: Editor;
+  private onZoom: (factor: number) => void;
+  private onPan: (dx: number, dy: number) => void;
+  private onReset: () => void;
 
-  constructor(editor: Editor) {
+  constructor(
+    editor: Editor,
+    onZoom?: (factor: number) => void,
+    onPan?: (dx: number, dy: number) => void,
+    onReset?: () => void,
+  ) {
     this.editor = editor;
+    this.onZoom = onZoom ?? ((f) => this.editor.zoomBy(f));
+    this.onPan = onPan ?? ((dx, dy) => this.editor.pan(dx, dy));
+    this.onReset = onReset ?? (() => this.editor.resetView());
     this.handler = (e: KeyboardEvent) => this.onKeyDown(e);
     document.addEventListener("keydown", this.handler);
   }
@@ -31,15 +42,49 @@ export class Shortcuts {
   private onKeyDown(e: KeyboardEvent) {
 
     if (e.ctrlKey || e.metaKey) {
-      if (e.key.toLowerCase() === "z") {
-        if (e.shiftKey) {
-          this.editor.redo();
-        } else {
-          this.editor.undo();
-        }
-        e.preventDefault();
+      switch (e.key) {
+        case "z":
+        case "Z":
+          if (e.shiftKey) {
+            this.editor.redo();
+          } else {
+            this.editor.undo();
+          }
+          e.preventDefault();
+          return;
+        case "=":
+        case "+":
+          this.onZoom(1.1);
+          e.preventDefault();
+          return;
+        case "-":
+          this.onZoom(0.9);
+          e.preventDefault();
+          return;
+        case "0":
+          this.onReset();
+          e.preventDefault();
+          return;
       }
-      return;
+    }
+
+    switch (e.key) {
+      case "ArrowUp":
+        this.onPan(0, -10);
+        e.preventDefault();
+        return;
+      case "ArrowDown":
+        this.onPan(0, 10);
+        e.preventDefault();
+        return;
+      case "ArrowLeft":
+        this.onPan(-10, 0);
+        e.preventDefault();
+        return;
+      case "ArrowRight":
+        this.onPan(10, 0);
+        e.preventDefault();
+        return;
     }
 
     switch (e.key.toLowerCase()) {

@@ -1,18 +1,20 @@
 import { initEditor, EditorHandle } from "../src/editor.js";
 
-describe("layer-specific undo/redo", () => {
+describe("layer management", () => {
   let handle: EditorHandle;
-  let canvas1: HTMLCanvasElement;
-  let canvas2: HTMLCanvasElement;
-  let ctx1: Partial<CanvasRenderingContext2D>;
-  let ctx2: Partial<CanvasRenderingContext2D>;
+  let addBtn: HTMLButtonElement;
+  let deleteBtn: HTMLButtonElement;
+  let layerSelect: HTMLSelectElement;
   let undoBtn: HTMLButtonElement;
   let redoBtn: HTMLButtonElement;
+  let ctx1: Partial<CanvasRenderingContext2D>;
+  let ctx2: Partial<CanvasRenderingContext2D>;
+  let ctx3: Partial<CanvasRenderingContext2D>;
 
   beforeEach(() => {
     document.body.innerHTML = `
-      <canvas id="c1"></canvas>
-      <canvas id="c2"></canvas>
+      <div id="toolbar"></div>
+      <div id="canvasContainer"><canvas id="c1"></canvas></div>
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
       <input id="fillMode" type="checkbox" />
@@ -28,10 +30,16 @@ describe("layer-specific undo/redo", () => {
       <button id="save"></button>
       <button id="undo"></button>
       <button id="redo"></button>
+      <button id="addLayer"></button>
+      <button id="deleteLayer"></button>
+      <select id="layerSelect"></select>
     `;
 
-    canvas1 = document.getElementById("c1") as HTMLCanvasElement;
-    canvas2 = document.getElementById("c2") as HTMLCanvasElement;
+    addBtn = document.getElementById("addLayer") as HTMLButtonElement;
+    deleteBtn = document.getElementById("deleteLayer") as HTMLButtonElement;
+    layerSelect = document.getElementById("layerSelect") as HTMLSelectElement;
+    undoBtn = document.getElementById("undo") as HTMLButtonElement;
+    redoBtn = document.getElementById("redo") as HTMLButtonElement;
 
     const rect = {
       width: 100,
@@ -71,19 +79,63 @@ describe("layer-specific undo/redo", () => {
       setTransform: jest.fn(),
       scale: jest.fn(),
     };
+    ctx3 = {
+      clearRect: jest.fn(),
+      putImageData: jest.fn(),
+      getImageData: jest
+        .fn()
+        .mockReturnValue({
+          data: new Uint8ClampedArray(),
+          width: 1,
+          height: 1,
+        } as ImageData),
+      setTransform: jest.fn(),
+      scale: jest.fn(),
+    };
 
-    canvas1.getContext = jest.fn().mockReturnValue(ctx1 as any);
-    canvas2.getContext = jest.fn().mockReturnValue(ctx2 as any);
-    canvas1.getBoundingClientRect = canvas2.getBoundingClientRect = () => rect;
+    const contexts = [ctx1, ctx2, ctx3];
+    let ctxIndex = 0;
+    HTMLCanvasElement.prototype.getContext = jest
+      .fn()
+      .mockImplementation(() => contexts[ctxIndex++] as any);
+    HTMLCanvasElement.prototype.getBoundingClientRect = () => rect;
 
     handle = initEditor();
-    undoBtn = document.getElementById("undo") as HTMLButtonElement;
-    redoBtn = document.getElementById("redo") as HTMLButtonElement;
   });
 
   afterEach(() => handle.destroy());
 
+  it("creates a new layer when Add Layer is clicked", () => {
+    expect(layerSelect.options.length).toBe(1);
+    addBtn.click();
+    expect(layerSelect.options.length).toBe(2);
+    expect(document.querySelectorAll("canvas").length).toBe(2);
+  });
+
+  it("deletes the selected layer", () => {
+    addBtn.click();
+    layerSelect.value = "1";
+    layerSelect.dispatchEvent(new Event("change"));
+    deleteBtn.click();
+    expect(layerSelect.options.length).toBe(1);
+    expect(document.querySelectorAll("canvas").length).toBe(1);
+  });
+
+  it("reorders layers via drag and drop", () => {
+    addBtn.click();
+    addBtn.click();
+    const canvases = Array.from(document.querySelectorAll("canvas"));
+    const option = layerSelect.options[2];
+    option.dispatchEvent(new Event("dragstart", { bubbles: true }));
+    layerSelect.options[0].dispatchEvent(new Event("drop", { bubbles: true }));
+    const reordered = Array.from(document.querySelectorAll("canvas"));
+    expect(reordered[0]).toBe(canvases[2]);
+  });
+
   it("targets the active layer and toggles button states", () => {
+    addBtn.click();
+    handle.activateLayer(0);
+
     // initially disabled
     expect(undoBtn.disabled).toBe(true);
     expect(redoBtn.disabled).toBe(true);

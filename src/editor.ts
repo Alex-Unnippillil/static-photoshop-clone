@@ -87,6 +87,10 @@ export function initEditor(): EditorHandle {
   const saveBtn = document.getElementById("save") as HTMLButtonElement | null;
   const formatSelect =
     document.getElementById("formatSelect") as HTMLSelectElement | null;
+  const zoomInBtn = document.getElementById("zoomIn") as HTMLButtonElement | null;
+  const zoomOutBtn = document.getElementById("zoomOut") as HTMLButtonElement | null;
+  const resetViewBtn = document.getElementById("resetView") as HTMLButtonElement | null;
+  const canvasContainer = document.getElementById("canvasContainer") as HTMLDivElement | null;
 
   if (!colorPicker) {
     throw new Error("Missing #colorPicker input");
@@ -192,7 +196,11 @@ export function initEditor(): EditorHandle {
   editor.setTool(new PencilTool());
 
   // keyboard shortcuts
-  const shortcuts = new Shortcuts(editor);
+  const zoomAll = (factor: number) => editors.forEach((ed) => ed.zoomBy(factor));
+  const panAll = (dx: number, dy: number) => editors.forEach((ed) => ed.pan(dx, dy));
+  const resetAll = () => editors.forEach((ed) => ed.resetView());
+
+  const shortcuts = new Shortcuts(editor, zoomAll, panAll, resetAll);
 
   // map button id to tool constructor
   Object.entries(toolConstructors).forEach(([id, ToolCtor]) =>
@@ -215,6 +223,61 @@ export function initEditor(): EditorHandle {
     () => {
       editor.redo();
       updateHistoryButtons();
+    },
+    listeners,
+  );
+
+  // zoom controls
+  listen(zoomInBtn, "click", () => zoomAll(1.1), listeners);
+  listen(zoomOutBtn, "click", () => zoomAll(0.9), listeners);
+  listen(resetViewBtn, "click", resetAll, listeners);
+
+  listen(
+    canvasContainer,
+    "wheel",
+    (e: WheelEvent) => {
+      e.preventDefault();
+      const factor = e.deltaY < 0 ? 1.1 : 0.9;
+      zoomAll(factor);
+    },
+    listeners,
+  );
+
+  let isPanning = false;
+  let lastX = 0;
+  let lastY = 0;
+  listen(
+    canvasContainer,
+    "pointerdown",
+    (e: PointerEvent) => {
+      if (e.button === 1) {
+        isPanning = true;
+        lastX = e.clientX;
+        lastY = e.clientY;
+      }
+    },
+    listeners,
+  );
+  listen(
+    window as unknown as HTMLElement,
+    "pointermove",
+    (e: PointerEvent) => {
+      if (!isPanning) return;
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      panAll(dx, dy);
+      lastX = e.clientX;
+      lastY = e.clientY;
+    },
+    listeners,
+  );
+  listen(
+    window as unknown as HTMLElement,
+    "pointerup",
+    (e: PointerEvent) => {
+      if (e.button === 1) {
+        isPanning = false;
+      }
     },
     listeners,
   );

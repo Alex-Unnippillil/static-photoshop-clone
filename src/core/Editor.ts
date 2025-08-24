@@ -3,6 +3,10 @@ import { Tool } from "../tools/Tool.js";
 export class Editor {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
+  zoom = 1;
+  offsetX = 0;
+  offsetY = 0;
+  private dpr = window.devicePixelRatio || 1;
   private undoStack: ImageData[] = [];
   private redoStack: ImageData[] = [];
   private currentTool: Tool | null = null;
@@ -33,6 +37,8 @@ export class Editor {
     this.fontFamily = fontFamily ?? null;
     this.fontSize = fontSize ?? null;
     this.adjustForPixelRatio();
+    this.canvas.style.transformOrigin = "0 0";
+    this.updateCanvasTransform();
     window.addEventListener("resize", this.handleResize);
 
     this.canvas.addEventListener("pointerdown", this.handlePointerDown);
@@ -47,29 +53,31 @@ export class Editor {
   }
 
   private handlePointerDown = (e: PointerEvent) => {
+    if (e.button !== 0) return;
     // Capture the pointer once before recording canvas state
     this.canvas.setPointerCapture(e.pointerId);
     this.saveState();
-    this.currentTool?.onPointerDown(e, this);
+    const ev = this.transformEvent(e);
+    this.withContext(() => this.currentTool?.onPointerDown(ev, this));
   };
 
   private handlePointerMove = (e: PointerEvent) => {
-    this.currentTool?.onPointerMove(e, this);
+    const ev = this.transformEvent(e);
+    this.withContext(() => this.currentTool?.onPointerMove(ev, this));
   };
 
   private handlePointerUp = (e: PointerEvent) => {
-    this.currentTool?.onPointerUp(e, this);
+    const ev = this.transformEvent(e);
+    this.withContext(() => this.currentTool?.onPointerUp(ev, this));
     this.canvas.releasePointerCapture(e.pointerId);
   };
 
   private adjustForPixelRatio() {
-    const dpr = window.devicePixelRatio || 1;
+    this.dpr = window.devicePixelRatio || 1;
     const rect = this.canvas.getBoundingClientRect();
-    this.canvas.width = rect.width * dpr;
-    this.canvas.height = rect.height * dpr;
-    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    // Reset any existing transforms
-    this.ctx.scale(1, 1);
+    this.canvas.width = rect.width * this.dpr;
+    this.canvas.height = rect.height * this.dpr;
+    this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
   }
 
   private handleResize = () => {
@@ -141,6 +149,51 @@ export class Editor {
 
   get fontSizeValue() {
     return parseInt(this.fontSize?.value ?? "", 10) || 16;
+  }
+
+  private updateCanvasTransform() {
+    this.canvas.style.transform = `translate(${this.offsetX}px, ${this.offsetY}px) scale(${this.zoom})`;
+  }
+
+  zoomBy(factor: number) {
+    this.zoom *= factor;
+    this.updateCanvasTransform();
+  }
+
+  pan(dx: number, dy: number) {
+    this.offsetX += dx;
+    this.offsetY += dy;
+    this.updateCanvasTransform();
+  }
+
+  resetView() {
+    this.zoom = 1;
+    this.offsetX = 0;
+    this.offsetY = 0;
+    this.updateCanvasTransform();
+  }
+
+  private transformEvent(e: PointerEvent): PointerEvent {
+    const x = e.offsetX / this.zoom;
+    const y = e.offsetY / this.zoom;
+    return Object.assign({}, e, {
+      offsetX: x,
+      offsetY: y,
+      buttons: e.buttons,
+      button: e.button,
+      pointerId: e.pointerId,
+    });
+  }
+
+  private withContext(fn: () => void) {
+    const ctx = this.ctx as CanvasRenderingContext2D &
+      Partial<{ save: () => void; restore: () => void }>;
+    ctx.save?.();
+    (this.ctx as any).setTransform?.(this.dpr, 0, 0, this.dpr, 0, 0);
+    (this.ctx as any).translate?.(this.offsetX, this.offsetY);
+    (this.ctx as any).scale?.(this.zoom, this.zoom);
+    fn();
+    ctx.restore?.();
   }
 
   /**

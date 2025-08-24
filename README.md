@@ -21,6 +21,7 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 - Eyedropper tool for sampling colors
 - Image import/export
 - Multi-layer support
+- Zoom and pan controls
 
 
 ### Keyboard Shortcuts
@@ -33,13 +34,18 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 - `E`: Eraser
 - `Ctrl+Z`: Undo
 - `Ctrl+Shift+Z`: Redo
+- `Ctrl++`: Zoom in
+- `Ctrl+-`: Zoom out
+- `Ctrl+0`: Reset view
+- Arrow keys: Pan canvas
 
 
 ## Usage
 
 Draw on the canvas using a mouse, a single finger, or a stylus. Pointer events
-enable touch input, but multi-touch gestures such as pinch-to-zoom or panning
-are handled by the browser and are not yet supported by the app.
+enable touch input. Zoom using the mouse wheel or `Ctrl` `+`/`-` and pan with
+the middle mouse button or arrow keys. Multi-touch gestures such as
+pinch-to-zoom are handled by the browser and are not yet supported by the app.
 At least one `<canvas>` element with a 2D rendering context must be present in
 the DOM before calling `initEditor()`; initialization will throw an error
 otherwise.

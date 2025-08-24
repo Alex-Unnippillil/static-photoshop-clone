@@ -66,4 +66,8 @@ body {
   box-sizing: border-box;
 }
 
+#lineWidthPreview {
+  border: 1px solid #ccc;
+}
+
 

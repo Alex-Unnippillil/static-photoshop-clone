@@ -79,6 +79,8 @@ export function initEditor(): EditorHandle {
   const colorPicker =
     document.getElementById("colorPicker") as HTMLInputElement | null;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement | null;
+  const lineWidthPreview =
+    document.getElementById("lineWidthPreview") as HTMLCanvasElement | null;
   const fillMode = document.getElementById("fillMode") as HTMLInputElement | null;
   const fontFamily = document.getElementById("fontFamily") as HTMLSelectElement | null;
   const fontSize = document.getElementById("fontSize") as HTMLInputElement | null;
@@ -143,6 +145,27 @@ export function initEditor(): EditorHandle {
   const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
   const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
   const listeners: Array<() => void> = [];
+
+  const updateLineWidthPreview = () => {
+    if (!lineWidthPreview) return;
+    const ctx = lineWidthPreview.getContext("2d");
+    if (!ctx) return;
+    const w = lineWidthPreview.width;
+    const h = lineWidthPreview.height;
+    ctx.clearRect(0, 0, w, h);
+    ctx.strokeStyle = colorPicker.value;
+    ctx.lineWidth = parseInt(lineWidth.value, 10) || 1;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(5, h / 2);
+    ctx.lineTo(w - 5, h / 2);
+    ctx.stroke();
+  };
+
+  updateLineWidthPreview();
+
+  listen(lineWidth, "input", updateLineWidthPreview, listeners);
+  listen(colorPicker, "input", updateLineWidthPreview, listeners);
 
   let editor: Editor; // set after editors created
 

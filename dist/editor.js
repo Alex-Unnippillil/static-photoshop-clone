@@ -43,19 +43,24 @@ export function initEditor() {
         constructorToId.set(Ctor, id);
     });
     let activeButton = null;
-    function setActiveButton(tool) {
-        const id = constructorToId.get(tool.constructor);
-        if (!id)
-            return;
-        const btn = toolButtons[id];
-        if (!btn)
-            return;
-        activeButton?.classList.remove("active");
-        btn.classList.add("active");
+    const setActiveButton = (btn) => {
+        if (activeButton)
+            activeButton.classList.remove("active");
+        if (btn)
+            btn.classList.add("active");
         activeButton = btn;
-    }
+    };
+    const buttonForTool = (tool) => {
+        for (const [id, ToolCtor] of Object.entries(toolConstructors)) {
+            if (tool instanceof ToolCtor) {
+                return toolButtons[id];
+            }
+        }
+        return null;
+    };
     const colorPicker = document.getElementById("colorPicker");
     const lineWidth = document.getElementById("lineWidth");
+    const lineWidthPreview = document.getElementById("lineWidthPreview");
     const fillMode = document.getElementById("fillMode");
     const fontFamily = document.getElementById("fontFamily");
     const fontSize = document.getElementById("fontSize");
@@ -110,6 +115,26 @@ export function initEditor() {
     const undoBtn = document.getElementById("undo");
     const redoBtn = document.getElementById("redo");
     const listeners = [];
+    const updateLineWidthPreview = () => {
+        if (!lineWidthPreview)
+            return;
+        const ctx = lineWidthPreview.getContext("2d");
+        if (!ctx)
+            return;
+        const w = lineWidthPreview.width;
+        const h = lineWidthPreview.height;
+        ctx.clearRect(0, 0, w, h);
+        ctx.strokeStyle = colorPicker.value;
+        ctx.lineWidth = parseInt(lineWidth.value, 10) || 1;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(5, h / 2);
+        ctx.lineTo(w - 5, h / 2);
+        ctx.stroke();
+    };
+    updateLineWidthPreview();
+    listen(lineWidth, "input", updateLineWidthPreview, listeners);
+    listen(colorPicker, "input", updateLineWidthPreview, listeners);
     let editor; // set after editors created
     const updateHistoryButtons = () => {
         if (undoBtn)
@@ -123,11 +148,6 @@ export function initEditor() {
             const e = new Editor(c, colorPicker, lineWidth, fillMode, () => {
                 updateHistoryButtons();
             }, fontFamily ?? undefined, fontSize ?? undefined);
-            const originalSetTool = e.setTool.bind(e);
-            e.setTool = (tool) => {
-                originalSetTool(tool);
-                setActiveButton(tool);
-            };
             editors.push(e);
         }
         catch {
@@ -137,6 +157,13 @@ export function initEditor() {
     if (editors.length === 0) {
         throw new Error("initEditor() requires at least one <canvas> element with a 2D context");
     }
+    editors.forEach((e) => {
+        const original = e.setTool.bind(e);
+        e.setTool = (tool) => {
+            original(tool);
+            setActiveButton(buttonForTool(tool));
+        };
+    });
     // active editor defaults to the first successfully created editor
     editor = editors[0];
     // default tool
@@ -196,6 +223,8 @@ export function initEditor() {
                 editor.saveState();
                 editor.ctx.drawImage(img, 0, 0, editor.canvas.width, editor.canvas.height);
                 updateHistoryButtons();
+                if (imageLoader)
+                    imageLoader.value = "";
             };
             img.src = reader.result;
         };

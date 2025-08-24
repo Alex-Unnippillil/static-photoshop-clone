@@ -87,6 +87,9 @@ export function initEditor(): EditorHandle {
   const saveBtn = document.getElementById("save") as HTMLButtonElement | null;
   const formatSelect =
     document.getElementById("formatSelect") as HTMLSelectElement | null;
+  const colorHistory = document.getElementById(
+    "colorHistory",
+  ) as HTMLDivElement | null;
 
   if (!colorPicker) {
     throw new Error("Missing #colorPicker input");
@@ -143,6 +146,42 @@ export function initEditor(): EditorHandle {
   const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
   const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
   const listeners: Array<() => void> = [];
+
+  const recentColors: string[] = [];
+  const maxRecentColors = 10;
+  const renderColorHistory = () => {
+    if (!colorHistory) return;
+    colorHistory.innerHTML = "";
+    recentColors.forEach((color) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "color-swatch";
+      btn.style.backgroundColor = color;
+      btn.setAttribute("aria-label", `Select ${color}`);
+      btn.addEventListener("click", () => {
+        colorPicker.value = color;
+        colorPicker.dispatchEvent(new Event("input"));
+      });
+      colorHistory.appendChild(btn);
+    });
+  };
+
+  const recordColor = (color: string) => {
+    const existing = recentColors.indexOf(color);
+    if (existing !== -1) recentColors.splice(existing, 1);
+    recentColors.unshift(color);
+    if (recentColors.length > maxRecentColors) recentColors.pop();
+    renderColorHistory();
+  };
+
+  listen(
+    colorPicker,
+    "input",
+    () => {
+      recordColor(colorPicker.value);
+    },
+    listeners,
+  );
 
   let editor: Editor; // set after editors created
 
@@ -335,7 +374,7 @@ export function initEditor(): EditorHandle {
       editors.forEach((e) => e.destroy());
     },
   };
-
+  recordColor(colorPicker.value);
   updateHistoryButtons();
   return handle;
 }

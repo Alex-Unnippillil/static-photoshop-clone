@@ -43,17 +43,21 @@ export function initEditor() {
         constructorToId.set(Ctor, id);
     });
     let activeButton = null;
-    function setActiveButton(tool) {
-        const id = constructorToId.get(tool.constructor);
-        if (!id)
-            return;
-        const btn = toolButtons[id];
-        if (!btn)
-            return;
-        activeButton?.classList.remove("active");
-        btn.classList.add("active");
+    const setActiveButton = (btn) => {
+        if (activeButton)
+            activeButton.classList.remove("active");
+        if (btn)
+            btn.classList.add("active");
         activeButton = btn;
-    }
+    };
+    const buttonForTool = (tool) => {
+        for (const [id, ToolCtor] of Object.entries(toolConstructors)) {
+            if (tool instanceof ToolCtor) {
+                return toolButtons[id];
+            }
+        }
+        return null;
+    };
     const colorPicker = document.getElementById("colorPicker");
     const lineWidth = document.getElementById("lineWidth");
     const fillMode = document.getElementById("fillMode");
@@ -63,6 +67,7 @@ export function initEditor() {
     const toolbar = document.getElementById("toolbar") || document.body;
     const saveBtn = document.getElementById("save");
     const formatSelect = document.getElementById("formatSelect");
+    const colorHistory = document.getElementById("colorHistory");
     if (!colorPicker) {
         throw new Error("Missing #colorPicker input");
     }
@@ -110,6 +115,37 @@ export function initEditor() {
     const undoBtn = document.getElementById("undo");
     const redoBtn = document.getElementById("redo");
     const listeners = [];
+    const recentColors = [];
+    const maxRecentColors = 10;
+    const renderColorHistory = () => {
+        if (!colorHistory)
+            return;
+        colorHistory.innerHTML = "";
+        recentColors.forEach((color) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "color-swatch";
+            btn.style.backgroundColor = color;
+            btn.setAttribute("aria-label", `Select ${color}`);
+            btn.addEventListener("click", () => {
+                colorPicker.value = color;
+                colorPicker.dispatchEvent(new Event("input"));
+            });
+            colorHistory.appendChild(btn);
+        });
+    };
+    const recordColor = (color) => {
+        const existing = recentColors.indexOf(color);
+        if (existing !== -1)
+            recentColors.splice(existing, 1);
+        recentColors.unshift(color);
+        if (recentColors.length > maxRecentColors)
+            recentColors.pop();
+        renderColorHistory();
+    };
+    listen(colorPicker, "input", () => {
+        recordColor(colorPicker.value);
+    }, listeners);
     let editor; // set after editors created
     const updateHistoryButtons = () => {
         if (undoBtn)
@@ -123,11 +159,6 @@ export function initEditor() {
             const e = new Editor(c, colorPicker, lineWidth, fillMode, () => {
                 updateHistoryButtons();
             }, fontFamily ?? undefined, fontSize ?? undefined);
-            const originalSetTool = e.setTool.bind(e);
-            e.setTool = (tool) => {
-                originalSetTool(tool);
-                setActiveButton(tool);
-            };
             editors.push(e);
         }
         catch {
@@ -137,6 +168,13 @@ export function initEditor() {
     if (editors.length === 0) {
         throw new Error("initEditor() requires at least one <canvas> element with a 2D context");
     }
+    editors.forEach((e) => {
+        const original = e.setTool.bind(e);
+        e.setTool = (tool) => {
+            original(tool);
+            setActiveButton(buttonForTool(tool));
+        };
+    });
     // active editor defaults to the first successfully created editor
     editor = editors[0];
     // default tool
@@ -196,6 +234,8 @@ export function initEditor() {
                 editor.saveState();
                 editor.ctx.drawImage(img, 0, 0, editor.canvas.width, editor.canvas.height);
                 updateHistoryButtons();
+                if (imageLoader)
+                    imageLoader.value = "";
             };
             img.src = reader.result;
         };
@@ -238,6 +278,7 @@ export function initEditor() {
             editors.forEach((e) => e.destroy());
         },
     };
+    recordColor(colorPicker.value);
     updateHistoryButtons();
     return handle;
 }

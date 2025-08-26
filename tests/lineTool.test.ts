@@ -92,4 +92,18 @@ describe("LineTool", () => {
     expect(ctx.clearRect).toHaveBeenCalledTimes(1);
     expect(ctx.putImageData).toHaveBeenCalledTimes(2);
   });
+
+  it("snaps to 45 degree increments when shift is held", () => {
+    const tool = new LineTool();
+    tool.onPointerDown({ offsetX: 0, offsetY: 0 } as PointerEvent, editor);
+    tool.onPointerUp({
+      offsetX: 1,
+      offsetY: 3,
+      shiftKey: true,
+    } as PointerEvent, editor);
+    const length = Math.sqrt(1 * 1 + 3 * 3);
+    const lastCall = (ctx.lineTo as jest.Mock).mock.calls.pop();
+    expect(lastCall[0]).toBeCloseTo(0);
+    expect(lastCall[1]).toBeCloseTo(length);
+  });
 });

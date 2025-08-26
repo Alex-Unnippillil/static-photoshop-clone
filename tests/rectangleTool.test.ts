@@ -80,5 +80,16 @@ describe("RectangleTool", () => {
     tool.onPointerUp({ offsetX: 20, offsetY: 25 } as PointerEvent, editor);
     expect(ctx.fillRect).toHaveBeenCalledWith(10, 15, 10, 10);
   });
+
+  it("constrains to a square when shift is held", () => {
+    const tool = new RectangleTool();
+    tool.onPointerDown({ offsetX: 5, offsetY: 5 } as PointerEvent, editor);
+    tool.onPointerUp({
+      offsetX: 25,
+      offsetY: 15,
+      shiftKey: true,
+    } as PointerEvent, editor);
+    expect(ctx.strokeRect).toHaveBeenLastCalledWith(5, 5, 10, 10);
+  });
 });
 

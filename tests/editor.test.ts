@@ -48,7 +48,7 @@ describe("editor toolbar controls", () => {
       putImageData: jest.fn(),
       strokeRect: jest.fn(),
       fillRect: jest.fn(),
-      arc: jest.fn(),
+      ellipse: jest.fn(),
       fill: jest.fn(),
       drawImage: jest.fn(),
       fillText: jest.fn(),
@@ -149,7 +149,7 @@ describe("editor toolbar controls", () => {
     dispatch("pointerdown", 2, 2, 1);
     dispatch("pointermove", 4, 2, 1);
     dispatch("pointerup", 4, 2, 0);
-    expect(ctx.arc).toHaveBeenCalled();
+    expect(ctx.ellipse).toHaveBeenCalled();
   });
 
   it("writes text with text tool", () => {

@@ -24,7 +24,7 @@ describe("additional tools", () => {
       moveTo: jest.fn(),
       lineTo: jest.fn(),
       stroke: jest.fn(),
-      arc: jest.fn(),
+      ellipse: jest.fn(),
       fillText: jest.fn(),
       closePath: jest.fn(),
       scale: jest.fn(),
@@ -70,11 +70,15 @@ describe("additional tools", () => {
     expect(ctx.lineTo).toHaveBeenCalledWith(3, 4);
   });
 
-  it("circle tool draws a circle", () => {
+  it("circle tool draws a circle when shift is held", () => {
     const tool = new CircleTool();
     tool.onPointerDown({ offsetX: 0, offsetY: 0 } as PointerEvent, editor);
-    tool.onPointerUp({ offsetX: 3, offsetY: 4 } as PointerEvent, editor);
-    expect(ctx.arc).toHaveBeenCalledWith(0, 0, 5, 0, Math.PI * 2);
+    tool.onPointerUp({
+      offsetX: 3,
+      offsetY: 4,
+      shiftKey: true,
+    } as PointerEvent, editor);
+    expect(ctx.ellipse).toHaveBeenCalledWith(0, 0, 5, 5, 0, 0, Math.PI * 2);
   });
 
   it("text tool commits text on Enter", () => {

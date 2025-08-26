@@ -65,4 +65,40 @@ describe("BucketFillTool", () => {
     expect(image.data[corner + 2]).toBe(0);
     expect(ctx.putImageData).toHaveBeenCalledWith(image, 0, 0);
   });
+
+  it("handles large areas without performance issues", () => {
+    const tool = new BucketFillTool();
+
+    const width = 100;
+    const height = 100;
+    const data = new Uint8ClampedArray(width * height * 4);
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const idx = (y * width + x) * 4;
+        const border = x === 0 || y === 0 || x === width - 1 || y === height - 1;
+        data[idx] = border ? 0 : 255;
+        data[idx + 1] = border ? 0 : 255;
+        data[idx + 2] = border ? 0 : 255;
+        data[idx + 3] = 255;
+      }
+    }
+    const largeImage = { data, width, height } as ImageData;
+    (ctx.getImageData as jest.Mock).mockReturnValueOnce(largeImage);
+    editor.canvas.width = width;
+    editor.canvas.height = height;
+
+    tool.onPointerDown({ offsetX: width / 2, offsetY: height / 2 } as PointerEvent, editor);
+
+    const center = ((height / 2) * width + width / 2) * 4;
+    expect(largeImage.data[center]).toBe(0);
+    expect(largeImage.data[center + 1]).toBe(0);
+    expect(largeImage.data[center + 2]).toBe(255);
+
+    const corner = 0;
+    expect(largeImage.data[corner]).toBe(0);
+    expect(largeImage.data[corner + 1]).toBe(0);
+    expect(largeImage.data[corner + 2]).toBe(0);
+
+    expect(ctx.putImageData).toHaveBeenCalledWith(largeImage, 0, 0);
+  });
 });

@@ -3,33 +3,84 @@ import { Tool } from "./Tool.js";
 
 /**
  * Tool that fills a contiguous region of pixels with the current fill color.
- * Uses a simple stack-based flood fill on the canvas' pixel data.
+ * Uses an iterative queue-based flood fill on the canvas' pixel data.
  */
 export class BucketFillTool implements Tool {
   onPointerDown(e: PointerEvent, editor: Editor): void {
     const ctx = editor.ctx;
     const image = ctx.getImageData(0, 0, editor.canvas.width, editor.canvas.height);
-    const { width, height } = image;
+    const { width, height, data } = image;
+
+    const totalPixels = width * height;
+    const MAX_FILL_PIXELS = 1_000_000; // safety guard to avoid freezing
+    if (totalPixels > MAX_FILL_PIXELS) {
+      // avoid allocating enormous buffers on huge canvases
+      console.warn("BucketFillTool: canvas too large to fill");
+      return;
+    }
+
     const dpr = window.devicePixelRatio || 1;
     const x = Math.max(0, Math.min(width - 1, Math.floor(e.offsetX * dpr)));
     const y = Math.max(0, Math.min(height - 1, Math.floor(e.offsetY * dpr)));
-    const targetColor = this.getPixel(image, x, y);
-    const fillColor = this.hexToRgb(editor.fillStyle);
+
+    const data32 = new Uint32Array(data.buffer);
+    const startIdx = y * width + x;
+    const targetColor = data32[startIdx];
+
+    const rgb = this.hexToRgb(editor.fillStyle);
+    const fillColor = (255 << 24) | (rgb[2] << 16) | (rgb[1] << 8) | rgb[0];
 
     // if target already the fill color, nothing to do
-    if (this.colorsMatch(targetColor, fillColor)) return;
+    if (targetColor === fillColor) return;
 
-    const stack: Array<[number, number]> = [[x, y]];
-    while (stack.length) {
-      const [px, py] = stack.pop()!;
-      const current = this.getPixel(image, px, py);
-      if (!this.colorsMatch(current, targetColor)) continue;
-      this.setPixel(image, px, py, fillColor);
-      if (px > 0) stack.push([px - 1, py]);
-      if (px < width - 1) stack.push([px + 1, py]);
-      if (py > 0) stack.push([px, py - 1]);
-      if (py < height - 1) stack.push([px, py + 1]);
+    const queue = new Uint32Array(totalPixels);
+    let qh = 0;
+    let qt = 0;
+    queue[qt++] = startIdx;
+    data32[startIdx] = fillColor;
+    let processed = 0;
+
+    while (qh < qt) {
+      const idx = queue[qh++];
+      const px = idx % width;
+      const py = (idx / width) | 0;
+
+      if (px > 0) {
+        const n = idx - 1;
+        if (data32[n] === targetColor) {
+          data32[n] = fillColor;
+          queue[qt++] = n;
+        }
+      }
+      if (px < width - 1) {
+        const n = idx + 1;
+        if (data32[n] === targetColor) {
+          data32[n] = fillColor;
+          queue[qt++] = n;
+        }
+      }
+      if (py > 0) {
+        const n = idx - width;
+        if (data32[n] === targetColor) {
+          data32[n] = fillColor;
+          queue[qt++] = n;
+        }
+      }
+      if (py < height - 1) {
+        const n = idx + width;
+        if (data32[n] === targetColor) {
+          data32[n] = fillColor;
+          queue[qt++] = n;
+        }
+      }
+
+      processed++;
+      if (processed > MAX_FILL_PIXELS || qt >= queue.length) {
+        console.warn("BucketFillTool: fill aborted due to size");
+        break;
+      }
     }
+
     ctx.putImageData(image, 0, 0);
   }
 
@@ -41,33 +92,6 @@ export class BucketFillTool implements Tool {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onPointerUp(_e: PointerEvent, _editor: Editor): void {
     // intentionally unused
-  }
-
-  private getPixel(image: ImageData, x: number, y: number): [number, number, number, number] {
-    const { width, data } = image;
-    const idx = (Math.floor(y) * width + Math.floor(x)) * 4;
-    return [data[idx], data[idx + 1], data[idx + 2], data[idx + 3]];
-  }
-
-  private setPixel(
-    image: ImageData,
-    x: number,
-    y: number,
-    color: [number, number, number],
-  ): void {
-    const { width, data } = image;
-    const idx = (Math.floor(y) * width + Math.floor(x)) * 4;
-    data[idx] = color[0];
-    data[idx + 1] = color[1];
-    data[idx + 2] = color[2];
-    data[idx + 3] = 255;
-  }
-
-  private colorsMatch(
-    a: [number, number, number, number],
-    b: [number, number, number] | [number, number, number, number],
-  ): boolean {
-    return a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
   }
 
   private hexToRgb(hex: string): [number, number, number] {

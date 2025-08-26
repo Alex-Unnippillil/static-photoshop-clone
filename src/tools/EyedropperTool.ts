@@ -17,6 +17,7 @@ export class EyedropperTool implements Tool {
     const [r, g, b] = data;
     const toHex = (v: number) => v.toString(16).padStart(2, "0");
     editor.colorPicker.value = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    editor.colorPicker.dispatchEvent(new Event("input", { bubbles: true }));
   }
 
   onPointerMove(e: PointerEvent, editor: Editor): void {

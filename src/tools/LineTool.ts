@@ -26,7 +26,18 @@ export class LineTool extends DrawingTool {
     this.applyStroke(ctx, editor);
     ctx.beginPath();
     ctx.moveTo(this.startX, this.startY);
-    ctx.lineTo(e.offsetX, e.offsetY);
+    let x = e.offsetX;
+    let y = e.offsetY;
+    if (e.shiftKey) {
+      const dx = x - this.startX;
+      const dy = y - this.startY;
+      const angle = Math.atan2(dy, dx);
+      const snapped = Math.round(angle / (Math.PI / 4)) * (Math.PI / 4);
+      const length = Math.sqrt(dx * dx + dy * dy);
+      x = this.startX + length * Math.cos(snapped);
+      y = this.startY + length * Math.sin(snapped);
+    }
+    ctx.lineTo(x, y);
     ctx.stroke();
     ctx.closePath();
   }
@@ -39,7 +50,18 @@ export class LineTool extends DrawingTool {
     this.applyStroke(ctx, editor);
     ctx.beginPath();
     ctx.moveTo(this.startX, this.startY);
-    ctx.lineTo(e.offsetX, e.offsetY);
+    let x = e.offsetX;
+    let y = e.offsetY;
+    if (e.shiftKey) {
+      const dx = x - this.startX;
+      const dy = y - this.startY;
+      const angle = Math.atan2(dy, dx);
+      const snapped = Math.round(angle / (Math.PI / 4)) * (Math.PI / 4);
+      const length = Math.sqrt(dx * dx + dy * dy);
+      x = this.startX + length * Math.cos(snapped);
+      y = this.startY + length * Math.sin(snapped);
+    }
+    ctx.lineTo(x, y);
     ctx.stroke();
     ctx.closePath();
     this.imageData = null;

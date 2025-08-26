@@ -26,9 +26,15 @@ export class CircleTool extends DrawingTool {
         this.applyStroke(ctx, editor);
         const dx = e.offsetX - this.startX;
         const dy = e.offsetY - this.startY;
-        const radius = Math.sqrt(dx * dx + dy * dy);
+        let radiusX = Math.abs(dx);
+        let radiusY = Math.abs(dy);
+        if (e.shiftKey) {
+            const radius = Math.max(radiusX, radiusY);
+            radiusX = radius;
+            radiusY = radius;
+        }
         ctx.beginPath();
-        ctx.arc(this.startX, this.startY, radius, 0, Math.PI * 2);
+        ctx.ellipse(this.startX, this.startY, radiusX, radiusY, 0, 0, Math.PI * 2);
         ctx.stroke();
         if (editor.fill) {
             ctx.fill();
@@ -43,9 +49,15 @@ export class CircleTool extends DrawingTool {
         this.applyStroke(ctx, editor);
         const dx = e.offsetX - this.startX;
         const dy = e.offsetY - this.startY;
-        const radius = Math.sqrt(dx * dx + dy * dy);
+        let radiusX = Math.abs(dx);
+        let radiusY = Math.abs(dy);
+        if (e.shiftKey) {
+            const radius = Math.max(radiusX, radiusY);
+            radiusX = radius;
+            radiusY = radius;
+        }
         ctx.beginPath();
-        ctx.arc(this.startX, this.startY, radius, 0, Math.PI * 2);
+        ctx.ellipse(this.startX, this.startY, radiusX, radiusY, 0, 0, Math.PI * 2);
         ctx.stroke();
         if (editor.fill) {
             ctx.fill();

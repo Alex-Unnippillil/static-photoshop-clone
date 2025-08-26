@@ -92,4 +92,25 @@ describe("LineTool", () => {
     expect(ctx.clearRect).toHaveBeenCalledTimes(1);
     expect(ctx.putImageData).toHaveBeenCalledTimes(2);
   });
+
+  it("snaps angles to 45° increments when shift is held", () => {
+    const tool = new LineTool();
+    tool.onPointerDown({ offsetX: 0, offsetY: 0 } as PointerEvent, editor);
+    tool.onPointerMove({
+      offsetX: 10,
+      offsetY: 5,
+      buttons: 1,
+      shiftKey: true,
+    } as PointerEvent, editor);
+    const args = (ctx.lineTo as jest.Mock).mock.calls.pop();
+    const dx = 10;
+    const dy = 5;
+    const angle = Math.atan2(dy, dx);
+    const snapped = Math.round(angle / (Math.PI / 4)) * (Math.PI / 4);
+    const length = Math.sqrt(dx * dx + dy * dy);
+    const expectedX = length * Math.cos(snapped);
+    const expectedY = length * Math.sin(snapped);
+    expect(args[0]).toBeCloseTo(expectedX);
+    expect(args[1]).toBeCloseTo(expectedY);
+  });
 });

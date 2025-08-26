@@ -20,7 +20,7 @@ describe("CircleTool", () => {
       getImageData: jest.fn().mockReturnValue(imageData),
       putImageData: jest.fn(),
       beginPath: jest.fn(),
-      arc: jest.fn(),
+      ellipse: jest.fn(),
       stroke: jest.fn(),
       fill: jest.fn(),
       closePath: jest.fn(),
@@ -52,9 +52,10 @@ describe("CircleTool", () => {
     expect(ctx.putImageData).toHaveBeenCalledWith(image, 0, 0);
     const dx = 5 - 2;
     const dy = 7 - 3;
-    const radius = Math.sqrt(dx * dx + dy * dy);
+    const radiusX = Math.abs(dx);
+    const radiusY = Math.abs(dy);
     expect(ctx.beginPath).toHaveBeenCalled();
-    expect(ctx.arc).toHaveBeenCalledWith(2, 3, radius, 0, Math.PI * 2);
+    expect(ctx.ellipse).toHaveBeenCalledWith(2, 3, radiusX, radiusY, 0, 0, Math.PI * 2);
     expect(ctx.stroke).toHaveBeenCalled();
     expect(ctx.closePath).toHaveBeenCalled();
   });
@@ -65,5 +66,15 @@ describe("CircleTool", () => {
     tool.onPointerDown({ offsetX: 2, offsetY: 3 } as PointerEvent, editor);
     tool.onPointerUp({ offsetX: 5, offsetY: 7 } as PointerEvent, editor);
     expect(ctx.fill).toHaveBeenCalled();
+  });
+
+  it("constrains to a circle when shift is held", () => {
+    const tool = new CircleTool();
+    tool.onPointerDown({ offsetX: 2, offsetY: 3 } as PointerEvent, editor);
+    tool.onPointerUp({ offsetX: 5, offsetY: 7, shiftKey: true } as PointerEvent, editor);
+    const dx = 5 - 2;
+    const dy = 7 - 3;
+    const radius = Math.max(Math.abs(dx), Math.abs(dy));
+    expect(ctx.ellipse).toHaveBeenLastCalledWith(2, 3, radius, radius, 0, 0, Math.PI * 2);
   });
 });

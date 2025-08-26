@@ -87,15 +87,44 @@ describe("keyboard shortcuts", () => {
   it("performs undo and redo with shortcuts", () => {
     const undo = jest.spyOn(handle.editor, "undo").mockImplementation(() => {});
     const redo = jest.spyOn(handle.editor, "redo").mockImplementation(() => {});
-    const undoEvent = new KeyboardEvent("keydown", { key: "z", ctrlKey: true, cancelable: true });
+
+    const undoEvent = new KeyboardEvent("keydown", {
+      key: "z",
+      ctrlKey: true,
+      cancelable: true,
+    });
     document.dispatchEvent(undoEvent);
-    expect(undo).toHaveBeenCalled();
+    expect(undo).toHaveBeenCalledTimes(1);
     expect(undoEvent.defaultPrevented).toBe(true);
 
-    const redoEvent = new KeyboardEvent("keydown", { key: "z", ctrlKey: true, shiftKey: true, cancelable: true });
-    document.dispatchEvent(redoEvent);
-    expect(redo).toHaveBeenCalled();
-    expect(redoEvent.defaultPrevented).toBe(true);
+    const redoEventCtrlShiftZ = new KeyboardEvent("keydown", {
+      key: "z",
+      ctrlKey: true,
+      shiftKey: true,
+      cancelable: true,
+    });
+    document.dispatchEvent(redoEventCtrlShiftZ);
+    expect(redo).toHaveBeenCalledTimes(1);
+    expect(redoEventCtrlShiftZ.defaultPrevented).toBe(true);
+
+    const redoEventCtrlY = new KeyboardEvent("keydown", {
+      key: "y",
+      ctrlKey: true,
+      cancelable: true,
+    });
+    document.dispatchEvent(redoEventCtrlY);
+    expect(redo).toHaveBeenCalledTimes(2);
+    expect(redoEventCtrlY.defaultPrevented).toBe(true);
+
+    const redoEventCmdShiftZ = new KeyboardEvent("keydown", {
+      key: "z",
+      metaKey: true,
+      shiftKey: true,
+      cancelable: true,
+    });
+    document.dispatchEvent(redoEventCmdShiftZ);
+    expect(redo).toHaveBeenCalledTimes(3);
+    expect(redoEventCmdShiftZ.defaultPrevented).toBe(true);
   });
 
   it("switches active editor when requested", () => {

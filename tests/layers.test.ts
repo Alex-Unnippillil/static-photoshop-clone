@@ -57,6 +57,8 @@ describe("layer-specific undo/redo", () => {
         } as ImageData),
       setTransform: jest.fn(),
       scale: jest.fn(),
+      save: jest.fn(),
+      restore: jest.fn(),
     };
     ctx2 = {
       clearRect: jest.fn(),
@@ -70,6 +72,8 @@ describe("layer-specific undo/redo", () => {
         } as ImageData),
       setTransform: jest.fn(),
       scale: jest.fn(),
+      save: jest.fn(),
+      restore: jest.fn(),
     };
 
     canvas1.getContext = jest.fn().mockReturnValue(ctx1 as any);

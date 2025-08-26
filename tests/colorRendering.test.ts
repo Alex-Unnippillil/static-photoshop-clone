@@ -44,6 +44,8 @@ describe("color rendering", () => {
       lineWidth: 0,
       setTransform: jest.fn(),
       scale: jest.fn(),
+      save: jest.fn(),
+      restore: jest.fn(),
     };
 
     canvas.getContext = jest.fn().mockReturnValue(ctx);

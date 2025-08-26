@@ -29,6 +29,8 @@ describe("bucket tool integration", () => {
     ctx = {
       setTransform: jest.fn(),
       scale: jest.fn(),
+      save: jest.fn(),
+      restore: jest.fn(),
       getImageData: jest.fn(),
       putImageData: jest.fn(),
       clearRect: jest.fn(),

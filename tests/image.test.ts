@@ -38,6 +38,8 @@ describe("image load and save", () => {
       drawImage: jest.fn(),
       setTransform: jest.fn(),
       scale: jest.fn(),
+      save: jest.fn(),
+      restore: jest.fn(),
       getImageData: jest.fn().mockReturnValue(imageData),
       putImageData: jest.fn(),
       clearRect: jest.fn(),

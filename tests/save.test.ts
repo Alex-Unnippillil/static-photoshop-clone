@@ -20,7 +20,12 @@ describe("save button", () => {
     `;
 
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-    const ctx = { scale: jest.fn(), setTransform: jest.fn() } as any;
+    const ctx = {
+      scale: jest.fn(),
+      setTransform: jest.fn(),
+      save: jest.fn(),
+      restore: jest.fn(),
+    } as any;
     canvas.getContext = jest.fn().mockReturnValue(ctx);
     canvas.toDataURL = jest.fn().mockReturnValue("data:image/png;base64,TEST");
     canvas.getBoundingClientRect = () => ({
@@ -68,7 +73,12 @@ describe("save button", () => {
     `;
 
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-    const ctx = { scale: jest.fn(), setTransform: jest.fn() } as any;
+    const ctx = {
+      scale: jest.fn(),
+      setTransform: jest.fn(),
+      save: jest.fn(),
+      restore: jest.fn(),
+    } as any;
     canvas.getContext = jest.fn().mockReturnValue(ctx);
     canvas.toDataURL = jest.fn().mockReturnValue("data:image/jpeg;base64,TEST");
     canvas.getBoundingClientRect = () => ({

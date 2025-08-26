@@ -54,6 +54,8 @@ describe("editor toolbar controls", () => {
       fillText: jest.fn(),
       setTransform: jest.fn(),
       scale: jest.fn(),
+      save: jest.fn(),
+      restore: jest.fn(),
       globalCompositeOperation: "source-over" as GlobalCompositeOperation,
     };
 
@@ -84,8 +86,20 @@ describe("editor toolbar controls", () => {
     const event = new MouseEvent(type, { bubbles: true } as MouseEventInit);
     Object.defineProperty(event, "offsetX", { value: x });
     Object.defineProperty(event, "offsetY", { value: y });
+    Object.defineProperty(event, "clientX", { value: x });
+    Object.defineProperty(event, "clientY", { value: y });
     Object.defineProperty(event, "buttons", { value: buttons });
     Object.defineProperty(event, "pointerId", { value: 1 });
+    canvas.dispatchEvent(event);
+  }
+
+  function dispatchWheel(deltaY: number, x: number, y: number) {
+    const event = new WheelEvent("wheel", {
+      bubbles: true,
+      deltaY,
+      clientX: x,
+      clientY: y,
+    });
     canvas.dispatchEvent(event);
   }
 
@@ -162,5 +176,31 @@ describe("editor toolbar controls", () => {
     );
     expect(ctx.fillText).toHaveBeenCalledWith("hi", 10, 10);
     expect(document.querySelector("textarea")).toBeNull();
+  });
+
+  it("zooms with wheel and transforms drawing coordinates", () => {
+    dispatchWheel(-100, 0, 0); // zoom in
+    expect(ctx.setTransform).toHaveBeenLastCalledWith(1.1, 0, 0, 1.1, 0, 0);
+    (document.getElementById("pencil") as HTMLButtonElement).click();
+    dispatch("pointerdown", 0, 0, 1);
+    dispatch("pointermove", 11, 11, 1);
+    dispatch("pointerup", 11, 11, 0);
+    expect(ctx.moveTo).toHaveBeenCalledWith(0, 0);
+    expect(ctx.lineTo).toHaveBeenCalledWith(10, 10);
+  });
+
+  it("pans with space drag and adjusts drawing", () => {
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: " ", code: "Space" }));
+    dispatch("pointerdown", 0, 0, 1);
+    dispatch("pointermove", 5, 5, 1);
+    dispatch("pointerup", 5, 5, 0);
+    window.dispatchEvent(new KeyboardEvent("keyup", { key: " ", code: "Space" }));
+    expect(ctx.setTransform).toHaveBeenLastCalledWith(1, 0, 0, 1, 5, 5);
+    (document.getElementById("pencil") as HTMLButtonElement).click();
+    dispatch("pointerdown", 5, 5, 1);
+    dispatch("pointermove", 10, 10, 1);
+    dispatch("pointerup", 10, 10, 0);
+    expect(ctx.moveTo).toHaveBeenCalledWith(0, 0);
+    expect(ctx.lineTo).toHaveBeenCalledWith(5, 5);
   });
 });

@@ -24,6 +24,8 @@ describe("EraserTool", () => {
       scale: jest.fn(),
       setTransform: jest.fn(),
       clearRect: jest.fn(),
+      save: jest.fn(),
+      restore: jest.fn(),
       globalCompositeOperation: "source-over" as GlobalCompositeOperation,
       lineWidth: 0,
     };

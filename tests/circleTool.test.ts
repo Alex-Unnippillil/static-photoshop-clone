@@ -20,7 +20,7 @@ describe("CircleTool", () => {
       getImageData: jest.fn().mockReturnValue(imageData),
       putImageData: jest.fn(),
       beginPath: jest.fn(),
-      arc: jest.fn(),
+      ellipse: jest.fn(),
       stroke: jest.fn(),
       fill: jest.fn(),
       closePath: jest.fn(),
@@ -38,7 +38,7 @@ describe("CircleTool", () => {
     );
   });
 
-  it("previews circle during pointer move", () => {
+  it("previews ellipse during pointer move", () => {
     const tool = new CircleTool();
     tool.onPointerDown({ offsetX: 2, offsetY: 3 } as PointerEvent, editor);
     tool.onPointerMove({
@@ -52,9 +52,8 @@ describe("CircleTool", () => {
     expect(ctx.putImageData).toHaveBeenCalledWith(image, 0, 0);
     const dx = 5 - 2;
     const dy = 7 - 3;
-    const radius = Math.sqrt(dx * dx + dy * dy);
     expect(ctx.beginPath).toHaveBeenCalled();
-    expect(ctx.arc).toHaveBeenCalledWith(2, 3, radius, 0, Math.PI * 2);
+    expect(ctx.ellipse).toHaveBeenCalledWith(2, 3, Math.abs(dx), Math.abs(dy), 0, 0, Math.PI * 2);
     expect(ctx.stroke).toHaveBeenCalled();
     expect(ctx.closePath).toHaveBeenCalled();
   });
@@ -65,5 +64,25 @@ describe("CircleTool", () => {
     tool.onPointerDown({ offsetX: 2, offsetY: 3 } as PointerEvent, editor);
     tool.onPointerUp({ offsetX: 5, offsetY: 7 } as PointerEvent, editor);
     expect(ctx.fill).toHaveBeenCalled();
+  });
+
+  it("constrains to a circle when shift is held", () => {
+    const tool = new CircleTool();
+    tool.onPointerDown({ offsetX: 10, offsetY: 10 } as PointerEvent, editor);
+    tool.onPointerUp({
+      offsetX: 30,
+      offsetY: 20,
+      shiftKey: true,
+    } as PointerEvent, editor);
+    const radius = Math.sqrt(20 * 20 + 10 * 10);
+    expect(ctx.ellipse).toHaveBeenLastCalledWith(
+      10,
+      10,
+      radius,
+      radius,
+      0,
+      0,
+      Math.PI * 2,
+    );
   });
 });

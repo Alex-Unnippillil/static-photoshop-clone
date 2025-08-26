@@ -20,11 +20,16 @@ export class RectangleTool extends DrawingTool {
     ctx.putImageData(this.imageData, 0, 0);
     this.applyStroke(editor.ctx, editor);
 
-    const x = e.offsetX;
-    const y = e.offsetY;
-    ctx.strokeRect(this.startX, this.startY, x - this.startX, y - this.startY);
+    let width = e.offsetX - this.startX;
+    let height = e.offsetY - this.startY;
+    if (e.shiftKey) {
+      const size = Math.min(Math.abs(width), Math.abs(height));
+      width = Math.sign(width) * size;
+      height = Math.sign(height) * size;
+    }
+    ctx.strokeRect(this.startX, this.startY, width, height);
     if (editor.fill) {
-      ctx.fillRect(this.startX, this.startY, x - this.startX, y - this.startY);
+      ctx.fillRect(this.startX, this.startY, width, height);
     }
   }
 
@@ -35,11 +40,16 @@ export class RectangleTool extends DrawingTool {
     }
 
     this.applyStroke(editor.ctx, editor);
-    const x = e.offsetX;
-    const y = e.offsetY;
-    ctx.strokeRect(this.startX, this.startY, x - this.startX, y - this.startY);
+    let width = e.offsetX - this.startX;
+    let height = e.offsetY - this.startY;
+    if (e.shiftKey) {
+      const size = Math.min(Math.abs(width), Math.abs(height));
+      width = Math.sign(width) * size;
+      height = Math.sign(height) * size;
+    }
+    ctx.strokeRect(this.startX, this.startY, width, height);
     if (editor.fill) {
-      ctx.fillRect(this.startX, this.startY, x - this.startX, y - this.startY);
+      ctx.fillRect(this.startX, this.startY, width, height);
     }
     this.imageData = null;
   }

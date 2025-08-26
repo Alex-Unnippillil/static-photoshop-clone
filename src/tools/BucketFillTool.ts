@@ -11,15 +11,16 @@ export class BucketFillTool implements Tool {
     const image = ctx.getImageData(0, 0, editor.canvas.width, editor.canvas.height);
     const { width, height } = image;
     const dpr = window.devicePixelRatio || 1;
-    const x = Math.max(0, Math.min(width - 1, Math.floor(e.offsetX * dpr)));
-    const y = Math.max(0, Math.min(height - 1, Math.floor(e.offsetY * dpr)));
-    const targetColor = this.getPixel(image, x, y);
+    const { x, y } = editor.getCanvasCoords(e);
+    const px = Math.max(0, Math.min(width - 1, Math.floor(x * dpr)));
+    const py = Math.max(0, Math.min(height - 1, Math.floor(y * dpr)));
+    const targetColor = this.getPixel(image, px, py);
     const fillColor = this.hexToRgb(editor.fillStyle);
 
     // if target already the fill color, nothing to do
     if (this.colorsMatch(targetColor, fillColor)) return;
 
-    const stack: Array<[number, number]> = [[x, y]];
+    const stack: Array<[number, number]> = [[px, py]];
     while (stack.length) {
       const [px, py] = stack.pop()!;
       const current = this.getPixel(image, px, py);

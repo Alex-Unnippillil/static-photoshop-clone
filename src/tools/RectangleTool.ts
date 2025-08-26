@@ -7,8 +7,9 @@ export class RectangleTool extends DrawingTool {
   private imageData: ImageData | null = null;
 
   onPointerDown(e: PointerEvent, editor: Editor) {
-    this.startX = e.offsetX;
-    this.startY = e.offsetY;
+    const { x, y } = editor.getCanvasCoords(e);
+    this.startX = x;
+    this.startY = y;
     this.applyStroke(editor.ctx, editor);
     const ctx = editor.ctx;
     this.imageData = ctx.getImageData(0, 0, editor.canvas.width, editor.canvas.height);
@@ -20,8 +21,7 @@ export class RectangleTool extends DrawingTool {
     ctx.putImageData(this.imageData, 0, 0);
     this.applyStroke(editor.ctx, editor);
 
-    const x = e.offsetX;
-    const y = e.offsetY;
+    const { x, y } = editor.getCanvasCoords(e);
     ctx.strokeRect(this.startX, this.startY, x - this.startX, y - this.startY);
     if (editor.fill) {
       ctx.fillRect(this.startX, this.startY, x - this.startX, y - this.startY);
@@ -35,8 +35,7 @@ export class RectangleTool extends DrawingTool {
     }
 
     this.applyStroke(editor.ctx, editor);
-    const x = e.offsetX;
-    const y = e.offsetY;
+    const { x, y } = editor.getCanvasCoords(e);
     ctx.strokeRect(this.startX, this.startY, x - this.startX, y - this.startY);
     if (editor.fill) {
       ctx.fillRect(this.startX, this.startY, x - this.startX, y - this.startY);

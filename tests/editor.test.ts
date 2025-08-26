@@ -84,8 +84,20 @@ describe("editor toolbar controls", () => {
     const event = new MouseEvent(type, { bubbles: true } as MouseEventInit);
     Object.defineProperty(event, "offsetX", { value: x });
     Object.defineProperty(event, "offsetY", { value: y });
+    Object.defineProperty(event, "clientX", { value: x });
+    Object.defineProperty(event, "clientY", { value: y });
     Object.defineProperty(event, "buttons", { value: buttons });
     Object.defineProperty(event, "pointerId", { value: 1 });
+    canvas.dispatchEvent(event);
+  }
+
+  function dispatchWheel(x: number, y: number, deltaY: number) {
+    const event = new WheelEvent("wheel", {
+      bubbles: true,
+      deltaY,
+      clientX: x,
+      clientY: y,
+    });
     canvas.dispatchEvent(event);
   }
 
@@ -162,5 +174,35 @@ describe("editor toolbar controls", () => {
     );
     expect(ctx.fillText).toHaveBeenCalledWith("hi", 10, 10);
     expect(document.querySelector("textarea")).toBeNull();
+  });
+
+  it("zooms with wheel and adjusts coordinates", () => {
+    dispatchWheel(0, 0, -100);
+    (document.getElementById("pencil") as HTMLButtonElement).click();
+    dispatch("pointerdown", 11, 11, 1);
+    dispatch("pointermove", 22, 22, 1);
+    dispatch("pointerup", 22, 22, 0);
+    expect(ctx.setTransform).toHaveBeenLastCalledWith(1.1, 0, 0, 1.1, 0, 0);
+    expect(ctx.moveTo).toHaveBeenCalledWith(10, 10);
+    expect(ctx.lineTo).toHaveBeenCalledWith(20, 20);
+  });
+
+  it("pans with space and drag", () => {
+    window.dispatchEvent(new KeyboardEvent("keydown", { code: "Space", bubbles: true }));
+    dispatch("pointerdown", 0, 0, 1);
+    dispatch("pointermove", 5, 5, 1);
+    dispatch("pointerup", 5, 5, 0);
+    window.dispatchEvent(new KeyboardEvent("keyup", { code: "Space", bubbles: true }));
+
+    expect(ctx.setTransform).toHaveBeenLastCalledWith(1, 0, 0, 1, 5, 5);
+
+    (ctx.moveTo as jest.Mock).mockClear();
+    (ctx.lineTo as jest.Mock).mockClear();
+
+    dispatch("pointerdown", 5, 5, 1);
+    dispatch("pointermove", 10, 10, 1);
+    dispatch("pointerup", 10, 10, 0);
+    expect(ctx.moveTo).toHaveBeenCalledWith(0, 0);
+    expect(ctx.lineTo).toHaveBeenCalledWith(5, 5);
   });
 });

@@ -12,6 +12,14 @@ export class Editor {
   fontFamily: HTMLSelectElement | null;
   fontSize: HTMLInputElement | null;
   private onChange?: () => void;
+  private scale = 1;
+  private offsetX = 0;
+  private offsetY = 0;
+  private isPanning = false;
+  private panLastX = 0;
+  private panLastY = 0;
+  private spacePressed = false;
+  private dpr = 1;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -34,10 +42,13 @@ export class Editor {
     this.fontSize = fontSize ?? null;
     this.adjustForPixelRatio();
     window.addEventListener("resize", this.handleResize);
+    window.addEventListener("keydown", this.handleKeyDown);
+    window.addEventListener("keyup", this.handleKeyUp);
 
     this.canvas.addEventListener("pointerdown", this.handlePointerDown);
     this.canvas.addEventListener("pointermove", this.handlePointerMove);
     this.canvas.addEventListener("pointerup", this.handlePointerUp);
+    this.canvas.addEventListener("wheel", this.handleWheel, { passive: false });
   }
 
   setTool(tool: Tool) {
@@ -49,27 +60,46 @@ export class Editor {
   private handlePointerDown = (e: PointerEvent) => {
     // Capture the pointer once before recording canvas state
     this.canvas.setPointerCapture(e.pointerId);
+    if (this.spacePressed) {
+      this.isPanning = true;
+      this.panLastX = e.clientX;
+      this.panLastY = e.clientY;
+      return;
+    }
     this.saveState();
     this.currentTool?.onPointerDown(e, this);
   };
 
   private handlePointerMove = (e: PointerEvent) => {
+    if (this.isPanning) {
+      const dx = e.clientX - this.panLastX;
+      const dy = e.clientY - this.panLastY;
+      this.panLastX = e.clientX;
+      this.panLastY = e.clientY;
+      this.offsetX += dx;
+      this.offsetY += dy;
+      this.applyViewportTransform();
+      return;
+    }
     this.currentTool?.onPointerMove(e, this);
   };
 
   private handlePointerUp = (e: PointerEvent) => {
-    this.currentTool?.onPointerUp(e, this);
+    if (this.isPanning) {
+      this.isPanning = false;
+    } else {
+      this.currentTool?.onPointerUp(e, this);
+    }
     this.canvas.releasePointerCapture(e.pointerId);
   };
 
   private adjustForPixelRatio() {
     const dpr = window.devicePixelRatio || 1;
+    this.dpr = dpr;
     const rect = this.canvas.getBoundingClientRect();
     this.canvas.width = rect.width * dpr;
     this.canvas.height = rect.height * dpr;
-    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    // Reset any existing transforms
-    this.ctx.scale(1, 1);
+    this.applyViewportTransform();
   }
 
   private handleResize = () => {
@@ -82,6 +112,57 @@ export class Editor {
     this.adjustForPixelRatio();
     this.ctx.putImageData(data, 0, 0);
   };
+
+  private handleWheel = (e: WheelEvent) => {
+    e.preventDefault();
+    const scaleFactor = e.deltaY < 0 ? 1.1 : 0.9;
+    const rect = this.canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const wx = (x - this.offsetX) / this.scale;
+    const wy = (y - this.offsetY) / this.scale;
+    this.scale *= scaleFactor;
+    this.offsetX = x - wx * this.scale;
+    this.offsetY = y - wy * this.scale;
+    this.applyViewportTransform();
+  };
+
+  private handleKeyDown = (e: KeyboardEvent) => {
+    if (e.code === "Space" && !this.spacePressed) {
+      this.spacePressed = true;
+      this.canvas.style.cursor = "grab";
+      e.preventDefault();
+    }
+  };
+
+  private handleKeyUp = (e: KeyboardEvent) => {
+    if (e.code === "Space") {
+      this.spacePressed = false;
+      this.isPanning = false;
+      this.canvas.style.cursor = this.currentTool?.cursor || "crosshair";
+    }
+  };
+
+  private applyViewportTransform() {
+    this.ctx.setTransform(
+      this.dpr * this.scale,
+      0,
+      0,
+      this.dpr * this.scale,
+      this.offsetX * this.dpr,
+      this.offsetY * this.dpr,
+    );
+  }
+
+  toCanvasCoords(e: { offsetX: number; offsetY: number }): {
+    x: number;
+    y: number;
+  } {
+    return {
+      x: (e.offsetX - this.offsetX) / this.scale,
+      y: (e.offsetY - this.offsetY) / this.scale,
+    };
+  }
 
   saveState() {
     this.undoStack.push(
@@ -98,8 +179,11 @@ export class Editor {
       this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height),
     );
     const imageData = stack.pop()!;
+    this.ctx.save();
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.putImageData(imageData, 0, 0);
+    this.ctx.restore();
     this.onChange?.();
   }
 
@@ -150,8 +234,11 @@ export class Editor {
   destroy(): void {
     this.currentTool?.destroy?.();
     window.removeEventListener("resize", this.handleResize);
+    window.removeEventListener("keydown", this.handleKeyDown);
+    window.removeEventListener("keyup", this.handleKeyUp);
     this.canvas.removeEventListener("pointerdown", this.handlePointerDown);
     this.canvas.removeEventListener("pointermove", this.handlePointerMove);
     this.canvas.removeEventListener("pointerup", this.handlePointerUp);
+    this.canvas.removeEventListener("wheel", this.handleWheel);
   }
 }

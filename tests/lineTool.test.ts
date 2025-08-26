@@ -31,6 +31,8 @@ describe("LineTool", () => {
       closePath: jest.fn(),
       scale: jest.fn(),
       setTransform: jest.fn(),
+      save: jest.fn(),
+      restore: jest.fn(),
       strokeStyle: "red",
       fillStyle: "blue",
       lineWidth: 5,

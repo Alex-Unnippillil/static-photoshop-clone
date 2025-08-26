@@ -29,6 +29,8 @@ describe("additional tools", () => {
       closePath: jest.fn(),
       scale: jest.fn(),
       setTransform: jest.fn(),
+      save: jest.fn(),
+      restore: jest.fn(),
       getImageData: jest
         .fn()
         .mockReturnValue({

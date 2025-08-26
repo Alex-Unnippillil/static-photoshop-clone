@@ -35,6 +35,8 @@ describe("RectangleTool", () => {
       stroke: jest.fn(),
       setTransform: jest.fn(),
       scale: jest.fn(),
+      save: jest.fn(),
+      restore: jest.fn(),
     };
 
     canvas.getContext = jest

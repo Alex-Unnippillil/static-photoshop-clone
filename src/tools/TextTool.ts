@@ -24,13 +24,14 @@ export class TextTool implements Tool {
     parent.appendChild(textarea);
     textarea.focus();
 
+    const { x, y } = editor.toCanvasCoords(e);
     const commit = () => {
       const text = textarea.value;
       this.cleanup();
       if (text) {
         editor.ctx.fillStyle = editor.strokeStyle;
         editor.ctx.font = `${editor.fontSizeValue}px ${editor.fontFamilyValue}`;
-        editor.ctx.fillText(text, e.offsetX, e.offsetY);
+        editor.ctx.fillText(text, x, y);
       }
     };
 

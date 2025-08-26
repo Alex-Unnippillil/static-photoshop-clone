@@ -37,6 +37,8 @@ describe("BucketFillTool", () => {
       clearRect: jest.fn(),
       setTransform: jest.fn(),
       scale: jest.fn(),
+      save: jest.fn(),
+      restore: jest.fn(),
     };
     canvas.getContext = jest.fn().mockReturnValue(ctx as CanvasRenderingContext2D);
 

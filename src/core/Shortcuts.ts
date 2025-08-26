@@ -31,12 +31,17 @@ export class Shortcuts {
   private onKeyDown(e: KeyboardEvent) {
 
     if (e.ctrlKey || e.metaKey) {
-      if (e.key.toLowerCase() === "z") {
+      const key = e.key.toLowerCase();
+
+      if (key === "z") {
         if (e.shiftKey) {
           this.editor.redo();
         } else {
           this.editor.undo();
         }
+        e.preventDefault();
+      } else if (e.ctrlKey && key === "y") {
+        this.editor.redo();
         e.preventDefault();
       }
       return;

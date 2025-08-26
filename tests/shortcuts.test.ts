@@ -87,15 +87,21 @@ describe("keyboard shortcuts", () => {
   it("performs undo and redo with shortcuts", () => {
     const undo = jest.spyOn(handle.editor, "undo").mockImplementation(() => {});
     const redo = jest.spyOn(handle.editor, "redo").mockImplementation(() => {});
+
     const undoEvent = new KeyboardEvent("keydown", { key: "z", ctrlKey: true, cancelable: true });
     document.dispatchEvent(undoEvent);
     expect(undo).toHaveBeenCalled();
     expect(undoEvent.defaultPrevented).toBe(true);
 
-    const redoEvent = new KeyboardEvent("keydown", { key: "z", ctrlKey: true, shiftKey: true, cancelable: true });
-    document.dispatchEvent(redoEvent);
-    expect(redo).toHaveBeenCalled();
-    expect(redoEvent.defaultPrevented).toBe(true);
+    const redoCtrlY = new KeyboardEvent("keydown", { key: "y", ctrlKey: true, cancelable: true });
+    document.dispatchEvent(redoCtrlY);
+    expect(redo).toHaveBeenCalledTimes(1);
+    expect(redoCtrlY.defaultPrevented).toBe(true);
+
+    const redoMetaShiftZ = new KeyboardEvent("keydown", { key: "z", metaKey: true, shiftKey: true, cancelable: true });
+    document.dispatchEvent(redoMetaShiftZ);
+    expect(redo).toHaveBeenCalledTimes(2);
+    expect(redoMetaShiftZ.defaultPrevented).toBe(true);
   });
 
   it("switches active editor when requested", () => {

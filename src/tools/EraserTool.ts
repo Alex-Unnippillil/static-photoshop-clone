@@ -4,13 +4,14 @@ import { DrawingTool } from "./DrawingTool.js";
 export class EraserTool extends DrawingTool {
   onPointerDown(e: PointerEvent, editor: Editor) {
     const ctx = editor.ctx;
+    const { x, y } = editor.getCanvasCoords(e);
     ctx.globalCompositeOperation = "destination-out";
     this.applyStroke(ctx, editor);
     ctx.beginPath();
-    ctx.moveTo(e.offsetX, e.offsetY);
+    ctx.moveTo(x, y);
     ctx.clearRect(
-      e.offsetX - editor.lineWidthValue / 2,
-      e.offsetY - editor.lineWidthValue / 2,
+      x - editor.lineWidthValue / 2,
+      y - editor.lineWidthValue / 2,
       editor.lineWidthValue,
       editor.lineWidthValue,
     );
@@ -20,11 +21,12 @@ export class EraserTool extends DrawingTool {
     if (e.buttons !== 1) return;
     const ctx = editor.ctx;
     this.applyStroke(ctx, editor);
-    ctx.lineTo(e.offsetX, e.offsetY);
+    const { x, y } = editor.getCanvasCoords(e);
+    ctx.lineTo(x, y);
     ctx.stroke();
     ctx.clearRect(
-      e.offsetX - editor.lineWidthValue / 2,
-      e.offsetY - editor.lineWidthValue / 2,
+      x - editor.lineWidthValue / 2,
+      y - editor.lineWidthValue / 2,
       editor.lineWidthValue,
       editor.lineWidthValue,
     );

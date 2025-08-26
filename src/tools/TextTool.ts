@@ -30,7 +30,8 @@ export class TextTool implements Tool {
       if (text) {
         editor.ctx.fillStyle = editor.strokeStyle;
         editor.ctx.font = `${editor.fontSizeValue}px ${editor.fontFamilyValue}`;
-        editor.ctx.fillText(text, e.offsetX, e.offsetY);
+        const { x, y } = editor.getCanvasCoords(e);
+        editor.ctx.fillText(text, x, y);
       }
     };
 

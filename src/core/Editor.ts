@@ -13,6 +13,14 @@ export class Editor {
   fontSize: HTMLInputElement | null;
   private onChange?: () => void;
 
+  private scale = 1;
+  private translateX = 0;
+  private translateY = 0;
+  private isSpacePressed = false;
+  private isPanning = false;
+  private lastPanX = 0;
+  private lastPanY = 0;
+
   constructor(
     canvas: HTMLCanvasElement,
     colorPicker: HTMLInputElement,
@@ -34,6 +42,11 @@ export class Editor {
     this.fontSize = fontSize ?? null;
     this.adjustForPixelRatio();
     window.addEventListener("resize", this.handleResize);
+    window.addEventListener("keydown", this.handleKeyDown);
+    window.addEventListener("keyup", this.handleKeyUp);
+    this.canvas.addEventListener("wheel", this.handleWheel, {
+      passive: false,
+    });
 
     this.canvas.addEventListener("pointerdown", this.handlePointerDown);
     this.canvas.addEventListener("pointermove", this.handlePointerMove);
@@ -49,15 +62,36 @@ export class Editor {
   private handlePointerDown = (e: PointerEvent) => {
     // Capture the pointer once before recording canvas state
     this.canvas.setPointerCapture(e.pointerId);
+    if (this.isSpacePressed) {
+      this.isPanning = true;
+      this.lastPanX = e.clientX;
+      this.lastPanY = e.clientY;
+      return;
+    }
     this.saveState();
     this.currentTool?.onPointerDown(e, this);
   };
 
   private handlePointerMove = (e: PointerEvent) => {
+    if (this.isPanning) {
+      const dx = e.clientX - this.lastPanX;
+      const dy = e.clientY - this.lastPanY;
+      this.lastPanX = e.clientX;
+      this.lastPanY = e.clientY;
+      this.translateX += dx;
+      this.translateY += dy;
+      this.updateTransform();
+      return;
+    }
     this.currentTool?.onPointerMove(e, this);
   };
 
   private handlePointerUp = (e: PointerEvent) => {
+    if (this.isPanning) {
+      this.isPanning = false;
+      this.canvas.releasePointerCapture(e.pointerId);
+      return;
+    }
     this.currentTool?.onPointerUp(e, this);
     this.canvas.releasePointerCapture(e.pointerId);
   };
@@ -67,9 +101,7 @@ export class Editor {
     const rect = this.canvas.getBoundingClientRect();
     this.canvas.width = rect.width * dpr;
     this.canvas.height = rect.height * dpr;
-    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    // Reset any existing transforms
-    this.ctx.scale(1, 1);
+    this.updateTransform();
   }
 
   private handleResize = () => {
@@ -81,6 +113,47 @@ export class Editor {
     );
     this.adjustForPixelRatio();
     this.ctx.putImageData(data, 0, 0);
+  };
+
+  private updateTransform() {
+    const dpr = window.devicePixelRatio || 1;
+    this.ctx.setTransform(
+      this.scale * dpr,
+      0,
+      0,
+      this.scale * dpr,
+      this.translateX * dpr,
+      this.translateY * dpr,
+    );
+  }
+
+  getCanvasCoords(e: { offsetX: number; offsetY: number }) {
+    return {
+      x: (e.offsetX - this.translateX) / this.scale,
+      y: (e.offsetY - this.translateY) / this.scale,
+    };
+  }
+
+  private handleWheel = (e: WheelEvent) => {
+    e.preventDefault();
+    const rect = this.canvas.getBoundingClientRect();
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
+    const factor = 1 - e.deltaY * 0.001;
+    const wx = (offsetX - this.translateX) / this.scale;
+    const wy = (offsetY - this.translateY) / this.scale;
+    this.scale *= factor;
+    this.translateX = offsetX - wx * this.scale;
+    this.translateY = offsetY - wy * this.scale;
+    this.updateTransform();
+  };
+
+  private handleKeyDown = (e: KeyboardEvent) => {
+    if (e.code === "Space") this.isSpacePressed = true;
+  };
+
+  private handleKeyUp = (e: KeyboardEvent) => {
+    if (e.code === "Space") this.isSpacePressed = false;
   };
 
   saveState() {
@@ -150,6 +223,9 @@ export class Editor {
   destroy(): void {
     this.currentTool?.destroy?.();
     window.removeEventListener("resize", this.handleResize);
+    window.removeEventListener("keydown", this.handleKeyDown);
+    window.removeEventListener("keyup", this.handleKeyUp);
+    this.canvas.removeEventListener("wheel", this.handleWheel);
     this.canvas.removeEventListener("pointerdown", this.handlePointerDown);
     this.canvas.removeEventListener("pointermove", this.handlePointerMove);
     this.canvas.removeEventListener("pointerup", this.handlePointerUp);

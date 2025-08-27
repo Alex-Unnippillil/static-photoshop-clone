@@ -15,10 +15,12 @@ export class EyedropperTool {
         const [r, g, b] = data;
         const toHex = (v) => v.toString(16).padStart(2, "0");
         editor.colorPicker.value = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+        editor.colorPicker.dispatchEvent(new Event("input", { bubbles: true }));
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    onPointerMove(_e, _editor) {
-        // intentionally unused
+    onPointerMove(e, editor) {
+        if (e.buttons !== 1)
+            return;
+        this.onPointerDown(e, editor);
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     onPointerUp(_e, _editor) {

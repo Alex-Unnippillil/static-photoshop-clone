@@ -65,4 +65,28 @@ describe("BucketFillTool", () => {
     expect(image.data[corner + 2]).toBe(0);
     expect(ctx.putImageData).toHaveBeenCalledWith(image, 0, 0);
   });
+
+  it("fills large areas efficiently", () => {
+    const width = 100;
+    const height = 100;
+    const data = new Uint8ClampedArray(width * height * 4);
+    for (let i = 0; i < width * height; i++) {
+      const idx = i * 4;
+      data[idx] = 255;
+      data[idx + 1] = 255;
+      data[idx + 2] = 255;
+      data[idx + 3] = 255;
+    }
+    const image = { data, width, height } as ImageData;
+    (ctx.getImageData as jest.Mock).mockReturnValueOnce(image);
+
+    const tool = new BucketFillTool();
+    tool.onPointerDown({ offsetX: 0, offsetY: 0 } as PointerEvent, editor);
+
+    const last = (width * height - 1) * 4;
+    expect(image.data[last]).toBe(0);
+    expect(image.data[last + 1]).toBe(0);
+    expect(image.data[last + 2]).toBe(255);
+    expect(ctx.putImageData).toHaveBeenCalledWith(image, 0, 0);
+  });
 });

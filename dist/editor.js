@@ -114,6 +114,7 @@ export function initEditor() {
     });
     const undoBtn = document.getElementById("undo");
     const redoBtn = document.getElementById("redo");
+    const clearBtn = document.getElementById("clear");
     const listeners = [];
     const recentColors = [];
     const maxRecentColors = 10;
@@ -189,6 +190,11 @@ export function initEditor() {
     }, listeners);
     listen(redoBtn, "click", () => {
         editor.redo();
+        updateHistoryButtons();
+    }, listeners);
+    listen(clearBtn, "click", () => {
+        editor.saveState();
+        editor.ctx.clearRect(0, 0, editor.canvas.width, editor.canvas.height);
         updateHistoryButtons();
     }, listeners);
     // saving

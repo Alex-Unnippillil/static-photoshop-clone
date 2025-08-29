@@ -145,6 +145,7 @@ export function initEditor(): EditorHandle {
 
   const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
   const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
+  const clearBtn = document.getElementById("clear") as HTMLButtonElement | null;
   const listeners: Array<() => void> = [];
 
   const recentColors: string[] = [];
@@ -253,6 +254,17 @@ export function initEditor(): EditorHandle {
     "click",
     () => {
       editor.redo();
+      updateHistoryButtons();
+    },
+    listeners,
+  );
+
+  listen(
+    clearBtn,
+    "click",
+    () => {
+      editor.saveState();
+      editor.ctx.clearRect(0, 0, editor.canvas.width, editor.canvas.height);
       updateHistoryButtons();
     },
     listeners,

@@ -45,9 +45,9 @@ export function initEditor() {
     let activeButton = null;
     const setActiveButton = (btn) => {
         if (activeButton)
-            activeButton.classList.remove("active");
+            activeButton.classList.remove("active-tool");
         if (btn)
-            btn.classList.add("active");
+            btn.classList.add("active-tool");
         activeButton = btn;
     };
     const buttonForTool = (tool) => {
@@ -273,6 +273,7 @@ export function initEditor() {
         editors,
         activateLayer,
         destroy() {
+            setActiveButton(null);
             listeners.forEach((fn) => fn());
             shortcuts.destroy();
             editors.forEach((e) => e.destroy());

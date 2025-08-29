@@ -63,8 +63,8 @@ export function initEditor(): EditorHandle {
 
   let activeButton: HTMLButtonElement | null = null;
   const setActiveButton = (btn: HTMLButtonElement | null) => {
-    if (activeButton) activeButton.classList.remove("active");
-    if (btn) btn.classList.add("active");
+    if (activeButton) activeButton.classList.remove("active-tool");
+    if (btn) btn.classList.add("active-tool");
     activeButton = btn;
   };
   const buttonForTool = (tool: Tool): HTMLButtonElement | null => {
@@ -369,6 +369,7 @@ export function initEditor(): EditorHandle {
     editors,
     activateLayer,
     destroy() {
+      setActiveButton(null);
       listeners.forEach((fn) => fn());
       shortcuts.destroy();
       editors.forEach((e) => e.destroy());

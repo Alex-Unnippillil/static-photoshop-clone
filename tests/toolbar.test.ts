@@ -77,6 +77,23 @@ describe("toolbar controls", () => {
     expect(select.options.length).toBe(2);
   });
 
+  it("toggles active-tool class on tool buttons", () => {
+    const pencilBtn = document.getElementById("pencil") as HTMLButtonElement;
+    const eraserBtn = document.getElementById("eraser") as HTMLButtonElement;
+
+    // pencil is active by default
+    expect(pencilBtn.classList.contains("active-tool")).toBe(true);
+    expect(eraserBtn.classList.contains("active-tool")).toBe(false);
+
+    eraserBtn.click();
+    expect(eraserBtn.classList.contains("active-tool")).toBe(true);
+    expect(pencilBtn.classList.contains("active-tool")).toBe(false);
+
+    pencilBtn.click();
+    expect(pencilBtn.classList.contains("active-tool")).toBe(true);
+    expect(eraserBtn.classList.contains("active-tool")).toBe(false);
+  });
+
     it("switches tools when buttons are clicked", () => {
       const spy = jest.spyOn(handle.editor, "setTool");
       (document.getElementById("pencil") as HTMLButtonElement).click();

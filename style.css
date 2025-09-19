@@ -56,10 +56,11 @@ body {
   padding: 4px;
   border: 1px solid #ccc;
   background: #fff;
+  color: #222;
   cursor: pointer;
 }
 
-.tool-button img {
+.tool-button svg {
   width: 20px;
   height: 20px;
   pointer-events: none;
@@ -71,10 +72,11 @@ body {
 
 .tool-button.active {
   background: #007bff;
+  color: #fff;
 }
 
-.tool-button.active img {
-  filter: brightness(0) invert(1);
+.tool-button.active svg {
+  filter: none;
 }
 
 #canvasContainer {

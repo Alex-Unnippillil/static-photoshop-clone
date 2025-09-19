@@ -1,3 +1,7 @@
+import { createElement, type ComponentType } from "react";
+import type { SVGProps } from "react";
+import { createRoot } from "react-dom/client";
+
 import { Editor } from "./core/Editor.js";
 import { Shortcuts } from "./core/Shortcuts.js";
 import { PencilTool } from "./tools/PencilTool.js";
@@ -9,6 +13,45 @@ import { TextTool } from "./tools/TextTool.js";
 import { BucketFillTool } from "./tools/BucketFillTool.js";
 import { EyedropperTool } from "./tools/EyedropperTool.js";
 import type { Tool } from "./tools/Tool.js";
+import {
+  CircleIcon,
+  EraserIcon,
+  EyedropperIcon,
+  PaintBucketIcon,
+  PencilIcon,
+  RectangleIcon,
+  RedoIcon,
+  SaveIcon,
+  SlashIcon,
+  TypeIcon,
+  UndoIcon,
+} from "./icons/ToolbarIcons.js";
+
+type IconComponent = ComponentType<SVGProps<SVGSVGElement>>;
+
+function mountIcon(
+  button: HTMLButtonElement | null,
+  Icon: IconComponent,
+  label: string,
+  cleanups: Array<() => void>,
+) {
+  if (!button) return;
+  button.setAttribute("aria-label", label);
+  const doc = button.ownerDocument ?? document;
+  const namespace =
+    doc.documentElement?.namespaceURI ?? "http://www.w3.org/1999/xhtml";
+  const container = doc.createElementNS(namespace, "span") as HTMLElement;
+  container.setAttribute("aria-hidden", "true");
+  button.replaceChildren(container);
+  const root = createRoot(container);
+  root.render(
+    createElement(Icon, {
+      "aria-hidden": "true",
+      focusable: "false",
+    }),
+  );
+  cleanups.push(() => root.unmount());
+}
 
 /** Utility to listen to events and auto-remove on destroy. */
 function listen<T extends Event>(
@@ -61,6 +104,8 @@ export function initEditor(): EditorHandle {
     constructorToId.set(Ctor, id);
   });
 
+  const listeners: Array<() => void> = [];
+
   let activeButton: HTMLButtonElement | null = null;
   const setActiveButton = (btn: HTMLButtonElement | null) => {
     if (activeButton) activeButton.classList.remove("active");
@@ -90,6 +135,8 @@ export function initEditor(): EditorHandle {
   const colorHistory = document.getElementById(
     "colorHistory",
   ) as HTMLDivElement | null;
+  const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
+  const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
 
   if (!colorPicker) {
     throw new Error("Missing #colorPicker input");
@@ -106,6 +153,22 @@ export function initEditor(): EditorHandle {
   if (!formatSelect) {
     throw new Error("Missing #formatSelect select");
   }
+
+  (
+    [
+      [toolButtons.pencil, PencilIcon, "Pencil"],
+      [toolButtons.eraser, EraserIcon, "Eraser"],
+      [toolButtons.rectangle, RectangleIcon, "Rectangle"],
+      [toolButtons.line, SlashIcon, "Line"],
+      [toolButtons.circle, CircleIcon, "Circle"],
+      [toolButtons.text, TypeIcon, "Text"],
+      [toolButtons.eyedropper, EyedropperIcon, "Eyedropper"],
+      [toolButtons.bucket, PaintBucketIcon, "Bucket"],
+      [undoBtn, UndoIcon, "Undo"],
+      [redoBtn, RedoIcon, "Redo"],
+      [saveBtn, SaveIcon, "Save"],
+    ] as Array<[HTMLButtonElement | null, IconComponent, string]>
+  ).forEach(([button, Icon, label]) => mountIcon(button, Icon, label, listeners));
 
   if (layerSelect) {
     layerSelect.innerHTML = "";
@@ -142,10 +205,6 @@ export function initEditor(): EditorHandle {
       toolbar.appendChild(group);
     }
   });
-
-  const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
-  const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
-  const listeners: Array<() => void> = [];
 
   const recentColors: string[] = [];
   const maxRecentColors = 10;

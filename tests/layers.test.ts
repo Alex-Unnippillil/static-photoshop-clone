@@ -110,5 +110,19 @@ describe("layer-specific undo/redo", () => {
     expect(undoBtn.disabled).toBe(false);
     expect(redoBtn.disabled).toBe(true);
   });
+
+  it("enables pointer events only on the active layer", () => {
+    const canvases = Array.from(
+      document.querySelectorAll<HTMLCanvasElement>("canvas"),
+    );
+
+    expect(canvases[0].style.pointerEvents).toBe("auto");
+    expect(canvases[1].style.pointerEvents).toBe("none");
+
+    handle.activateLayer(1);
+
+    expect(canvases[0].style.pointerEvents).toBe("none");
+    expect(canvases[1].style.pointerEvents).toBe("auto");
+  });
 });
 

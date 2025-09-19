@@ -34,6 +34,9 @@ export function initEditor() {
     };
     const toolButtons = {};
     const constructorToId = new Map();
+    const editorToolConstructors = new Map();
+    let activeToolCtor = PencilTool;
+    let activeLayerIndex = 0;
     Object.entries(toolConstructors).forEach(([id, Ctor]) => {
         const btn = document.getElementById(id);
         if (!btn) {
@@ -57,6 +60,11 @@ export function initEditor() {
             }
         }
         return null;
+    };
+    const updateLayerInteractivity = () => {
+        canvases.forEach((canvas, index) => {
+            canvas.style.pointerEvents = index === activeLayerIndex ? "auto" : "none";
+        });
     };
     const colorPicker = document.getElementById("colorPicker");
     const lineWidth = document.getElementById("lineWidth");
@@ -172,6 +180,9 @@ export function initEditor() {
         const original = e.setTool.bind(e);
         e.setTool = (tool) => {
             original(tool);
+            const ctor = tool.constructor;
+            editorToolConstructors.set(e, ctor);
+            activeToolCtor = ctor;
             setActiveButton(buttonForTool(tool));
         };
     });
@@ -179,6 +190,8 @@ export function initEditor() {
     editor = editors[0];
     // default tool
     editor.setTool(new PencilTool());
+    editorToolConstructors.set(editor, PencilTool);
+    updateLayerInteractivity();
     // keyboard shortcuts
     const shortcuts = new Shortcuts(editor);
     // map button id to tool constructor
@@ -261,9 +274,13 @@ export function initEditor() {
     function activateLayer(index) {
         if (index < 0 || index >= editors.length)
             return;
+        activeLayerIndex = index;
         editor = editors[index];
         handle.editor = editor;
         shortcuts.switchEditor(editor);
+        updateLayerInteractivity();
+        const ToolCtor = editorToolConstructors.get(editor) ?? activeToolCtor;
+        editor.setTool(new ToolCtor());
         updateHistoryButtons();
         if (layerSelect)
             layerSelect.value = String(index);

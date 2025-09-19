@@ -26,7 +26,6 @@ export class TextTool {
                 editor.ctx.fillStyle = editor.strokeStyle;
                 editor.ctx.font = `${editor.fontSizeValue}px ${editor.fontFamilyValue}`;
                 editor.ctx.fillText(text, e.offsetX, e.offsetY);
-                editor.saveState();
             }
         };
         const cancel = () => {

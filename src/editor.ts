@@ -52,6 +52,9 @@ export function initEditor(): EditorHandle {
 
   const toolButtons: Record<string, HTMLButtonElement> = {};
   const constructorToId = new Map<new () => Tool, string>();
+  const editorToolConstructors = new Map<Editor, new () => Tool>();
+  let activeToolCtor: new () => Tool = PencilTool;
+  let activeLayerIndex = 0;
   Object.entries(toolConstructors).forEach(([id, Ctor]) => {
     const btn = document.getElementById(id) as HTMLButtonElement | null;
     if (!btn) {
@@ -74,6 +77,12 @@ export function initEditor(): EditorHandle {
       }
     }
     return null;
+  };
+
+  const updateLayerInteractivity = () => {
+    canvases.forEach((canvas, index) => {
+      canvas.style.pointerEvents = index === activeLayerIndex ? "auto" : "none";
+    });
   };
 
   const colorPicker =
@@ -220,6 +229,9 @@ export function initEditor(): EditorHandle {
     const original = e.setTool.bind(e);
     e.setTool = (tool: Tool) => {
       original(tool);
+      const ctor = tool.constructor as new () => Tool;
+      editorToolConstructors.set(e, ctor);
+      activeToolCtor = ctor;
       setActiveButton(buttonForTool(tool));
     };
   });
@@ -229,6 +241,8 @@ export function initEditor(): EditorHandle {
 
   // default tool
   editor.setTool(new PencilTool());
+  editorToolConstructors.set(editor, PencilTool);
+  updateLayerInteractivity();
 
   // keyboard shortcuts
   const shortcuts = new Shortcuts(editor);
@@ -357,9 +371,13 @@ export function initEditor(): EditorHandle {
 
   function activateLayer(index: number) {
     if (index < 0 || index >= editors.length) return;
+    activeLayerIndex = index;
     editor = editors[index];
     handle.editor = editor;
     shortcuts.switchEditor(editor);
+    updateLayerInteractivity();
+    const ToolCtor = editorToolConstructors.get(editor) ?? activeToolCtor;
+    editor.setTool(new ToolCtor());
     updateHistoryButtons();
     if (layerSelect) layerSelect.value = String(index);
   }

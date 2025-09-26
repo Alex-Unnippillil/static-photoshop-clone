@@ -1,5 +1,13 @@
 import { Tool } from "../tools/Tool.js";
 
+export interface SelectionMask {
+  width: number;
+  height: number;
+  data: Uint8ClampedArray;
+  path: Array<{ x: number; y: number }>;
+  bounds: { x: number; y: number; width: number; height: number };
+}
+
 export class Editor {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
@@ -12,6 +20,8 @@ export class Editor {
   fontFamily: HTMLSelectElement | null;
   fontSize: HTMLInputElement | null;
   private onChange?: () => void;
+  private selectionMaskValue: SelectionMask | null = null;
+  private selectionListeners = new Set<(mask: SelectionMask | null) => void>();
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -143,6 +153,33 @@ export class Editor {
     return parseInt(this.fontSize?.value ?? "", 10) || 16;
   }
 
+  get selectionMask(): SelectionMask | null {
+    return this.selectionMaskValue;
+  }
+
+  setSelectionMask(mask: SelectionMask | null) {
+    this.selectionMaskValue = mask;
+    this.notifySelectionListeners(mask);
+  }
+
+  clearSelectionMask() {
+    if (this.selectionMaskValue) {
+      this.selectionMaskValue = null;
+      this.notifySelectionListeners(null);
+    }
+  }
+
+  onSelectionChange(listener: (mask: SelectionMask | null) => void) {
+    this.selectionListeners.add(listener);
+    return () => {
+      this.selectionListeners.delete(listener);
+    };
+  }
+
+  private notifySelectionListeners(mask: SelectionMask | null) {
+    this.selectionListeners.forEach((listener) => listener(mask));
+  }
+
   /**
    * Remove all event listeners registered by the editor.
    * Should be called before discarding the instance to prevent leaks.
@@ -153,5 +190,7 @@ export class Editor {
     this.canvas.removeEventListener("pointerdown", this.handlePointerDown);
     this.canvas.removeEventListener("pointermove", this.handlePointerMove);
     this.canvas.removeEventListener("pointerup", this.handlePointerUp);
+    this.selectionListeners.clear();
+    this.selectionMaskValue = null;
   }
 }

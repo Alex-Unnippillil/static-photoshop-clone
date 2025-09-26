@@ -8,6 +8,7 @@ import { CircleTool } from "./tools/CircleTool.js";
 import { TextTool } from "./tools/TextTool.js";
 import { BucketFillTool } from "./tools/BucketFillTool.js";
 import { EyedropperTool } from "./tools/EyedropperTool.js";
+import { LassoTool, type LassoState } from "./tools/LassoTool.js";
 import type { Tool } from "./tools/Tool.js";
 
 /** Utility to listen to events and auto-remove on destroy. */
@@ -48,12 +49,14 @@ export function initEditor(): EditorHandle {
     text: TextTool,
     bucket: BucketFillTool,
     eyedropper: EyedropperTool,
+    lasso: LassoTool,
   };
 
   const toolButtons: Record<string, HTMLButtonElement> = {};
   const constructorToId = new Map<new () => Tool, string>();
   const editorToolConstructors = new Map<Editor, new () => Tool>();
   let activeToolCtor: new () => Tool = PencilTool;
+  let activeTool: Tool | null = null;
   let activeLayerIndex = 0;
   Object.entries(toolConstructors).forEach(([id, Ctor]) => {
     const btn = document.getElementById(id) as HTMLButtonElement | null;
@@ -99,6 +102,56 @@ export function initEditor(): EditorHandle {
   const colorHistory = document.getElementById(
     "colorHistory",
   ) as HTMLDivElement | null;
+  const selectionControls = document.createElement("div");
+  selectionControls.className = "group selection-controls";
+  selectionControls.style.display = "none";
+  const closePathBtn = document.createElement("button");
+  closePathBtn.type = "button";
+  closePathBtn.id = "lassoClosePath";
+  closePathBtn.textContent = "Close Path";
+  closePathBtn.disabled = true;
+  const commitSelectionBtn = document.createElement("button");
+  commitSelectionBtn.type = "button";
+  commitSelectionBtn.id = "lassoCommit";
+  commitSelectionBtn.textContent = "Commit Selection";
+  commitSelectionBtn.disabled = true;
+  const cancelSelectionBtn = document.createElement("button");
+  cancelSelectionBtn.type = "button";
+  cancelSelectionBtn.id = "lassoCancel";
+  cancelSelectionBtn.textContent = "Cancel Selection";
+  cancelSelectionBtn.disabled = true;
+  selectionControls.append(closePathBtn, commitSelectionBtn, cancelSelectionBtn);
+  toolbar.appendChild(selectionControls);
+
+  const updateSelectionControls = (state?: LassoState) => {
+    if (!state) {
+      closePathBtn.disabled = true;
+      commitSelectionBtn.disabled = true;
+      cancelSelectionBtn.disabled = true;
+      return;
+    }
+    closePathBtn.disabled = !state.canClose;
+    commitSelectionBtn.disabled = !state.canCommit;
+    cancelSelectionBtn.disabled = !(state.hasPath || state.hasSelection);
+  };
+  updateSelectionControls();
+
+  const attachTool = (tool: Tool) => {
+    if (activeTool instanceof LassoTool) {
+      activeTool.onStateChange = undefined;
+    }
+    activeTool = tool;
+    setActiveButton(buttonForTool(tool));
+    if (tool instanceof LassoTool) {
+      selectionControls.style.display = "flex";
+      const handler = (state: LassoState) => updateSelectionControls(state);
+      tool.onStateChange = handler;
+      updateSelectionControls(tool.state);
+    } else {
+      selectionControls.style.display = "none";
+      updateSelectionControls();
+    }
+  };
 
   if (!colorPicker) {
     throw new Error("Missing #colorPicker input");
@@ -231,8 +284,10 @@ export function initEditor(): EditorHandle {
       original(tool);
       const ctor = tool.constructor as new () => Tool;
       editorToolConstructors.set(e, ctor);
-      activeToolCtor = ctor;
-      setActiveButton(buttonForTool(tool));
+      if (e === editor) {
+        activeToolCtor = ctor;
+        attachTool(tool);
+      }
     };
   });
 
@@ -249,7 +304,43 @@ export function initEditor(): EditorHandle {
 
   // map button id to tool constructor
   Object.entries(toolConstructors).forEach(([id, ToolCtor]) =>
-    listen(toolButtons[id], "click", () => editor.setTool(new ToolCtor()), listeners),
+    listen(toolButtons[id], "click", () => {
+      const tool = new ToolCtor();
+      editor.setTool(tool);
+    }, listeners),
+  );
+
+  listen(
+    closePathBtn,
+    "click",
+    () => {
+      if (activeTool instanceof LassoTool) {
+        activeTool.closePath();
+      }
+    },
+    listeners,
+  );
+
+  listen(
+    commitSelectionBtn,
+    "click",
+    () => {
+      if (activeTool instanceof LassoTool) {
+        activeTool.commitSelection();
+      }
+    },
+    listeners,
+  );
+
+  listen(
+    cancelSelectionBtn,
+    "click",
+    () => {
+      if (activeTool instanceof LassoTool) {
+        activeTool.cancelSelection();
+      }
+    },
+    listeners,
   );
 
   listen(

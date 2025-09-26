@@ -7,6 +7,7 @@ import { LineTool } from "./tools/LineTool.js";
 import { CircleTool } from "./tools/CircleTool.js";
 import { TextTool } from "./tools/TextTool.js";
 import { BucketFillTool } from "./tools/BucketFillTool.js";
+import type { BucketFillOptions } from "./tools/BucketFillTool.js";
 import { EyedropperTool } from "./tools/EyedropperTool.js";
 import type { Tool } from "./tools/Tool.js";
 
@@ -99,6 +100,75 @@ export function initEditor(): EditorHandle {
   const colorHistory = document.getElementById(
     "colorHistory",
   ) as HTMLDivElement | null;
+  const bucketSettingsKey = "bucketFillSettings";
+
+  const loadBucketSettings = (): Partial<BucketFillOptions> | undefined => {
+    if (typeof window === "undefined") return undefined;
+    try {
+      return JSON.parse(
+        window.sessionStorage?.getItem(bucketSettingsKey) ?? "null",
+      ) ?? undefined;
+    } catch {
+      return undefined;
+    }
+  };
+
+  const persistBucketSettings = (settings: BucketFillOptions) => {
+    try {
+      window.sessionStorage?.setItem(
+        bucketSettingsKey,
+        JSON.stringify(settings),
+      );
+    } catch {
+      /* ignore storage errors */
+    }
+  };
+
+  const storedBucketSettings = loadBucketSettings();
+  const bucketSettings = storedBucketSettings
+    ? BucketFillTool.setDefaults(storedBucketSettings)
+    : BucketFillTool.getDefaults();
+
+  const bucketControlsGroup = document.createElement("div");
+  bucketControlsGroup.className = "group bucket-fill-controls";
+
+  const toleranceRow = document.createElement("div");
+  toleranceRow.className = "bucket-tolerance-row";
+
+  const toleranceLabel = document.createElement("label");
+  toleranceLabel.htmlFor = "bucketTolerance";
+  toleranceLabel.textContent = "Fill tolerance";
+
+  const toleranceSlider = document.createElement("input");
+  toleranceSlider.type = "range";
+  toleranceSlider.id = "bucketTolerance";
+  toleranceSlider.min = "0";
+  toleranceSlider.max = "255";
+  toleranceSlider.step = "1";
+  toleranceSlider.value = String(bucketSettings.tolerance);
+
+  const toleranceValue = document.createElement("span");
+  toleranceValue.className = "bucket-tolerance-value";
+  toleranceValue.textContent = String(bucketSettings.tolerance);
+
+  toleranceRow.appendChild(toleranceLabel);
+  toleranceRow.appendChild(toleranceSlider);
+  toleranceRow.appendChild(toleranceValue);
+
+  const connectivityLabel = document.createElement("label");
+  connectivityLabel.className = "bucket-connectivity-toggle";
+
+  const connectivityToggle = document.createElement("input");
+  connectivityToggle.type = "checkbox";
+  connectivityToggle.id = "bucketConnectivity";
+  connectivityToggle.checked = bucketSettings.connectivity === 8;
+
+  connectivityLabel.appendChild(connectivityToggle);
+  connectivityLabel.appendChild(document.createTextNode("8-way fill"));
+
+  bucketControlsGroup.appendChild(toleranceRow);
+  bucketControlsGroup.appendChild(connectivityLabel);
+  toolbar.appendChild(bucketControlsGroup);
 
   if (!colorPicker) {
     throw new Error("Missing #colorPicker input");
@@ -155,6 +225,27 @@ export function initEditor(): EditorHandle {
   const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
   const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
   const listeners: Array<() => void> = [];
+
+  const updateBucketTolerance = () => {
+    const updated = BucketFillTool.setDefaults({
+      tolerance: Number(toleranceSlider.value),
+    });
+    toleranceSlider.value = String(updated.tolerance);
+    toleranceValue.textContent = String(updated.tolerance);
+    persistBucketSettings(updated);
+  };
+
+  const updateBucketConnectivity = () => {
+    const updated = BucketFillTool.setDefaults({
+      connectivity: connectivityToggle.checked ? 8 : 4,
+    });
+    connectivityToggle.checked = updated.connectivity === 8;
+    persistBucketSettings(updated);
+  };
+
+  listen(toleranceSlider, "input", updateBucketTolerance, listeners);
+
+  listen(connectivityToggle, "change", updateBucketConnectivity, listeners);
 
   const recentColors: string[] = [];
   const maxRecentColors = 10;

@@ -59,9 +59,15 @@ describe("image load and save", () => {
     });
 
     anchor = { href: "", download: "", click: jest.fn() };
+    const realCreateElement = document.createElement.bind(document);
     createElementSpy = jest
       .spyOn(document, "createElement")
-      .mockReturnValue(anchor as any);
+      .mockImplementation(((tagName: string, options?: ElementCreationOptions) => {
+        if (tagName.toLowerCase() === "a") {
+          return anchor as unknown as HTMLElement;
+        }
+        return realCreateElement(tagName as any, options);
+      }) as typeof document.createElement);
 
     class MockFileReader {
       result: string | ArrayBuffer | null = null;

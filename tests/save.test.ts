@@ -38,7 +38,15 @@ describe("save button", () => {
     const click = jest.fn();
     const anchor = { href: "", download: "", click } as any;
 
-    jest.spyOn(document, "createElement").mockReturnValue(anchor);
+    const realCreateElement = document.createElement.bind(document);
+    const createElementSpy = jest
+      .spyOn(document, "createElement")
+      .mockImplementation(((tagName: string, options?: ElementCreationOptions) => {
+        if (tagName.toLowerCase() === "a") {
+          return anchor as unknown as HTMLElement;
+        }
+        return realCreateElement(tagName as any, options);
+      }) as typeof document.createElement);
 
     const handle = initEditor();
 
@@ -47,6 +55,7 @@ describe("save button", () => {
     expect(click).toHaveBeenCalled();
 
     handle.destroy();
+    createElementSpy.mockRestore();
   });
 
   it("supports selecting jpeg format", () => {
@@ -85,7 +94,15 @@ describe("save button", () => {
 
     const click = jest.fn();
     const anchor = { href: "", download: "", click } as any;
-    jest.spyOn(document, "createElement").mockReturnValue(anchor);
+    const realCreateElement = document.createElement.bind(document);
+    const createElementSpy = jest
+      .spyOn(document, "createElement")
+      .mockImplementation(((tagName: string, options?: ElementCreationOptions) => {
+        if (tagName.toLowerCase() === "a") {
+          return anchor as unknown as HTMLElement;
+        }
+        return realCreateElement(tagName as any, options);
+      }) as typeof document.createElement);
 
     const handle = initEditor();
 
@@ -95,5 +112,6 @@ describe("save button", () => {
     expect(click).toHaveBeenCalled();
 
     handle.destroy();
+    createElementSpy.mockRestore();
   });
 });

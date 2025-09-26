@@ -313,30 +313,89 @@ export function initEditor(): EditorHandle {
 
   // image loading
   const imageLoader = document.getElementById("imageLoader") as HTMLInputElement | null;
+  const canvasContainer = document.getElementById(
+    "canvasContainer",
+  ) as HTMLDivElement | null;
+
+  const loadImageFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        editor.saveState();
+        editor.ctx.drawImage(
+          img,
+          0,
+          0,
+          editor.canvas.width,
+          editor.canvas.height,
+        );
+        updateHistoryButtons();
+        if (imageLoader) imageLoader.value = "";
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
   listen(
     imageLoader,
     "change",
     (e: Event) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        const img = new Image();
-        img.onload = () => {
-          editor.saveState();
-          editor.ctx.drawImage(
-            img,
-            0,
-            0,
-            editor.canvas.width,
-            editor.canvas.height,
-          );
-          updateHistoryButtons();
-          if (imageLoader) imageLoader.value = "";
-        };
-        img.src = reader.result as string;
-      };
-      reader.readAsDataURL(file);
+      loadImageFile(file);
+    },
+    listeners,
+  );
+
+  const setDragState = (active: boolean) => {
+    if (!canvasContainer) return;
+    canvasContainer.classList.toggle("drag-over", active);
+  };
+
+  listen<DragEvent>(
+    canvasContainer,
+    "dragenter",
+    (event) => {
+      event.preventDefault();
+      setDragState(true);
+    },
+    listeners,
+  );
+
+  listen<DragEvent>(
+    canvasContainer,
+    "dragover",
+    (event) => {
+      event.preventDefault();
+      if (event.dataTransfer) {
+        event.dataTransfer.dropEffect = "copy";
+      }
+      setDragState(true);
+    },
+    listeners,
+  );
+
+  listen<DragEvent>(
+    canvasContainer,
+    "dragleave",
+    () => {
+      setDragState(false);
+    },
+    listeners,
+  );
+
+  listen<DragEvent>(
+    canvasContainer,
+    "drop",
+    (event) => {
+      event.preventDefault();
+      setDragState(false);
+      const file = event.dataTransfer?.files?.[0];
+      if (file) {
+        loadImageFile(file);
+      }
     },
     listeners,
   );

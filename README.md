@@ -113,6 +113,20 @@ Execute the test suite:
 npm test
 ```
 
+### Updating canvas rendering snapshots
+
+The core drawing tools are covered by deterministic canvas snapshot tests. If a
+legitimate change updates how these tools render, regenerate the reference
+images before committing:
+
+```bash
+UPDATE_TOOL_SNAPSHOTS=true npm test -- --runTestsByPath tests/toolSnapshots.test.ts
+```
+
+The command rewrites `tests/__tool_snapshots__/core-tools.json` with fresh
+headless-canvas captures. Review the diff carefully, then rerun the tests
+without `UPDATE_TOOL_SNAPSHOTS` to ensure they pass using the new snapshots.
+
 Open `index.html` in your browser to use the app.
 
 ## Deployment

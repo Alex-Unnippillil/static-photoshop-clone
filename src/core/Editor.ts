@@ -1,4 +1,5 @@
 import { Tool } from "../tools/Tool.js";
+import { profiler } from "./Profiler.js";
 
 export class Editor {
   canvas: HTMLCanvasElement;
@@ -12,6 +13,7 @@ export class Editor {
   fontFamily: HTMLSelectElement | null;
   fontSize: HTMLInputElement | null;
   private onChange?: () => void;
+  private activeStrokeToken: string | null = null;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -38,6 +40,7 @@ export class Editor {
     this.canvas.addEventListener("pointerdown", this.handlePointerDown);
     this.canvas.addEventListener("pointermove", this.handlePointerMove);
     this.canvas.addEventListener("pointerup", this.handlePointerUp);
+    this.canvas.addEventListener("pointercancel", this.handlePointerCancel);
   }
 
   setTool(tool: Tool) {
@@ -50,7 +53,17 @@ export class Editor {
     // Capture the pointer once before recording canvas state
     this.canvas.setPointerCapture(e.pointerId);
     this.saveState();
-    this.currentTool?.onPointerDown(e, this);
+    if (this.activeStrokeToken) {
+      this.finishStroke();
+    }
+    this.activeStrokeToken = profiler.begin("stroke");
+    try {
+      this.currentTool?.onPointerDown(e, this);
+    } catch (error) {
+      this.finishStroke();
+      this.canvas.releasePointerCapture(e.pointerId);
+      throw error;
+    }
   };
 
   private handlePointerMove = (e: PointerEvent) => {
@@ -58,8 +71,21 @@ export class Editor {
   };
 
   private handlePointerUp = (e: PointerEvent) => {
-    this.currentTool?.onPointerUp(e, this);
-    this.canvas.releasePointerCapture(e.pointerId);
+    try {
+      this.currentTool?.onPointerUp(e, this);
+    } finally {
+      this.finishStroke();
+      this.canvas.releasePointerCapture(e.pointerId);
+    }
+  };
+
+  private handlePointerCancel = (e: PointerEvent) => {
+    try {
+      this.currentTool?.onPointerUp(e, this);
+    } finally {
+      this.finishStroke();
+      this.canvas.releasePointerCapture(e.pointerId);
+    }
   };
 
   private adjustForPixelRatio() {
@@ -153,5 +179,12 @@ export class Editor {
     this.canvas.removeEventListener("pointerdown", this.handlePointerDown);
     this.canvas.removeEventListener("pointermove", this.handlePointerMove);
     this.canvas.removeEventListener("pointerup", this.handlePointerUp);
+    this.canvas.removeEventListener("pointercancel", this.handlePointerCancel);
+  }
+
+  private finishStroke() {
+    if (!this.activeStrokeToken) return;
+    profiler.end(this.activeStrokeToken);
+    this.activeStrokeToken = null;
   }
 }

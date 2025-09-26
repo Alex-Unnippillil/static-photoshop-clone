@@ -1,20 +1,47 @@
+import { profiler } from "./Profiler.js";
 export class Editor {
     constructor(canvas, colorPicker, lineWidth, fillMode, onChange, fontFamily, fontSize) {
         this.undoStack = [];
         this.redoStack = [];
         this.currentTool = null;
+        this.activeStrokeToken = null;
         this.handlePointerDown = (e) => {
             // Capture the pointer once before recording canvas state
             this.canvas.setPointerCapture(e.pointerId);
             this.saveState();
-            this.currentTool?.onPointerDown(e, this);
+            if (this.activeStrokeToken) {
+                this.finishStroke();
+            }
+            this.activeStrokeToken = profiler.begin("stroke");
+            try {
+                this.currentTool?.onPointerDown(e, this);
+            }
+            catch (error) {
+                this.finishStroke();
+                this.canvas.releasePointerCapture(e.pointerId);
+                throw error;
+            }
         };
         this.handlePointerMove = (e) => {
             this.currentTool?.onPointerMove(e, this);
         };
         this.handlePointerUp = (e) => {
-            this.currentTool?.onPointerUp(e, this);
-            this.canvas.releasePointerCapture(e.pointerId);
+            try {
+                this.currentTool?.onPointerUp(e, this);
+            }
+            finally {
+                this.finishStroke();
+                this.canvas.releasePointerCapture(e.pointerId);
+            }
+        };
+        this.handlePointerCancel = (e) => {
+            try {
+                this.currentTool?.onPointerUp(e, this);
+            }
+            finally {
+                this.finishStroke();
+                this.canvas.releasePointerCapture(e.pointerId);
+            }
         };
         this.handleResize = () => {
             const data = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
@@ -37,6 +64,7 @@ export class Editor {
         this.canvas.addEventListener("pointerdown", this.handlePointerDown);
         this.canvas.addEventListener("pointermove", this.handlePointerMove);
         this.canvas.addEventListener("pointerup", this.handlePointerUp);
+        this.canvas.addEventListener("pointercancel", this.handlePointerCancel);
     }
     setTool(tool) {
         this.currentTool?.destroy?.();
@@ -108,5 +136,12 @@ export class Editor {
         this.canvas.removeEventListener("pointerdown", this.handlePointerDown);
         this.canvas.removeEventListener("pointermove", this.handlePointerMove);
         this.canvas.removeEventListener("pointerup", this.handlePointerUp);
+        this.canvas.removeEventListener("pointercancel", this.handlePointerCancel);
+    }
+    finishStroke() {
+        if (!this.activeStrokeToken)
+            return;
+        profiler.end(this.activeStrokeToken);
+        this.activeStrokeToken = null;
     }
 }

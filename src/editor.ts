@@ -62,12 +62,19 @@ export function initEditor(): EditorHandle {
     }
     toolButtons[id] = btn;
     constructorToId.set(Ctor, id);
+    btn.setAttribute("aria-pressed", "false");
   });
 
   let activeButton: HTMLButtonElement | null = null;
   const setActiveButton = (btn: HTMLButtonElement | null) => {
-    if (activeButton) activeButton.classList.remove("active");
-    if (btn) btn.classList.add("active");
+    if (activeButton) {
+      activeButton.classList.remove("active");
+      activeButton.setAttribute("aria-pressed", "false");
+    }
+    if (btn) {
+      btn.classList.add("active");
+      btn.setAttribute("aria-pressed", "true");
+    }
     activeButton = btn;
   };
   const buttonForTool = (tool: Tool): HTMLButtonElement | null => {

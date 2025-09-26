@@ -1,5 +1,6 @@
 import { Editor } from "./core/Editor.js";
 import { Shortcuts } from "./core/Shortcuts.js";
+import { profiler } from "./core/Profiler.js";
 import { PencilTool } from "./tools/PencilTool.js";
 import { EraserTool } from "./tools/EraserTool.js";
 import { RectangleTool } from "./tools/RectangleTool.js";
@@ -35,6 +36,7 @@ export interface EditorHandle {
  * {@link EditorHandle} that allows tests or callers to tear down the editor.
  */
 export function initEditor(): EditorHandle {
+  profiler.initialize();
   const canvases = Array.from(
     document.querySelectorAll<HTMLCanvasElement>("canvas"),
   );
@@ -99,6 +101,8 @@ export function initEditor(): EditorHandle {
   const colorHistory = document.getElementById(
     "colorHistory",
   ) as HTMLDivElement | null;
+  const profilingToggle =
+    document.getElementById("profilingToggle") as HTMLInputElement | null;
 
   if (!colorPicker) {
     throw new Error("Missing #colorPicker input");
@@ -155,6 +159,20 @@ export function initEditor(): EditorHandle {
   const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
   const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
   const listeners: Array<() => void> = [];
+
+  if (profilingToggle) {
+    profiler.setEnabled(profilingToggle.checked);
+    listen(
+      profilingToggle,
+      "input",
+      () => {
+        profiler.setEnabled(profilingToggle.checked);
+      },
+      listeners,
+    );
+  } else {
+    profiler.setEnabled(false);
+  }
 
   const recentColors: string[] = [];
   const maxRecentColors = 10;
@@ -277,36 +295,38 @@ export function initEditor(): EditorHandle {
     saveBtn,
     "click",
     () => {
-      const format =
-        formatSelect.value.toLowerCase() === "jpeg" ? "jpeg" : "png";
-      const mime = format === "jpeg" ? "image/jpeg" : "image/png";
-      const quality = format === "jpeg" ? 0.9 : undefined;
+      profiler.run("export", () => {
+        const format =
+          formatSelect.value.toLowerCase() === "jpeg" ? "jpeg" : "png";
+        const mime = format === "jpeg" ? "image/jpeg" : "image/png";
+        const quality = format === "jpeg" ? 0.9 : undefined;
 
-      let exportCanvas: HTMLCanvasElement;
-      if (canvases.length > 1) {
-        // composite all layers respecting their opacity
-        exportCanvas = document.createElement("canvas");
-        exportCanvas.width = canvases[0].width;
-        exportCanvas.height = canvases[0].height;
-        const tempCtx = exportCanvas.getContext("2d")!;
-        canvases.forEach((cv) => {
-          const opacity = parseFloat(cv.style.opacity) || 1;
-          tempCtx.globalAlpha = opacity;
-          tempCtx.drawImage(cv, 0, 0);
-        });
-        tempCtx.globalAlpha = 1;
-      } else {
-        exportCanvas = editor.canvas;
-      }
+        let exportCanvas: HTMLCanvasElement;
+        if (canvases.length > 1) {
+          // composite all layers respecting their opacity
+          exportCanvas = document.createElement("canvas");
+          exportCanvas.width = canvases[0].width;
+          exportCanvas.height = canvases[0].height;
+          const tempCtx = exportCanvas.getContext("2d")!;
+          canvases.forEach((cv) => {
+            const opacity = parseFloat(cv.style.opacity) || 1;
+            tempCtx.globalAlpha = opacity;
+            tempCtx.drawImage(cv, 0, 0);
+          });
+          tempCtx.globalAlpha = 1;
+        } else {
+          exportCanvas = editor.canvas;
+        }
 
-      const data =
-        quality !== undefined
-          ? exportCanvas.toDataURL(mime, quality)
-          : exportCanvas.toDataURL(mime);
-      const a = document.createElement("a");
-      a.href = data;
-      a.download = `canvas.${format === "jpeg" ? "jpg" : "png"}`;
-      a.click();
+        const data =
+          quality !== undefined
+            ? exportCanvas.toDataURL(mime, quality)
+            : exportCanvas.toDataURL(mime);
+        const a = document.createElement("a");
+        a.href = data;
+        a.download = `canvas.${format === "jpeg" ? "jpg" : "png"}`;
+        a.click();
+      });
     },
     listeners,
   );
@@ -390,6 +410,7 @@ export function initEditor(): EditorHandle {
       listeners.forEach((fn) => fn());
       shortcuts.destroy();
       editors.forEach((e) => e.destroy());
+      profiler.setEnabled(false);
     },
   };
   recordColor(colorPicker.value);

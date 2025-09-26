@@ -9,6 +9,7 @@ import { TextTool } from "../src/tools/TextTool.js";
 import { BucketFillTool } from "../src/tools/BucketFillTool.js";
 import { Shortcuts } from "../src/core/Shortcuts.js";
 import { Editor } from "../src/core/Editor.js";
+import { MagicWandTool } from "../src/tools/MagicWandTool.js";
 
 describe("keyboard shortcuts", () => {
   let handle: EditorHandle;
@@ -29,6 +30,7 @@ describe("keyboard shortcuts", () => {
       <button id="text"></button>
       <button id="bucket"></button>
       <button id="eyedropper"></button>
+      <button id="magicWand"></button>
       <select id="formatSelect"><option value="png">PNG</option></select>
       <button id="save"></button>
     `;
@@ -72,6 +74,7 @@ describe("keyboard shortcuts", () => {
       ["c", CircleTool],
       ["t", TextTool],
       ["b", BucketFillTool],
+      ["w", MagicWandTool],
     ];
 
     cases.forEach(([key, ToolClass], index) => {

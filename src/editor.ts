@@ -8,6 +8,7 @@ import { CircleTool } from "./tools/CircleTool.js";
 import { TextTool } from "./tools/TextTool.js";
 import { BucketFillTool } from "./tools/BucketFillTool.js";
 import { EyedropperTool } from "./tools/EyedropperTool.js";
+import { MagicWandTool } from "./tools/MagicWandTool.js";
 import type { Tool } from "./tools/Tool.js";
 
 /** Utility to listen to events and auto-remove on destroy. */
@@ -48,6 +49,7 @@ export function initEditor(): EditorHandle {
     text: TextTool,
     bucket: BucketFillTool,
     eyedropper: EyedropperTool,
+    magicWand: MagicWandTool,
   };
 
   const toolButtons: Record<string, HTMLButtonElement> = {};
@@ -99,6 +101,12 @@ export function initEditor(): EditorHandle {
   const colorHistory = document.getElementById(
     "colorHistory",
   ) as HTMLDivElement | null;
+  let toleranceInput = document.getElementById(
+    "magicTolerance",
+  ) as HTMLInputElement | null;
+  let connectivitySelect = document.getElementById(
+    "magicConnectivity",
+  ) as HTMLSelectElement | null;
 
   if (!colorPicker) {
     throw new Error("Missing #colorPicker input");
@@ -114,6 +122,51 @@ export function initEditor(): EditorHandle {
   }
   if (!formatSelect) {
     throw new Error("Missing #formatSelect select");
+  }
+
+  if (!toleranceInput) {
+    const group = document.createElement("div");
+    group.className = "group";
+
+    const label = document.createElement("label");
+    label.htmlFor = "magicTolerance";
+    label.textContent = "Tolerance";
+
+    toleranceInput = document.createElement("input");
+    toleranceInput.id = "magicTolerance";
+    toleranceInput.type = "number";
+    toleranceInput.min = "0";
+    toleranceInput.max = "255";
+    toleranceInput.value = "32";
+
+    group.appendChild(label);
+    group.appendChild(toleranceInput);
+    toolbar.appendChild(group);
+  }
+
+  if (!connectivitySelect) {
+    const group = document.createElement("div");
+    group.className = "group";
+
+    const label = document.createElement("label");
+    label.htmlFor = "magicConnectivity";
+    label.textContent = "Connectivity";
+
+    connectivitySelect = document.createElement("select");
+    connectivitySelect.id = "magicConnectivity";
+
+    const option4 = document.createElement("option");
+    option4.value = "4";
+    option4.textContent = "4-way";
+    const option8 = document.createElement("option");
+    option8.value = "8";
+    option8.textContent = "8-way";
+
+    connectivitySelect.append(option4, option8);
+    connectivitySelect.value = "4";
+
+    group.append(label, connectivitySelect);
+    toolbar.appendChild(group);
   }
 
   if (layerSelect) {
@@ -212,6 +265,8 @@ export function initEditor(): EditorHandle {
         },
         fontFamily ?? undefined,
         fontSize ?? undefined,
+        toleranceInput ?? undefined,
+        connectivitySelect ?? undefined,
       );
       editors.push(e);
     } catch {

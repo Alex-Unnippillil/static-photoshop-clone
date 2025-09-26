@@ -15,6 +15,7 @@ describe("save button", () => {
       <button id="text"></button>
       <button id="bucket"></button>
       <button id="eyedropper"></button>
+      <button id="magicWand"></button>
       <select id="formatSelect"><option value="png">PNG</option></select>
       <button id="save"></button>
     `;
@@ -35,19 +36,33 @@ describe("save button", () => {
       toJSON: () => {},
     });
 
-    const click = jest.fn();
-    const anchor = { href: "", download: "", click } as any;
-
-    jest.spyOn(document, "createElement").mockReturnValue(anchor);
+      let anchor: HTMLAnchorElement | null = null;
+      let clickSpy: jest.SpyInstance | null = null;
+      jest
+        .spyOn(document, "createElement")
+        .mockImplementation((tag: string) => {
+          const element = Document.prototype.createElement.call(
+            document,
+            tag,
+          );
+          if (tag === "a") {
+            anchor = element as HTMLAnchorElement;
+            clickSpy = jest
+              .spyOn(anchor, "click")
+              .mockImplementation(() => undefined);
+          }
+          return element;
+        });
 
     const handle = initEditor();
 
     (document.getElementById("save") as HTMLButtonElement).click();
-    expect(canvas.toDataURL).toHaveBeenCalledWith("image/png");
-    expect(click).toHaveBeenCalled();
+      expect(canvas.toDataURL).toHaveBeenCalledWith("image/png");
+      expect(clickSpy).not.toBeNull();
+      expect(clickSpy?.mock.calls.length).toBe(1);
 
-    handle.destroy();
-  });
+      handle.destroy();
+    });
 
   it("supports selecting jpeg format", () => {
     document.body.innerHTML = `
@@ -63,6 +78,7 @@ describe("save button", () => {
       <button id="text"></button>
       <button id="bucket"></button>
       <button id="eyedropper"></button>
+      <button id="magicWand"></button>
       <select id="formatSelect"><option value="png">PNG</option><option value="jpeg" selected>JPEG</option></select>
       <button id="save"></button>
     `;
@@ -83,17 +99,31 @@ describe("save button", () => {
       toJSON: () => {},
     });
 
-    const click = jest.fn();
-    const anchor = { href: "", download: "", click } as any;
-    jest.spyOn(document, "createElement").mockReturnValue(anchor);
+      let anchor: HTMLAnchorElement | null = null;
+      let clickSpy: jest.SpyInstance | null = null;
+      jest
+        .spyOn(document, "createElement")
+        .mockImplementation((tag: string) => {
+          const element = Document.prototype.createElement.call(
+            document,
+            tag,
+          );
+          if (tag === "a") {
+            anchor = element as HTMLAnchorElement;
+            clickSpy = jest
+              .spyOn(anchor, "click")
+              .mockImplementation(() => undefined);
+          }
+          return element;
+        });
 
-    const handle = initEditor();
+      const handle = initEditor();
 
-    (document.getElementById("save") as HTMLButtonElement).click();
-    expect(canvas.toDataURL).toHaveBeenCalledWith("image/jpeg", 0.9);
-    expect(anchor.download).toBe("canvas.jpg");
-    expect(click).toHaveBeenCalled();
+      (document.getElementById("save") as HTMLButtonElement).click();
+      expect(canvas.toDataURL).toHaveBeenCalledWith("image/jpeg", 0.9);
+      expect(anchor?.download).toBe("canvas.jpg");
+      expect(clickSpy?.mock.calls.length).toBe(1);
 
-    handle.destroy();
-  });
+      handle.destroy();
+    });
 });

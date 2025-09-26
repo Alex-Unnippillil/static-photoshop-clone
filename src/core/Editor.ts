@@ -1,5 +1,11 @@
 import { Tool } from "../tools/Tool.js";
 
+export interface SelectionMask {
+  data: Uint8Array;
+  width: number;
+  height: number;
+}
+
 export class Editor {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
@@ -11,6 +17,9 @@ export class Editor {
   fillMode: HTMLInputElement;
   fontFamily: HTMLSelectElement | null;
   fontSize: HTMLInputElement | null;
+  private selectionToleranceInput: HTMLInputElement | null;
+  private selectionConnectivitySelect: HTMLSelectElement | null;
+  selectionMask: SelectionMask | null = null;
   private onChange?: () => void;
 
   constructor(
@@ -21,6 +30,8 @@ export class Editor {
     onChange?: () => void,
     fontFamily?: HTMLSelectElement | null,
     fontSize?: HTMLInputElement | null,
+    selectionTolerance?: HTMLInputElement | null,
+    selectionConnectivity?: HTMLSelectElement | null,
   ) {
     this.canvas = canvas;
     const ctx = canvas.getContext("2d");
@@ -32,6 +43,8 @@ export class Editor {
     this.onChange = onChange;
     this.fontFamily = fontFamily ?? null;
     this.fontSize = fontSize ?? null;
+    this.selectionToleranceInput = selectionTolerance ?? null;
+    this.selectionConnectivitySelect = selectionConnectivity ?? null;
     this.adjustForPixelRatio();
     window.addEventListener("resize", this.handleResize);
 
@@ -141,6 +154,24 @@ export class Editor {
 
   get fontSizeValue() {
     return parseInt(this.fontSize?.value ?? "", 10) || 16;
+  }
+
+  get selectionTolerance() {
+    const value = parseInt(this.selectionToleranceInput?.value ?? "", 10);
+    if (Number.isNaN(value)) return 0;
+    return Math.min(255, Math.max(0, value));
+  }
+
+  get selectionConnectivity(): 4 | 8 {
+    const value = parseInt(
+      this.selectionConnectivitySelect?.value ?? "",
+      10,
+    );
+    return value === 8 ? 8 : 4;
+  }
+
+  setSelectionMask(mask: SelectionMask | null) {
+    this.selectionMask = mask;
   }
 
   /**

@@ -4,8 +4,9 @@ describe("image load and save", () => {
   let canvas: HTMLCanvasElement;
   let ctx: Partial<CanvasRenderingContext2D>;
   let handle: EditorHandle;
-  let anchor: { href: string; download: string; click: jest.Mock };
+  let anchor: HTMLAnchorElement | null;
   let createElementSpy: jest.SpyInstance;
+  let clickSpy: jest.SpyInstance | null;
   let fileReaderSpy: jest.SpyInstance;
   let imageSpy: jest.SpyInstance;
 
@@ -23,6 +24,7 @@ describe("image load and save", () => {
       <button id="text"></button>
       <button id="bucket"></button>
       <button id="eyedropper"></button>
+      <button id="magicWand"></button>
       <input id="imageLoader" type="file" />
       <select id="formatSelect"><option value="png">PNG</option></select>
       <button id="save"></button>
@@ -58,10 +60,23 @@ describe("image load and save", () => {
       toJSON: () => {},
     });
 
-    anchor = { href: "", download: "", click: jest.fn() };
+    anchor = null;
+    clickSpy = null;
     createElementSpy = jest
       .spyOn(document, "createElement")
-      .mockReturnValue(anchor as any);
+      .mockImplementation((tag: string) => {
+        const element = Document.prototype.createElement.call(
+          document,
+          tag,
+        );
+        if (tag === "a") {
+          anchor = element as HTMLAnchorElement;
+          clickSpy = jest
+            .spyOn(anchor, "click")
+            .mockImplementation(() => undefined);
+        }
+        return element;
+      });
 
     class MockFileReader {
       result: string | ArrayBuffer | null = null;
@@ -159,8 +174,8 @@ describe("image load and save", () => {
     const save = document.getElementById("save") as HTMLButtonElement;
     save.click();
     expect(canvas.toDataURL).toHaveBeenCalledWith("image/png");
-    expect(anchor.href).toBe("data:image/png;base64,SAVE");
-    expect(anchor.download).toBe("canvas.png");
-    expect(anchor.click).toHaveBeenCalled();
+    expect(anchor?.href).toBe("data:image/png;base64,SAVE");
+    expect(anchor?.download).toBe("canvas.png");
+    expect(clickSpy?.mock.calls.length).toBe(1);
   });
 });

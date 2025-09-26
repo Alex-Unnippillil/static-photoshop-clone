@@ -6,6 +6,7 @@ import { LineTool } from "../src/tools/LineTool.js";
 import { CircleTool } from "../src/tools/CircleTool.js";
 import { TextTool } from "../src/tools/TextTool.js";
 import { EyedropperTool } from "../src/tools/EyedropperTool.js";
+import { MagicWandTool } from "../src/tools/MagicWandTool.js";
 
 describe("toolbar controls", () => {
   let handle: EditorHandle;
@@ -28,6 +29,7 @@ describe("toolbar controls", () => {
       <button id="text"></button>
       <button id="eyedropper"></button>
       <button id="bucket"></button>
+      <button id="magicWand"></button>
 
       <select id="formatSelect"><option value="png">PNG</option></select>
       <button id="save"></button>
@@ -79,26 +81,21 @@ describe("toolbar controls", () => {
 
     it("switches tools when buttons are clicked", () => {
       const spy = jest.spyOn(handle.editor, "setTool");
-      (document.getElementById("pencil") as HTMLButtonElement).click();
-      expect(spy.mock.calls[0][0]).toBeInstanceOf(PencilTool);
+      const sequence: Array<[string, new () => unknown]> = [
+        ["pencil", PencilTool],
+        ["eraser", EraserTool],
+        ["rectangle", RectangleTool],
+        ["line", LineTool],
+        ["circle", CircleTool],
+        ["text", TextTool],
+        ["eyedropper", EyedropperTool],
+        ["magicWand", MagicWandTool],
+      ];
 
-      (document.getElementById("eraser") as HTMLButtonElement).click();
-      expect(spy.mock.calls[1][0]).toBeInstanceOf(EraserTool);
-
-      (document.getElementById("rectangle") as HTMLButtonElement).click();
-      expect(spy.mock.calls[2][0]).toBeInstanceOf(RectangleTool);
-
-      (document.getElementById("line") as HTMLButtonElement).click();
-      expect(spy.mock.calls[3][0]).toBeInstanceOf(LineTool);
-
-      (document.getElementById("circle") as HTMLButtonElement).click();
-      expect(spy.mock.calls[4][0]).toBeInstanceOf(CircleTool);
-
-      (document.getElementById("text") as HTMLButtonElement).click();
-      expect(spy.mock.calls[5][0]).toBeInstanceOf(TextTool);
-
-      (document.getElementById("eyedropper") as HTMLButtonElement).click();
-      expect(spy.mock.calls[6][0]).toBeInstanceOf(EyedropperTool);
+      sequence.forEach(([id, ToolCtor], index) => {
+        (document.getElementById(id) as HTMLButtonElement).click();
+        expect(spy.mock.calls[index][0]).toBeInstanceOf(ToolCtor);
+      });
     });
 
     it("routes tool changes to the selected layer", () => {

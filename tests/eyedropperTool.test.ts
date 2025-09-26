@@ -102,6 +102,7 @@ describe("EyedropperTool color history", () => {
       <button id="rectangle"></button>
       <button id="line"></button>
       <button id="circle"></button>
+      <button id="gradient"></button>
       <button id="text"></button>
       <button id="bucket"></button>
       <button id="eyedropper"></button>

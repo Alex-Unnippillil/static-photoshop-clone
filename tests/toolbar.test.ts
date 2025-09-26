@@ -6,6 +6,7 @@ import { LineTool } from "../src/tools/LineTool.js";
 import { CircleTool } from "../src/tools/CircleTool.js";
 import { TextTool } from "../src/tools/TextTool.js";
 import { EyedropperTool } from "../src/tools/EyedropperTool.js";
+import { GradientTool } from "../src/tools/GradientTool.js";
 
 describe("toolbar controls", () => {
   let handle: EditorHandle;
@@ -25,6 +26,7 @@ describe("toolbar controls", () => {
       <button id="rectangle"></button>
       <button id="line"></button>
       <button id="circle"></button>
+      <button id="gradient"></button>
       <button id="text"></button>
       <button id="eyedropper"></button>
       <button id="bucket"></button>
@@ -99,6 +101,9 @@ describe("toolbar controls", () => {
 
       (document.getElementById("eyedropper") as HTMLButtonElement).click();
       expect(spy.mock.calls[6][0]).toBeInstanceOf(EyedropperTool);
+
+      (document.getElementById("gradient") as HTMLButtonElement).click();
+      expect(spy.mock.calls[7][0]).toBeInstanceOf(GradientTool);
     });
 
     it("routes tool changes to the selected layer", () => {

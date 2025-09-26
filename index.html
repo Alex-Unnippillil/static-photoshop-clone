@@ -65,6 +65,15 @@
         <img src="icons/save.svg" alt="Save" />
       </button>
 
+      <div id="transformControls" class="group" aria-live="polite">
+        <span id="transformScale">Scale: 100% × 100%</span>
+        <span id="transformRotation">Rotation: 0°</span>
+        <button id="resetTransform" type="button">Reset</button>
+        <button id="commitTransform" type="button">Commit</button>
+        <button id="flipHorizontal" type="button">Flip H</button>
+        <button id="flipVertical" type="button">Flip V</button>
+      </div>
+
     </div>
     <div id="canvasContainer">
       <canvas id="canvas" width="800" height="600"></canvas>

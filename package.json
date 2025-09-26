@@ -21,11 +21,16 @@
     "@types/jest": "^29.5.11",
     "jest": "^29.7.0",
     "ts-jest": "^29.2.3",
-    "jest-environment-jsdom": "^29.7.0"
+    "jest-environment-jsdom": "^29.7.0",
+    "axe-core": "^4.8.4",
+    "jest-axe": "^7.0.1"
   },
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": [
+      "<rootDir>/tests/setupAxe.ts"
+    ],
     "globals": {
       "ts-jest": {
         "useESM": true,

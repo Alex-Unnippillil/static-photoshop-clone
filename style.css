@@ -1,3 +1,15 @@
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 button:focus-visible, input:focus-visible {
   outline: 2px solid #1e90ff;
   outline-offset: 2px;
@@ -26,6 +38,13 @@ body {
   display: flex;
   align-items: center;
   gap: 4px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#colorHistory li {
+  display: contents;
 }
 
 .color-swatch {
@@ -97,6 +116,37 @@ body {
   width: 100%;
   height: 100%;
   box-sizing: border-box;
+}
+
+dialog {
+  border: none;
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 420px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.dialog-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.dialog-actions button {
+  padding: 6px 12px;
+  border: 1px solid #007bff;
+  background: #007bff;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.dialog-actions button:hover {
+  background: #005bb5;
 }
 
 

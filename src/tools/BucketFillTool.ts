@@ -1,12 +1,72 @@
 import { Editor } from "../core/Editor.js";
 import { Tool } from "./Tool.js";
 
+export type BucketFillConnectivity = 4 | 8;
+
+export interface BucketFillOptions {
+  tolerance: number;
+  connectivity: BucketFillConnectivity;
+}
+
 /**
  * Tool that fills a contiguous region of pixels with the current fill color.
  * Uses an iterative flood fill with typed-array backed queue to reduce memory churn.
  */
 export class BucketFillTool implements Tool {
   private static readonly MAX_FILL_PIXELS = 1_000_000;
+  private static defaults: BucketFillOptions = {
+    tolerance: 0,
+    connectivity: 4,
+  };
+
+  private readonly override?: BucketFillOptions;
+
+  constructor(options?: Partial<BucketFillOptions>) {
+    if (options) {
+      this.override = BucketFillTool.normalizeOptions(
+        options,
+        BucketFillTool.defaults,
+      );
+    }
+  }
+
+  static getDefaults(): BucketFillOptions {
+    return { ...BucketFillTool.defaults };
+  }
+
+  static setDefaults(options: Partial<BucketFillOptions>): BucketFillOptions {
+    BucketFillTool.defaults = BucketFillTool.normalizeOptions(
+      options,
+      BucketFillTool.defaults,
+    );
+    return BucketFillTool.getDefaults();
+  }
+
+  private static normalizeOptions(
+    options: Partial<BucketFillOptions>,
+    base: BucketFillOptions,
+  ): BucketFillOptions {
+    const tolerance =
+      options.tolerance !== undefined
+        ? BucketFillTool.clampTolerance(options.tolerance)
+        : base.tolerance;
+    const connectivity =
+      options.connectivity !== undefined
+        ? options.connectivity === 8
+          ? 8
+          : 4
+        : base.connectivity;
+    return { tolerance, connectivity };
+  }
+
+  private static clampTolerance(value: number): number {
+    if (!Number.isFinite(value)) return 0;
+    return Math.max(0, Math.min(255, Math.round(value)));
+  }
+
+  private get options(): BucketFillOptions {
+    return this.override ?? BucketFillTool.defaults;
+  }
 
   onPointerDown(e: PointerEvent, editor: Editor): void {
     const ctx = editor.ctx;
@@ -39,13 +99,20 @@ export class BucketFillTool implements Tool {
     let tail = 0;
     let processed = 0;
 
+    const { tolerance, connectivity } = this.options;
+    const useEightConnectivity = connectivity === 8;
+
     queue[tail++] = start;
     visited[start] = 1;
 
     while (head < tail) {
       const idx = queue[head++];
       const offset = idx * 4;
-      if (data[offset] !== tr || data[offset + 1] !== tg || data[offset + 2] !== tb) {
+      if (
+        Math.abs(data[offset] - tr) > tolerance ||
+        Math.abs(data[offset + 1] - tg) > tolerance ||
+        Math.abs(data[offset + 2] - tb) > tolerance
+      ) {
         continue;
       }
 
@@ -62,33 +129,25 @@ export class BucketFillTool implements Tool {
       const x = idx % width;
       const y = (idx / width) | 0;
 
-      if (x > 0) {
-        const n = idx - 1;
+      const enqueue = (nx: number, ny: number) => {
+        if (nx < 0 || ny < 0 || nx >= width || ny >= height) return;
+        const n = ny * width + nx;
         if (!visited[n]) {
           queue[tail++] = n;
           visited[n] = 1;
         }
-      }
-      if (x < width - 1) {
-        const n = idx + 1;
-        if (!visited[n]) {
-          queue[tail++] = n;
-          visited[n] = 1;
-        }
-      }
-      if (y > 0) {
-        const n = idx - width;
-        if (!visited[n]) {
-          queue[tail++] = n;
-          visited[n] = 1;
-        }
-      }
-      if (y < height - 1) {
-        const n = idx + width;
-        if (!visited[n]) {
-          queue[tail++] = n;
-          visited[n] = 1;
-        }
+      };
+
+      enqueue(x - 1, y);
+      enqueue(x + 1, y);
+      enqueue(x, y - 1);
+      enqueue(x, y + 1);
+
+      if (useEightConnectivity) {
+        enqueue(x - 1, y - 1);
+        enqueue(x + 1, y - 1);
+        enqueue(x - 1, y + 1);
+        enqueue(x + 1, y + 1);
       }
     }
     ctx.putImageData(image, 0, 0);

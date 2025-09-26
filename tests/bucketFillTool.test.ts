@@ -48,6 +48,10 @@ describe("BucketFillTool", () => {
     );
   });
 
+  afterEach(() => {
+    BucketFillTool.setDefaults({ tolerance: 0, connectivity: 4 });
+  });
+
   it("fills enclosed areas with the selected color", () => {
     const tool = new BucketFillTool();
     tool.onPointerDown({ offsetX: 2, offsetY: 2 } as PointerEvent, editor);
@@ -88,5 +92,80 @@ describe("BucketFillTool", () => {
     expect(image.data[last + 1]).toBe(0);
     expect(image.data[last + 2]).toBe(255);
     expect(ctx.putImageData).toHaveBeenCalledWith(image, 0, 0);
+  });
+
+  it("fills neighboring pixels that are within the configured tolerance", () => {
+    const width = 3;
+    const height = 3;
+    const data = new Uint8ClampedArray(width * height * 4);
+    for (let i = 0; i < width * height; i++) {
+      const offset = i * 4;
+      data[offset] = 255;
+      data[offset + 1] = 255;
+      data[offset + 2] = 255;
+      data[offset + 3] = 255;
+    }
+    // Starting pixel slightly darker than neighbors
+    data[0] = 245;
+    data[1] = 245;
+    data[2] = 245;
+    const image = { data, width, height } as ImageData;
+    (ctx.getImageData as jest.Mock).mockReturnValueOnce(image);
+
+    const tool = new BucketFillTool({ tolerance: 10 });
+    tool.onPointerDown({ offsetX: 0, offsetY: 0 } as PointerEvent, editor);
+
+    const last = (width * height - 1) * 4;
+    expect(image.data[last]).toBe(0);
+    expect(image.data[last + 1]).toBe(0);
+    expect(image.data[last + 2]).toBe(255);
+  });
+
+  it("expands diagonally when using 8-way connectivity", () => {
+    const createImage = () => {
+      const width = 3;
+      const height = 3;
+      const data = new Uint8ClampedArray(width * height * 4);
+      for (let i = 0; i < width * height; i++) {
+        const offset = i * 4;
+        data[offset] = 0;
+        data[offset + 1] = 0;
+        data[offset + 2] = 0;
+        data[offset + 3] = 255;
+      }
+      // Start and diagonal pixel share a color
+      const start = 0;
+      data[start] = 255;
+      data[start + 1] = 255;
+      data[start + 2] = 255;
+
+      const diagonal = (1 * width + 1) * 4;
+      data[diagonal] = 255;
+      data[diagonal + 1] = 255;
+      data[diagonal + 2] = 255;
+
+      return { data, width, height } as ImageData;
+    };
+
+    const image4 = createImage();
+    (ctx.getImageData as jest.Mock).mockReturnValueOnce(image4);
+
+    const fourWayTool = new BucketFillTool({ connectivity: 4 });
+    fourWayTool.onPointerDown({ offsetX: 0, offsetY: 0 } as PointerEvent, editor);
+
+    const diagonal = (1 * image4.width + 1) * 4;
+    expect(image4.data[diagonal]).toBe(255);
+    expect(image4.data[diagonal + 1]).toBe(255);
+    expect(image4.data[diagonal + 2]).toBe(255);
+
+    const image8 = createImage();
+    (ctx.getImageData as jest.Mock).mockReturnValueOnce(image8);
+
+    const eightWayTool = new BucketFillTool({ connectivity: 8 });
+    eightWayTool.onPointerDown({ offsetX: 0, offsetY: 0 } as PointerEvent, editor);
+
+    expect(image8.data[diagonal]).toBe(0);
+    expect(image8.data[diagonal + 1]).toBe(0);
+    expect(image8.data[diagonal + 2]).toBe(255);
   });
 });

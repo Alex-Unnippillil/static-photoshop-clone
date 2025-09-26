@@ -313,30 +313,50 @@ export function initEditor(): EditorHandle {
 
   // image loading
   const imageLoader = document.getElementById("imageLoader") as HTMLInputElement | null;
-  listen(
-    imageLoader,
-    "change",
-    (e: Event) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
+  const loadImageFromFile = async (file: File): Promise<CanvasImageSource> => {
+    if (typeof window.createImageBitmap === "function") {
+      try {
+        return await window.createImageBitmap(file);
+      } catch (error) {
+        console.warn("createImageBitmap failed, falling back to Image", error);
+      }
+    }
+
+    return await new Promise<HTMLImageElement>((resolve, reject) => {
       const reader = new FileReader();
+      reader.onerror = () => reject(reader.error);
       reader.onload = () => {
         const img = new Image();
-        img.onload = () => {
-          editor.saveState();
-          editor.ctx.drawImage(
-            img,
-            0,
-            0,
-            editor.canvas.width,
-            editor.canvas.height,
-          );
-          updateHistoryButtons();
-          if (imageLoader) imageLoader.value = "";
-        };
+        img.onload = () => resolve(img);
+        img.onerror = reject;
         img.src = reader.result as string;
       };
       reader.readAsDataURL(file);
+    });
+  };
+
+  listen(
+    imageLoader,
+    "change",
+    async (e: Event) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      try {
+        const img = await loadImageFromFile(file);
+        editor.saveState();
+        editor.ctx.drawImage(
+          img,
+          0,
+          0,
+          editor.canvas.width,
+          editor.canvas.height,
+        );
+        updateHistoryButtons();
+      } catch (error) {
+        console.error("Failed to load image", error);
+      } finally {
+        if (imageLoader) imageLoader.value = "";
+      }
     },
     listeners,
   );

@@ -75,6 +75,9 @@ export function initEditor() {
     const toolbar = document.getElementById("toolbar") || document.body;
     const saveBtn = document.getElementById("save");
     const formatSelect = document.getElementById("formatSelect");
+    const jpegQualityGroup = document.getElementById("jpegQualityGroup");
+    const jpegQuality = document.getElementById("jpegQuality");
+    const jpegQualityValue = document.getElementById("jpegQualityValue");
     const colorHistory = document.getElementById("colorHistory");
     if (!colorPicker) {
         throw new Error("Missing #colorPicker input");
@@ -91,6 +94,101 @@ export function initEditor() {
     if (!formatSelect) {
         throw new Error("Missing #formatSelect select");
     }
+    if (!jpegQualityGroup || !jpegQuality || !jpegQualityValue) {
+        throw new Error("Missing JPEG quality controls");
+    }
+    const detectCanvasFormatSupport = (mime) => {
+        const testCanvas = document.createElement("canvas");
+        try {
+            return testCanvas.toDataURL(mime).startsWith(`data:${mime}`);
+        }
+        catch {
+            return false;
+        }
+    };
+    const baseFormats = [
+        { id: "png", label: "PNG", mime: "image/png", extension: "png" },
+        {
+            id: "jpeg",
+            label: "JPEG",
+            mime: "image/jpeg",
+            extension: "jpg",
+            supportsQuality: true,
+        },
+    ];
+    const optionalFormats = [
+        { id: "webp", label: "WebP", mime: "image/webp", extension: "webp" },
+        { id: "avif", label: "AVIF", mime: "image/avif", extension: "avif" },
+    ];
+    const formats = baseFormats.slice();
+    optionalFormats.forEach((format) => {
+        if (detectCanvasFormatSupport(format.mime)) {
+            formats.push(format);
+        }
+    });
+    const formatConfigs = new Map();
+    formatSelect.innerHTML = "";
+    formats.forEach((format) => {
+        const option = document.createElement("option");
+        option.value = format.id;
+        option.textContent = format.label;
+        formatSelect.appendChild(option);
+        formatConfigs.set(format.id, format);
+    });
+    if (!formatConfigs.has(formatSelect.value)) {
+        formatSelect.value = formats[0]?.id ?? "png";
+    }
+    const listeners = [];
+    const defaultJpegQuality = 90;
+    const clampQuality = (value) => {
+        const min = Number.parseFloat(jpegQuality.min || "0");
+        const max = Number.parseFloat(jpegQuality.max || "100");
+        const safeValue = Number.isNaN(value)
+            ? defaultJpegQuality
+            : Math.round(value);
+        return Math.min(Math.max(safeValue, min), max);
+    };
+    const readStoredJpegQuality = () => {
+        try {
+            const stored = window.localStorage.getItem("editor.jpegQuality");
+            if (!stored)
+                return defaultJpegQuality;
+            const parsed = Number.parseInt(stored, 10);
+            if (Number.isNaN(parsed))
+                return defaultJpegQuality;
+            return clampQuality(parsed);
+        }
+        catch {
+            return defaultJpegQuality;
+        }
+    };
+    const writeStoredJpegQuality = (value) => {
+        try {
+            window.localStorage.setItem("editor.jpegQuality", String(value));
+        }
+        catch {
+            /* ignore storage failures */
+        }
+    };
+    const updateQualityDisplay = (percent) => {
+        jpegQualityValue.textContent = `${Math.round(percent)}%`;
+    };
+    const updateFormatDependentControls = () => {
+        jpegQualityGroup.hidden = formatSelect.value !== "jpeg";
+    };
+    const initialQuality = readStoredJpegQuality();
+    jpegQuality.value = String(initialQuality);
+    updateQualityDisplay(initialQuality);
+    updateFormatDependentControls();
+    listen(formatSelect, "change", () => {
+        updateFormatDependentControls();
+    }, listeners);
+    listen(jpegQuality, "input", () => {
+        const quality = clampQuality(Number.parseFloat(jpegQuality.value));
+        jpegQuality.value = String(quality);
+        updateQualityDisplay(quality);
+        writeStoredJpegQuality(quality);
+    }, listeners);
     if (layerSelect) {
         layerSelect.innerHTML = "";
     }
@@ -122,7 +220,6 @@ export function initEditor() {
     });
     const undoBtn = document.getElementById("undo");
     const redoBtn = document.getElementById("redo");
-    const listeners = [];
     const recentColors = [];
     const maxRecentColors = 10;
     const renderColorHistory = () => {
@@ -206,9 +303,17 @@ export function initEditor() {
     }, listeners);
     // saving
     listen(saveBtn, "click", () => {
-        const format = formatSelect.value.toLowerCase() === "jpeg" ? "jpeg" : "png";
-        const mime = format === "jpeg" ? "image/jpeg" : "image/png";
-        const quality = format === "jpeg" ? 0.9 : undefined;
+        const fallbackFormat = formatConfigs.get("png");
+        const selectedFormat = formatConfigs.get(formatSelect.value) ?? fallbackFormat;
+        if (!selectedFormat) {
+            throw new Error("No export formats available");
+        }
+        let mime = selectedFormat.mime;
+        let extension = selectedFormat.extension;
+        const qualityPercent = selectedFormat.supportsQuality
+            ? clampQuality(Number.parseFloat(jpegQuality.value))
+            : undefined;
+        const quality = qualityPercent !== undefined ? qualityPercent / 100 : undefined;
         let exportCanvas;
         if (canvases.length > 1) {
             // composite all layers respecting their opacity
@@ -226,12 +331,26 @@ export function initEditor() {
         else {
             exportCanvas = editor.canvas;
         }
-        const data = quality !== undefined
-            ? exportCanvas.toDataURL(mime, quality)
-            : exportCanvas.toDataURL(mime);
+        const ensureDataUrl = (targetMime, targetQuality) => {
+            return targetQuality !== undefined
+                ? exportCanvas.toDataURL(targetMime, targetQuality)
+                : exportCanvas.toDataURL(targetMime);
+        };
+        let data = ensureDataUrl(mime, quality);
+        if (!data.startsWith(`data:${mime}`)) {
+            const fallback = ensureDataUrl("image/png");
+            if (!fallbackFormat) {
+                throw new Error("PNG format is required for fallback");
+            }
+            data = fallback;
+            mime = fallbackFormat.mime;
+            extension = fallbackFormat.extension;
+            formatSelect.value = fallbackFormat.id;
+            updateFormatDependentControls();
+        }
         const a = document.createElement("a");
         a.href = data;
-        a.download = `canvas.${format === "jpeg" ? "jpg" : "png"}`;
+        a.download = `canvas.${extension}`;
         a.click();
     }, listeners);
     // image loading

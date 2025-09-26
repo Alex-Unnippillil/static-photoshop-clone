@@ -57,10 +57,19 @@
         <label for="layerSelect">Layer</label>
         <select id="layerSelect"></select>
       </div>
-      <select id="formatSelect">
-        <option value="png">PNG</option>
-        <option value="jpeg">JPEG</option>
-      </select>
+      <select id="formatSelect"></select>
+      <div class="group" id="jpegQualityGroup" hidden>
+        <label for="jpegQuality">JPEG Quality</label>
+        <input
+          type="range"
+          id="jpegQuality"
+          min="10"
+          max="100"
+          step="5"
+          value="90"
+        />
+        <output id="jpegQualityValue" for="jpegQuality">90%</output>
+      </div>
       <button id="save" class="tool-button" title="Save">
         <img src="icons/save.svg" alt="Save" />
       </button>

@@ -10,6 +10,7 @@ describe("image load and save", () => {
   let imageSpy: jest.SpyInstance;
 
   beforeEach(() => {
+    window.localStorage.clear();
     document.body.innerHTML = `
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
@@ -24,7 +25,18 @@ describe("image load and save", () => {
       <button id="bucket"></button>
       <button id="eyedropper"></button>
       <input id="imageLoader" type="file" />
-      <select id="formatSelect"><option value="png">PNG</option></select>
+      <select id="formatSelect"></select>
+      <div id="jpegQualityGroup" hidden>
+        <input
+          id="jpegQuality"
+          type="range"
+          min="10"
+          max="100"
+          step="5"
+          value="90"
+        />
+        <output id="jpegQualityValue">90%</output>
+      </div>
       <button id="save"></button>
     `;
 
@@ -59,9 +71,17 @@ describe("image load and save", () => {
     });
 
     anchor = { href: "", download: "", click: jest.fn() };
+    const originalCreateElement = document.createElement.bind(document);
     createElementSpy = jest
       .spyOn(document, "createElement")
-      .mockReturnValue(anchor as any);
+      .mockImplementation((
+        (tagName: string, options?: ElementCreationOptions) => {
+          if (tagName === "a") {
+            return anchor as unknown as HTMLElement;
+          }
+          return originalCreateElement(tagName, options);
+        }
+      ) as typeof document.createElement);
 
     class MockFileReader {
       result: string | ArrayBuffer | null = null;

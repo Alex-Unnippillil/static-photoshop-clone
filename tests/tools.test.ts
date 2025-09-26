@@ -3,6 +3,7 @@ import { PencilTool } from "../src/tools/PencilTool.js";
 import { LineTool } from "../src/tools/LineTool.js";
 import { CircleTool } from "../src/tools/CircleTool.js";
 import { TextTool } from "../src/tools/TextTool.js";
+import { HandTool } from "../src/tools/HandTool.js";
 
 describe("additional tools", () => {
   let canvas: HTMLCanvasElement;
@@ -11,7 +12,7 @@ describe("additional tools", () => {
 
   beforeEach(() => {
     document.body.innerHTML = `
-      <canvas id="canvas"></canvas>
+      <div id="canvasContainer"><canvas id="canvas"></canvas></div>
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
       <input id="fillMode" type="checkbox" />
@@ -105,5 +106,44 @@ describe("additional tools", () => {
     textarea.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     expect(ctx.fillText).not.toHaveBeenCalled();
     expect(document.querySelector("textarea")).toBeNull();
+  });
+
+  it("hand tool pans the scroll container on drag", () => {
+    const tool = new HandTool();
+    const container = editor.scrollContainer as HTMLElement;
+    Object.defineProperty(container, "scrollLeft", { value: 25, writable: true });
+    Object.defineProperty(container, "scrollTop", { value: 40, writable: true });
+
+    const setCursorSpy = jest.spyOn(editor, "setCursor");
+    const downPrevent = jest.fn();
+    tool.onPointerDown(
+      {
+        clientX: 10,
+        clientY: 20,
+        pointerId: 1,
+        preventDefault: downPrevent,
+      } as unknown as PointerEvent,
+      editor,
+    );
+    expect(downPrevent).toHaveBeenCalled();
+    expect(setCursorSpy).toHaveBeenCalledWith("grabbing");
+    setCursorSpy.mockClear();
+
+    const movePrevent = jest.fn();
+    tool.onPointerMove(
+      {
+        clientX: 15,
+        clientY: 30,
+        pointerId: 1,
+        preventDefault: movePrevent,
+      } as unknown as PointerEvent,
+      editor,
+    );
+    expect(movePrevent).toHaveBeenCalled();
+    expect(container.scrollLeft).toBe(20);
+    expect(container.scrollTop).toBe(30);
+
+    tool.onPointerUp({ pointerId: 1 } as PointerEvent, editor);
+    expect(setCursorSpy).toHaveBeenCalledWith();
   });
 });

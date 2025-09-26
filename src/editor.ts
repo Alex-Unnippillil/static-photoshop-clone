@@ -372,12 +372,13 @@ export function initEditor(): EditorHandle {
   function activateLayer(index: number) {
     if (index < 0 || index >= editors.length) return;
     activeLayerIndex = index;
-    editor = editors[index];
+    const nextEditor = editors[index];
+    const ToolCtor = editorToolConstructors.get(nextEditor) ?? activeToolCtor;
+    nextEditor.setTool(new ToolCtor());
+    editor = nextEditor;
     handle.editor = editor;
     shortcuts.switchEditor(editor);
     updateLayerInteractivity();
-    const ToolCtor = editorToolConstructors.get(editor) ?? activeToolCtor;
-    editor.setTool(new ToolCtor());
     updateHistoryButtons();
     if (layerSelect) layerSelect.value = String(index);
   }

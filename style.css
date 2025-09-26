@@ -47,6 +47,31 @@ body {
   gap: 8px;
 }
 
+#transformControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+#transformControls span {
+  font-size: 14px;
+  color: #333;
+}
+
+#transformControls button {
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+}
+
+#transformControls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .tool-button {
   width: 32px;
   height: 32px;
@@ -97,6 +122,98 @@ body {
   width: 100%;
   height: 100%;
   box-sizing: border-box;
+}
+
+#transformOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.transform-box {
+  position: absolute;
+  border: 1px dashed #1e90ff;
+  pointer-events: none;
+}
+
+.transform-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border: 2px solid #1e90ff;
+  border-radius: 50%;
+  pointer-events: auto;
+  box-sizing: border-box;
+}
+
+.transform-handle[data-handle="n"] {
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  cursor: ns-resize;
+}
+
+.transform-handle[data-handle="s"] {
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, 50%);
+  cursor: ns-resize;
+}
+
+.transform-handle[data-handle="e"] {
+  right: 0;
+  top: 50%;
+  transform: translate(50%, -50%);
+  cursor: ew-resize;
+}
+
+.transform-handle[data-handle="w"] {
+  left: 0;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  cursor: ew-resize;
+}
+
+.transform-handle[data-handle="ne"] {
+  top: 0;
+  right: 0;
+  transform: translate(50%, -50%);
+  cursor: nesw-resize;
+}
+
+.transform-handle[data-handle="se"] {
+  bottom: 0;
+  right: 0;
+  transform: translate(50%, 50%);
+  cursor: nwse-resize;
+}
+
+.transform-handle[data-handle="sw"] {
+  bottom: 0;
+  left: 0;
+  transform: translate(-50%, 50%);
+  cursor: nesw-resize;
+}
+
+.transform-handle[data-handle="nw"] {
+  top: 0;
+  left: 0;
+  transform: translate(-50%, -50%);
+  cursor: nwse-resize;
+}
+
+.transform-handle[data-handle="rotate"] {
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -180%);
+  cursor: grab;
+  background: #1e90ff;
+  border-color: #fff;
+}
+
+.transform-handle[data-handle="rotate"]:active {
+  cursor: grabbing;
 }
 
 

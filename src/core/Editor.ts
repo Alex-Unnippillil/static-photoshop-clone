@@ -1,5 +1,19 @@
 import { Tool } from "../tools/Tool.js";
 
+export interface SelectionBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface SelectionState {
+  layer: HTMLCanvasElement;
+  bounds: SelectionBounds;
+}
+
+type SelectionListener = (selection: SelectionState | null) => void;
+
 export class Editor {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
@@ -12,6 +26,8 @@ export class Editor {
   fontFamily: HTMLSelectElement | null;
   fontSize: HTMLInputElement | null;
   private onChange?: () => void;
+  private selection: SelectionState | null = null;
+  private selectionListeners: Set<SelectionListener> = new Set();
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -44,6 +60,7 @@ export class Editor {
     this.currentTool?.destroy?.();
     this.currentTool = tool;
     this.canvas.style.cursor = tool.cursor || "crosshair";
+    tool.onActivate?.(this);
   }
 
   private handlePointerDown = (e: PointerEvent) => {
@@ -153,5 +170,52 @@ export class Editor {
     this.canvas.removeEventListener("pointerdown", this.handlePointerDown);
     this.canvas.removeEventListener("pointermove", this.handlePointerMove);
     this.canvas.removeEventListener("pointerup", this.handlePointerUp);
+    this.selectionListeners.clear();
+  }
+
+  getSelection(): SelectionState | null {
+    if (!this.selection) return null;
+    return {
+      layer: this.selection.layer,
+      bounds: { ...this.selection.bounds },
+    };
+  }
+
+  setSelection(selection: SelectionState | null): void {
+    if (!selection) {
+      this.selection = null;
+    } else {
+      this.selection = {
+        layer: selection.layer,
+        bounds: { ...selection.bounds },
+      };
+    }
+    this.notifySelectionChange();
+  }
+
+  clearSelection(): void {
+    this.setSelection(null);
+  }
+
+  updateSelectionBounds(bounds: SelectionBounds): void {
+    if (!this.selection) return;
+    this.selection = {
+      ...this.selection,
+      bounds: { ...bounds },
+    };
+    this.notifySelectionChange();
+  }
+
+  onSelectionChange(listener: SelectionListener): () => void {
+    this.selectionListeners.add(listener);
+    listener(this.getSelection());
+    return () => {
+      this.selectionListeners.delete(listener);
+    };
+  }
+
+  private notifySelectionChange() {
+    const selection = this.getSelection();
+    this.selectionListeners.forEach((listener) => listener(selection));
   }
 }

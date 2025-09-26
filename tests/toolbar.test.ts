@@ -6,6 +6,7 @@ import { LineTool } from "../src/tools/LineTool.js";
 import { CircleTool } from "../src/tools/CircleTool.js";
 import { TextTool } from "../src/tools/TextTool.js";
 import { EyedropperTool } from "../src/tools/EyedropperTool.js";
+import { TransformTool } from "../src/tools/TransformTool.js";
 
 describe("toolbar controls", () => {
   let handle: EditorHandle;
@@ -27,6 +28,7 @@ describe("toolbar controls", () => {
       <button id="circle"></button>
       <button id="text"></button>
       <button id="eyedropper"></button>
+      <button id="transform"></button>
       <button id="bucket"></button>
 
       <select id="formatSelect"><option value="png">PNG</option></select>
@@ -39,14 +41,35 @@ describe("toolbar controls", () => {
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
     const canvas2 = document.getElementById("canvas2") as HTMLCanvasElement;
+    const imageFor = (sw: number, sh: number): ImageData =>
+      ({
+        data: new Uint8ClampedArray(sw * sh * 4),
+        width: sw,
+        height: sh,
+      } as ImageData);
+
     ctx = {
       setTransform: jest.fn(),
       scale: jest.fn(),
-      getImageData: jest.fn(),
+      getImageData: jest
+        .fn()
+        .mockImplementation((sx: number, sy: number, sw: number, sh: number) =>
+          imageFor(sw, sh),
+        ),
       putImageData: jest.fn(),
       clearRect: jest.fn(),
     };
-    const ctx2 = { ...ctx } as Partial<CanvasRenderingContext2D>;
+    const ctx2 = {
+      setTransform: jest.fn(),
+      scale: jest.fn(),
+      getImageData: jest
+        .fn()
+        .mockImplementation((sx: number, sy: number, sw: number, sh: number) =>
+          imageFor(sw, sh),
+        ),
+      putImageData: jest.fn(),
+      clearRect: jest.fn(),
+    } as Partial<CanvasRenderingContext2D>;
     canvas.getContext = jest.fn().mockReturnValue(ctx as CanvasRenderingContext2D);
     canvas2.getContext = jest.fn().mockReturnValue(ctx2 as CanvasRenderingContext2D);
 
@@ -99,6 +122,9 @@ describe("toolbar controls", () => {
 
       (document.getElementById("eyedropper") as HTMLButtonElement).click();
       expect(spy.mock.calls[6][0]).toBeInstanceOf(EyedropperTool);
+
+      (document.getElementById("transform") as HTMLButtonElement).click();
+      expect(spy.mock.calls[7][0]).toBeInstanceOf(TransformTool);
     });
 
     it("routes tool changes to the selected layer", () => {

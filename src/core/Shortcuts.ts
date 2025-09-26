@@ -7,6 +7,7 @@ import { TextTool } from "../tools/TextTool.js";
 import { EraserTool } from "../tools/EraserTool.js";
 import { BucketFillTool } from "../tools/BucketFillTool.js";
 import { EyedropperTool } from "../tools/EyedropperTool.js";
+import { TransformTool } from "../tools/TransformTool.js";
 
 
 /**
@@ -78,6 +79,10 @@ export class Shortcuts {
       case "i":
         e.preventDefault();
         this.editor.setTool(new EyedropperTool());
+        break;
+      case "v":
+        e.preventDefault();
+        this.editor.setTool(new TransformTool());
         break;
     }
   }

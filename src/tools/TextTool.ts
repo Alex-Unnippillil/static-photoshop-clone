@@ -13,8 +13,9 @@ export class TextTool implements Tool {
     const textarea = document.createElement("textarea");
     textarea.style.position = "absolute";
     const parent = editor.canvas.parentElement || document.body;
-    textarea.style.left = `${e.offsetX}px`;
-    textarea.style.top = `${e.offsetY}px`;
+    const { x, y } = editor.normalizeEvent(e);
+    textarea.style.left = `${x}px`;
+    textarea.style.top = `${y}px`;
     textarea.style.color = editor.strokeStyle;
     textarea.style.fontSize = `${editor.fontSizeValue}px`;
     textarea.style.fontFamily = editor.fontFamilyValue;
@@ -30,7 +31,7 @@ export class TextTool implements Tool {
       if (text) {
         editor.ctx.fillStyle = editor.strokeStyle;
         editor.ctx.font = `${editor.fontSizeValue}px ${editor.fontFamilyValue}`;
-        editor.ctx.fillText(text, e.offsetX, e.offsetY);
+        editor.ctx.fillText(text, x, y);
       }
     };
 

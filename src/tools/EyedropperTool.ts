@@ -10,9 +10,9 @@ export class EyedropperTool implements Tool {
 
   onPointerDown(e: PointerEvent, editor: Editor): void {
     const { width, height } = editor.canvas;
-    const dpr = window.devicePixelRatio || 1;
-    const x = Math.max(0, Math.min(width - 1, Math.floor(e.offsetX * dpr)));
-    const y = Math.max(0, Math.min(height - 1, Math.floor(e.offsetY * dpr)));
+    const { deviceX, deviceY } = editor.normalizeEvent(e);
+    const x = Math.max(0, Math.min(width - 1, Math.floor(deviceX)));
+    const y = Math.max(0, Math.min(height - 1, Math.floor(deviceY)));
     const { data } = editor.ctx.getImageData(x, y, 1, 1);
     const [r, g, b] = data;
     const toHex = (v: number) => v.toString(16).padStart(2, "0");

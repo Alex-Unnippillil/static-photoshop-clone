@@ -1,9 +1,11 @@
+import { DevicePixelRatioService } from "../src/core/DevicePixelRatioService.js";
 import { Editor } from "../src/core/Editor.js";
 import { CircleTool } from "../src/tools/CircleTool.js";
 
 describe("CircleTool", () => {
   let editor: Editor;
   let ctx: Partial<CanvasRenderingContext2D>;
+  let dprService: DevicePixelRatioService;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -30,20 +32,45 @@ describe("CircleTool", () => {
     canvas.getContext = jest
       .fn()
       .mockReturnValue(ctx as CanvasRenderingContext2D);
+    canvas.getBoundingClientRect = () => ({
+      width: 100,
+      height: 100,
+      top: 0,
+      left: 0,
+      bottom: 100,
+      right: 100,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    });
+    dprService = new DevicePixelRatioService();
     editor = new Editor(
       canvas,
       document.getElementById("colorPicker") as HTMLInputElement,
       document.getElementById("lineWidth") as HTMLInputElement,
       document.getElementById("fillMode") as HTMLInputElement,
+      undefined,
+      undefined,
+      dprService,
     );
+  });
+
+  afterEach(() => {
+    editor.destroy();
+    dprService.destroy();
   });
 
   it("previews circle during pointer move", () => {
     const tool = new CircleTool();
-    tool.onPointerDown({ offsetX: 2, offsetY: 3 } as PointerEvent, editor);
+    tool.onPointerDown(
+      { offsetX: 2, offsetY: 3, clientX: 2, clientY: 3 } as PointerEvent,
+      editor,
+    );
     tool.onPointerMove({
       offsetX: 5,
       offsetY: 7,
+      clientX: 5,
+      clientY: 7,
       buttons: 1,
     } as PointerEvent, editor);
 
@@ -63,15 +90,33 @@ describe("CircleTool", () => {
   it("fills circle on pointer up when enabled", () => {
     const tool = new CircleTool();
     (document.getElementById("fillMode") as HTMLInputElement).checked = true;
-    tool.onPointerDown({ offsetX: 2, offsetY: 3 } as PointerEvent, editor);
-    tool.onPointerUp({ offsetX: 5, offsetY: 7 } as PointerEvent, editor);
+    tool.onPointerDown(
+      { offsetX: 2, offsetY: 3, clientX: 2, clientY: 3 } as PointerEvent,
+      editor,
+    );
+    tool.onPointerUp(
+      { offsetX: 5, offsetY: 7, clientX: 5, clientY: 7 } as PointerEvent,
+      editor,
+    );
     expect(ctx.fill).toHaveBeenCalled();
   });
 
   it("constrains to a circle when shift is held", () => {
     const tool = new CircleTool();
-    tool.onPointerDown({ offsetX: 2, offsetY: 3 } as PointerEvent, editor);
-    tool.onPointerUp({ offsetX: 5, offsetY: 7, shiftKey: true } as PointerEvent, editor);
+    tool.onPointerDown(
+      { offsetX: 2, offsetY: 3, clientX: 2, clientY: 3 } as PointerEvent,
+      editor,
+    );
+    tool.onPointerUp(
+      {
+        offsetX: 5,
+        offsetY: 7,
+        clientX: 5,
+        clientY: 7,
+        shiftKey: true,
+      } as PointerEvent,
+      editor,
+    );
     const dx = 5 - 2;
     const dy = 7 - 3;
     const radius = Math.max(Math.abs(dx), Math.abs(dy));

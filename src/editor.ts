@@ -1,4 +1,5 @@
 import { Editor } from "./core/Editor.js";
+import { DevicePixelRatioService } from "./core/DevicePixelRatioService.js";
 import { Shortcuts } from "./core/Shortcuts.js";
 import { PencilTool } from "./tools/PencilTool.js";
 import { EraserTool } from "./tools/EraserTool.js";
@@ -199,6 +200,7 @@ export function initEditor(): EditorHandle {
     if (redoBtn) redoBtn.disabled = !editor?.canRedo;
   };
 
+  const dprService = new DevicePixelRatioService();
   const editors: Editor[] = [];
   canvases.forEach((c) => {
     try {
@@ -212,6 +214,7 @@ export function initEditor(): EditorHandle {
         },
         fontFamily ?? undefined,
         fontSize ?? undefined,
+        dprService,
       );
       editors.push(e);
     } catch {
@@ -390,6 +393,7 @@ export function initEditor(): EditorHandle {
       listeners.forEach((fn) => fn());
       shortcuts.destroy();
       editors.forEach((e) => e.destroy());
+      dprService.destroy();
     },
   };
   recordColor(colorPicker.value);

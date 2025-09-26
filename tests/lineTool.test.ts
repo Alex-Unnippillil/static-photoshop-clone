@@ -1,9 +1,11 @@
+import { DevicePixelRatioService } from "../src/core/DevicePixelRatioService.js";
 import { Editor } from "../src/core/Editor.js";
 import { LineTool } from "../src/tools/LineTool.js";
 
 describe("LineTool", () => {
   let editor: Editor;
   let ctx: Partial<CanvasRenderingContext2D>;
+  let dprService: DevicePixelRatioService;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -38,23 +40,51 @@ describe("LineTool", () => {
     canvas.getContext = jest
       .fn()
       .mockReturnValue(ctx as CanvasRenderingContext2D);
+    canvas.getBoundingClientRect = () => ({
+      width: 100,
+      height: 100,
+      top: 0,
+      left: 0,
+      bottom: 100,
+      right: 100,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    });
+    dprService = new DevicePixelRatioService();
     editor = new Editor(
       canvas,
       document.getElementById("colorPicker") as HTMLInputElement,
       document.getElementById("lineWidth") as HTMLInputElement,
       document.getElementById("fillMode") as HTMLInputElement,
+      undefined,
+      undefined,
+      dprService,
     );
+  });
+
+  afterEach(() => {
+    editor.destroy();
+    dprService.destroy();
   });
 
   it("renders line preview during drag", () => {
     const tool = new LineTool();
-    tool.onPointerDown({ offsetX: 1, offsetY: 2 } as PointerEvent, editor);
+    tool.onPointerDown(
+      { offsetX: 1, offsetY: 2, clientX: 1, clientY: 2 } as PointerEvent,
+      editor,
+    );
     tool.onPointerMove({
       offsetX: 3,
       offsetY: 4,
+      clientX: 3,
+      clientY: 4,
       buttons: 1,
     } as PointerEvent, editor);
-    tool.onPointerUp({ offsetX: 3, offsetY: 4 } as PointerEvent, editor);
+    tool.onPointerUp(
+      { offsetX: 3, offsetY: 4, clientX: 3, clientY: 4 } as PointerEvent,
+      editor,
+    );
 
     expect(ctx.getImageData).toHaveBeenCalled();
     const image = (ctx.getImageData as jest.Mock).mock.results[0].value;
@@ -73,8 +103,14 @@ describe("LineTool", () => {
 
   it("draws line on pointer up", () => {
     const tool = new LineTool();
-    tool.onPointerDown({ offsetX: 1, offsetY: 2 } as PointerEvent, editor);
-    tool.onPointerUp({ offsetX: 5, offsetY: 6 } as PointerEvent, editor);
+    tool.onPointerDown(
+      { offsetX: 1, offsetY: 2, clientX: 1, clientY: 2 } as PointerEvent,
+      editor,
+    );
+    tool.onPointerUp(
+      { offsetX: 5, offsetY: 6, clientX: 5, clientY: 6 } as PointerEvent,
+      editor,
+    );
     expect(ctx.putImageData).toHaveBeenCalled();
     expect(ctx.beginPath).toHaveBeenCalled();
     expect(ctx.moveTo).toHaveBeenCalledWith(1, 2);
@@ -86,8 +122,14 @@ describe("LineTool", () => {
   it("supports undo after drawing", () => {
     const tool = new LineTool();
     editor.saveState();
-    tool.onPointerDown({ offsetX: 0, offsetY: 0 } as PointerEvent, editor);
-    tool.onPointerUp({ offsetX: 1, offsetY: 1 } as PointerEvent, editor);
+    tool.onPointerDown(
+      { offsetX: 0, offsetY: 0, clientX: 0, clientY: 0 } as PointerEvent,
+      editor,
+    );
+    tool.onPointerUp(
+      { offsetX: 1, offsetY: 1, clientX: 1, clientY: 1 } as PointerEvent,
+      editor,
+    );
     editor.undo();
     expect(ctx.clearRect).toHaveBeenCalledTimes(1);
     expect(ctx.putImageData).toHaveBeenCalledTimes(2);
@@ -95,10 +137,15 @@ describe("LineTool", () => {
 
   it("snaps angles to 45° increments when shift is held", () => {
     const tool = new LineTool();
-    tool.onPointerDown({ offsetX: 0, offsetY: 0 } as PointerEvent, editor);
+    tool.onPointerDown(
+      { offsetX: 0, offsetY: 0, clientX: 0, clientY: 0 } as PointerEvent,
+      editor,
+    );
     tool.onPointerMove({
       offsetX: 10,
       offsetY: 5,
+      clientX: 10,
+      clientY: 5,
       buttons: 1,
       shiftKey: true,
     } as PointerEvent, editor);

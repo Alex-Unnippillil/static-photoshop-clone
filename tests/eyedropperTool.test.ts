@@ -1,3 +1,4 @@
+import { DevicePixelRatioService } from "../src/core/DevicePixelRatioService.js";
 import { Editor } from "../src/core/Editor.js";
 import { EyedropperTool } from "../src/tools/EyedropperTool.js";
 import { initEditor, type EditorHandle } from "../src/editor.js";
@@ -6,6 +7,7 @@ describe("EyedropperTool", () => {
   let canvas: HTMLCanvasElement;
   let editor: Editor;
   let ctx: Partial<CanvasRenderingContext2D>;
+  let dprService: DevicePixelRatioService;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -24,27 +26,39 @@ describe("EyedropperTool", () => {
     };
     canvas.getContext = jest.fn().mockReturnValue(ctx as CanvasRenderingContext2D);
     canvas.getBoundingClientRect = () => ({
-      width: 0,
-      height: 0,
+      width: 100,
+      height: 100,
       left: 0,
       top: 0,
-      right: 0,
-      bottom: 0,
+      right: 100,
+      bottom: 100,
       x: 0,
       y: 0,
       toJSON: () => {},
     });
+    dprService = new DevicePixelRatioService();
     editor = new Editor(
       canvas,
       document.getElementById("colorPicker") as HTMLInputElement,
       document.getElementById("lineWidth") as HTMLInputElement,
       document.getElementById("fillMode") as HTMLInputElement,
+      undefined,
+      undefined,
+      dprService,
     );
+  });
+
+  afterEach(() => {
+    editor.destroy();
+    dprService.destroy();
   });
 
   it("updates the color picker based on canvas pixel", () => {
     const tool = new EyedropperTool();
-    tool.onPointerDown({ offsetX: 0, offsetY: 0 } as PointerEvent, editor);
+    tool.onPointerDown(
+      { offsetX: 0, offsetY: 0, clientX: 0, clientY: 0 } as PointerEvent,
+      editor,
+    );
     expect(editor.colorPicker.value).toBe("#0c2238");
   });
 
@@ -76,7 +90,10 @@ describe("EyedropperTool", () => {
       recordColor(colorPicker.value);
     });
 
-    tool.onPointerDown({ offsetX: 0, offsetY: 0 } as PointerEvent, editor);
+    tool.onPointerDown(
+      { offsetX: 0, offsetY: 0, clientX: 0, clientY: 0 } as PointerEvent,
+      editor,
+    );
 
     expect(recentColors[0]).toBe("#0c2238");
     expect(colorHistory.children).toHaveLength(1);
@@ -140,7 +157,10 @@ describe("EyedropperTool color history", () => {
     const history = document.getElementById("colorHistory") as HTMLDivElement;
     expect(history.children).toHaveLength(1);
     const tool = new EyedropperTool();
-    tool.onPointerDown({ offsetX: 0, offsetY: 0 } as PointerEvent, handle.editor);
+    tool.onPointerDown(
+      { offsetX: 0, offsetY: 0, clientX: 0, clientY: 0 } as PointerEvent,
+      handle.editor,
+    );
     expect(history.children).toHaveLength(2);
     const swatch = history.children[0] as HTMLButtonElement;
     expect(swatch.style.backgroundColor).toBe("rgb(12, 34, 56)");

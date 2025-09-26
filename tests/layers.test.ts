@@ -23,6 +23,7 @@ describe("layer-specific undo/redo", () => {
       <button id="circle"></button>
       <button id="text"></button>
       <button id="bucket"></button>
+      <button id="cloneStamp"></button>
       <button id="eyedropper"></button>
       <select id="formatSelect"><option value="png">PNG</option></select>
       <button id="save"></button>

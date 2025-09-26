@@ -9,6 +9,7 @@ import { TextTool } from "../src/tools/TextTool.js";
 import { BucketFillTool } from "../src/tools/BucketFillTool.js";
 import { Shortcuts } from "../src/core/Shortcuts.js";
 import { Editor } from "../src/core/Editor.js";
+import { CloneStampTool } from "../src/tools/CloneStampTool.js";
 
 describe("keyboard shortcuts", () => {
   let handle: EditorHandle;
@@ -28,6 +29,7 @@ describe("keyboard shortcuts", () => {
       <button id="circle"></button>
       <button id="text"></button>
       <button id="bucket"></button>
+      <button id="cloneStamp"></button>
       <button id="eyedropper"></button>
       <select id="formatSelect"><option value="png">PNG</option></select>
       <button id="save"></button>
@@ -72,6 +74,7 @@ describe("keyboard shortcuts", () => {
       ["c", CircleTool],
       ["t", TextTool],
       ["b", BucketFillTool],
+      ["s", CloneStampTool],
     ];
 
     cases.forEach(([key, ToolClass], index) => {

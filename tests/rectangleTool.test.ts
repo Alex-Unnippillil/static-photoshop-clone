@@ -73,6 +73,26 @@ describe("RectangleTool", () => {
     expect(ctx.strokeRect).toHaveBeenCalledWith(10, 15, 10, 10);
   });
 
+  it("restores only the dirty region while previewing", () => {
+    const tool = new RectangleTool();
+    tool.onPointerDown({ offsetX: 10, offsetY: 15 } as PointerEvent, editor);
+    tool.onPointerMove({
+      offsetX: 20,
+      offsetY: 25,
+      buttons: 1,
+    } as PointerEvent, editor);
+    tool.onPointerMove({
+      offsetX: 25,
+      offsetY: 30,
+      buttons: 1,
+    } as PointerEvent, editor);
+
+    expect(ctx.putImageData).toHaveBeenCalledTimes(1);
+    const call = (ctx.putImageData as jest.Mock).mock.calls[0];
+    expect(call[0]).toBe(ctx.getImageData.mock.results[0].value);
+    expect(call.slice(1)).toEqual([0, 0, 9, 14, 12, 12]);
+  });
+
   it("fills a rectangle when fill mode is enabled", () => {
     const tool = new RectangleTool();
     (document.getElementById("fillMode") as HTMLInputElement).checked = true;

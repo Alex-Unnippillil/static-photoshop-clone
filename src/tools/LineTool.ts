@@ -1,3 +1,8 @@
+import {
+  DirtyRegionTracker,
+  clipRect,
+  expandRectForStroke,
+} from "../core/DirtyRegionTracker.js";
 import { Editor } from "../core/Editor.js";
 import { DrawingTool } from "./DrawingTool.js";
 
@@ -5,6 +10,42 @@ export class LineTool extends DrawingTool {
   private startX = 0;
   private startY = 0;
   private imageData: ImageData | null = null;
+  private dirtyRegions = new DirtyRegionTracker();
+
+  private restoreDirtyRegions(ctx: CanvasRenderingContext2D, editor: Editor) {
+    if (!this.imageData) return;
+    const bounds = {
+      width: editor.canvas.width,
+      height: editor.canvas.height,
+    };
+    for (const region of this.dirtyRegions.getRegions()) {
+      const clipped = clipRect(region, bounds);
+      if (!clipped) continue;
+      ctx.putImageData(
+        this.imageData,
+        0,
+        0,
+        clipped.x,
+        clipped.y,
+        clipped.width,
+        clipped.height,
+      );
+    }
+  }
+
+  private updateDirtyRegion(endX: number, endY: number, editor: Editor) {
+    const rect = {
+      x: Math.min(this.startX, endX),
+      y: Math.min(this.startY, endY),
+      width: Math.max(Math.abs(endX - this.startX), 1),
+      height: Math.max(Math.abs(endY - this.startY), 1),
+    };
+    const dirty = expandRectForStroke(rect, editor.lineWidthValue, {
+      width: editor.canvas.width,
+      height: editor.canvas.height,
+    });
+    this.dirtyRegions.setRegions(dirty ? [dirty] : []);
+  }
 
   onPointerDown(e: PointerEvent, editor: Editor): void {
     const ctx = editor.ctx;
@@ -17,12 +58,13 @@ export class LineTool extends DrawingTool {
       editor.canvas.width,
       editor.canvas.height,
     );
+    this.dirtyRegions.clear();
   }
 
   onPointerMove(e: PointerEvent, editor: Editor): void {
     if (e.buttons !== 1 || !this.imageData) return;
     const ctx = editor.ctx;
-    ctx.putImageData(this.imageData, 0, 0);
+    this.restoreDirtyRegions(ctx, editor);
     this.applyStroke(ctx, editor);
     ctx.beginPath();
     ctx.moveTo(this.startX, this.startY);
@@ -37,6 +79,7 @@ export class LineTool extends DrawingTool {
       x = this.startX + length * Math.cos(snapped);
       y = this.startY + length * Math.sin(snapped);
     }
+    this.updateDirtyRegion(x, y, editor);
     ctx.lineTo(x, y);
     ctx.stroke();
     ctx.closePath();
@@ -45,7 +88,7 @@ export class LineTool extends DrawingTool {
   onPointerUp(e: PointerEvent, editor: Editor): void {
     const ctx = editor.ctx;
     if (this.imageData) {
-      ctx.putImageData(this.imageData, 0, 0);
+      this.restoreDirtyRegions(ctx, editor);
     }
     this.applyStroke(ctx, editor);
     ctx.beginPath();
@@ -61,9 +104,11 @@ export class LineTool extends DrawingTool {
       x = this.startX + length * Math.cos(snapped);
       y = this.startY + length * Math.sin(snapped);
     }
+    this.updateDirtyRegion(x, y, editor);
     ctx.lineTo(x, y);
     ctx.stroke();
     ctx.closePath();
     this.imageData = null;
+    this.dirtyRegions.clear();
   }
 }

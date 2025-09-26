@@ -130,8 +130,10 @@ describe("editor toolbar controls", () => {
     (document.getElementById("rectangle") as HTMLButtonElement).click();
     dispatch("pointerdown", 1, 1, 1);
     dispatch("pointermove", 3, 4, 1);
+    dispatch("pointermove", 4, 5, 1);
     expect(ctx.getImageData).toHaveBeenCalled();
-    expect(ctx.putImageData).toHaveBeenCalled();
+    const image = (ctx.getImageData as jest.Mock).mock.results[0].value;
+    expect(ctx.putImageData).toHaveBeenCalledWith(image, 0, 0, 0, 0, 4, 5);
     expect(ctx.strokeRect).toHaveBeenCalledWith(1, 1, 2, 3);
   });
 

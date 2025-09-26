@@ -1,3 +1,4 @@
+import { t } from "../i18n/index.js";
 /**
  * Tool that fills a contiguous region of pixels with the current fill color.
  * Uses an iterative flood fill with typed-array backed queue to reduce memory churn.
@@ -9,7 +10,7 @@ export class BucketFillTool {
         const { width, height, data } = image;
         const pixelCount = width * height;
         if (pixelCount > BucketFillTool.MAX_FILL_PIXELS) {
-            console.warn("Bucket fill aborted: area too large");
+            console.warn(t("warning.bucket.tooLarge"));
             return;
         }
         const dpr = window.devicePixelRatio || 1;
@@ -43,7 +44,7 @@ export class BucketFillTool {
             data[offset + 3] = 255;
             processed++;
             if (processed > BucketFillTool.MAX_FILL_PIXELS) {
-                console.warn("Bucket fill aborted: exceeded pixel limit");
+                console.warn(t("warning.bucket.exceeded"));
                 break;
             }
             const x = idx % width;

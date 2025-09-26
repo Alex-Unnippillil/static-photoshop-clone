@@ -8,61 +8,201 @@
   </head>
   <body>
     <div id="toolbar">
-      <input type="color" id="colorPicker" />
+      <input
+        type="color"
+        id="colorPicker"
+        title="Color"
+        data-i18n-key="toolbar.colorPicker"
+        data-i18n-attr="title"
+      />
       <div id="colorHistory"></div>
       <input type="number" id="lineWidth" min="1" value="1" />
       <select id="fontFamily">
-        <option value="sans-serif">Sans-Serif</option>
-        <option value="serif">Serif</option>
-        <option value="monospace">Monospace</option>
+        <option value="sans-serif" data-i18n-key="toolbar.font.sansSerif">
+          Sans-Serif
+        </option>
+        <option value="serif" data-i18n-key="toolbar.font.serif">Serif</option>
+        <option value="monospace" data-i18n-key="toolbar.font.monospace">
+          Monospace
+        </option>
       </select>
       <input type="number" id="fontSize" min="1" value="16" />
       <label>
         <input type="checkbox" id="fillMode" />
-        Fill
+        <span data-i18n-key="toolbar.fill">Fill</span>
       </label>
-      <button id="pencil" class="tool-button" title="Pencil">
-        <img src="icons/pencil.svg" alt="Pencil" />
+      <button
+        id="pencil"
+        class="tool-button"
+        title="Pencil"
+        data-i18n-key="tool.pencil"
+        data-i18n-attr="title"
+      >
+        <img
+          src="icons/pencil.svg"
+          alt="Pencil"
+          data-i18n-key="tool.pencil"
+          data-i18n-attr="alt"
+        />
       </button>
-      <button id="eraser" class="tool-button" title="Eraser">
-        <img src="icons/eraser.svg" alt="Eraser" />
+      <button
+        id="eraser"
+        class="tool-button"
+        title="Eraser"
+        data-i18n-key="tool.eraser"
+        data-i18n-attr="title"
+      >
+        <img
+          src="icons/eraser.svg"
+          alt="Eraser"
+          data-i18n-key="tool.eraser"
+          data-i18n-attr="alt"
+        />
       </button>
-      <button id="rectangle" class="tool-button" title="Rectangle">
-        <img src="icons/rectangle-horizontal.svg" alt="Rectangle" />
+      <button
+        id="rectangle"
+        class="tool-button"
+        title="Rectangle"
+        data-i18n-key="tool.rectangle"
+        data-i18n-attr="title"
+      >
+        <img
+          src="icons/rectangle-horizontal.svg"
+          alt="Rectangle"
+          data-i18n-key="tool.rectangle"
+          data-i18n-attr="alt"
+        />
       </button>
-      <button id="line" class="tool-button" title="Line">
-        <img src="icons/slash.svg" alt="Line" />
+      <button
+        id="line"
+        class="tool-button"
+        title="Line"
+        data-i18n-key="tool.line"
+        data-i18n-attr="title"
+      >
+        <img
+          src="icons/slash.svg"
+          alt="Line"
+          data-i18n-key="tool.line"
+          data-i18n-attr="alt"
+        />
       </button>
-      <button id="circle" class="tool-button" title="Circle">
-        <img src="icons/circle.svg" alt="Circle" />
+      <button
+        id="circle"
+        class="tool-button"
+        title="Circle"
+        data-i18n-key="tool.circle"
+        data-i18n-attr="title"
+      >
+        <img
+          src="icons/circle.svg"
+          alt="Circle"
+          data-i18n-key="tool.circle"
+          data-i18n-attr="alt"
+        />
       </button>
-      <button id="text" class="tool-button" title="Text">
-        <img src="icons/type.svg" alt="Text" />
+      <button
+        id="text"
+        class="tool-button"
+        title="Text"
+        data-i18n-key="tool.text"
+        data-i18n-attr="title"
+      >
+        <img
+          src="icons/type.svg"
+          alt="Text"
+          data-i18n-key="tool.text"
+          data-i18n-attr="alt"
+        />
       </button>
-      <button id="eyedropper" class="tool-button" title="Eyedropper">
-        <img src="icons/pipette.svg" alt="Eyedropper" />
+      <button
+        id="eyedropper"
+        class="tool-button"
+        title="Eyedropper"
+        data-i18n-key="tool.eyedropper"
+        data-i18n-attr="title"
+      >
+        <img
+          src="icons/pipette.svg"
+          alt="Eyedropper"
+          data-i18n-key="tool.eyedropper"
+          data-i18n-attr="alt"
+        />
       </button>
-      <button id="bucket" class="tool-button" title="Bucket">
-        <img src="icons/paint-bucket.svg" alt="Bucket" />
+      <button
+        id="bucket"
+        class="tool-button"
+        title="Bucket"
+        data-i18n-key="tool.bucket"
+        data-i18n-attr="title"
+      >
+        <img
+          src="icons/paint-bucket.svg"
+          alt="Bucket"
+          data-i18n-key="tool.bucket"
+          data-i18n-attr="alt"
+        />
       </button>
       <input type="file" id="imageLoader" accept="image/*" />
-      <button id="undo" class="tool-button" title="Undo" disabled>
-        <img src="icons/undo.svg" alt="Undo" />
+      <button
+        id="undo"
+        class="tool-button"
+        title="Undo"
+        disabled
+        data-i18n-key="toolbar.undo"
+        data-i18n-attr="title"
+      >
+        <img
+          src="icons/undo.svg"
+          alt="Undo"
+          data-i18n-key="toolbar.undo"
+          data-i18n-attr="alt"
+        />
       </button>
-      <button id="redo" class="tool-button" title="Redo" disabled>
-        <img src="icons/redo.svg" alt="Redo" />
+      <button
+        id="redo"
+        class="tool-button"
+        title="Redo"
+        disabled
+        data-i18n-key="toolbar.redo"
+        data-i18n-attr="title"
+      >
+        <img
+          src="icons/redo.svg"
+          alt="Redo"
+          data-i18n-key="toolbar.redo"
+          data-i18n-attr="alt"
+        />
       </button>
 
       <div class="group">
-        <label for="layerSelect">Layer</label>
+        <label for="layerSelect" data-i18n-key="toolbar.layer">Layer</label>
         <select id="layerSelect"></select>
       </div>
+      <div class="group">
+        <label for="languageSelect" data-i18n-key="toolbar.language">Language</label>
+        <select id="languageSelect">
+          <option value="en" data-i18n-key="language.english">English</option>
+          <option value="es" data-i18n-key="language.spanish">Spanish</option>
+        </select>
+      </div>
       <select id="formatSelect">
-        <option value="png">PNG</option>
-        <option value="jpeg">JPEG</option>
+        <option value="png" data-i18n-key="toolbar.format.png">PNG</option>
+        <option value="jpeg" data-i18n-key="toolbar.format.jpeg">JPEG</option>
       </select>
-      <button id="save" class="tool-button" title="Save">
-        <img src="icons/save.svg" alt="Save" />
+      <button
+        id="save"
+        class="tool-button"
+        title="Save"
+        data-i18n-key="toolbar.save"
+        data-i18n-attr="title"
+      >
+        <img
+          src="icons/save.svg"
+          alt="Save"
+          data-i18n-key="toolbar.save"
+          data-i18n-attr="alt"
+        />
       </button>
 
     </div>

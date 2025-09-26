@@ -98,7 +98,16 @@ export function initEditor(): EditorHandle {
     document.getElementById("formatSelect") as HTMLSelectElement | null;
   const colorHistory = document.getElementById(
     "colorHistory",
-  ) as HTMLDivElement | null;
+  ) as HTMLUListElement | null;
+  const shortcutsButton = document.getElementById(
+    "openShortcuts",
+  ) as HTMLButtonElement | null;
+  const shortcutsDialog = document.getElementById(
+    "shortcutsDialog",
+  ) as HTMLDialogElement | null;
+  const shortcutsCloseButton = shortcutsDialog?.querySelector<HTMLButtonElement>(
+    "[data-dialog-close]",
+  ) ?? null;
 
   if (!colorPicker) {
     throw new Error("Missing #colorPicker input");
@@ -162,6 +171,7 @@ export function initEditor(): EditorHandle {
     if (!colorHistory) return;
     colorHistory.innerHTML = "";
     recentColors.forEach((color) => {
+      const item = document.createElement("li");
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "color-swatch";
@@ -171,7 +181,8 @@ export function initEditor(): EditorHandle {
         colorPicker.value = color;
         colorPicker.dispatchEvent(new Event("input"));
       });
-      colorHistory.appendChild(btn);
+      item.appendChild(btn);
+      colorHistory.appendChild(item);
     });
   };
 
@@ -310,6 +321,68 @@ export function initEditor(): EditorHandle {
     },
     listeners,
   );
+
+  if (shortcutsButton && shortcutsDialog) {
+    const openDialog = () => {
+      if (typeof shortcutsDialog.showModal === "function") {
+        shortcutsDialog.showModal();
+      } else {
+        shortcutsDialog.setAttribute("open", "");
+      }
+      const initialFocus =
+        shortcutsDialog.querySelector<HTMLElement>("[data-initial-focus]") ??
+        shortcutsCloseButton ??
+        shortcutsDialog;
+      initialFocus?.focus();
+    };
+
+    listen(
+      shortcutsButton,
+      "click",
+      () => {
+        openDialog();
+      },
+      listeners,
+    );
+
+    if (shortcutsCloseButton) {
+      listen(
+        shortcutsCloseButton,
+        "click",
+        () => {
+          if (typeof shortcutsDialog.close === "function") {
+            shortcutsDialog.close();
+          } else {
+            shortcutsDialog.removeAttribute("open");
+          }
+        },
+        listeners,
+      );
+    }
+
+    listen(
+      shortcutsDialog,
+      "cancel",
+      (event: Event) => {
+        event.preventDefault();
+        if (typeof shortcutsDialog.close === "function") {
+          shortcutsDialog.close();
+        } else {
+          shortcutsDialog.removeAttribute("open");
+        }
+      },
+      listeners,
+    );
+
+    listen(
+      shortcutsDialog,
+      "close",
+      () => {
+        shortcutsButton.focus();
+      },
+      listeners,
+    );
+  }
 
   // image loading
   const imageLoader = document.getElementById("imageLoader") as HTMLInputElement | null;

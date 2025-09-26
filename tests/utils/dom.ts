@@ -1,38 +1,17 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Photoshop Clone</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
+export function renderAccessibleEditorDom() {
+  document.body.innerHTML = `
     <div id="toolbar" role="toolbar" aria-label="Drawing controls">
       <div class="group">
         <label class="visually-hidden" for="colorPicker">Stroke color</label>
-        <input
-          type="color"
-          id="colorPicker"
-          aria-describedby="colorPickerHint"
-        />
-        <span id="colorPickerHint" class="visually-hidden"
-          >Choose the drawing color.</span
-        >
+        <input type="color" id="colorPicker" value="#000000" aria-describedby="colorPickerHint" />
+        <span id="colorPickerHint" class="visually-hidden">Choose the drawing color.</span>
         <p id="colorHistoryLabel" class="visually-hidden">Recent colors</p>
-        <ul
-          id="colorHistory"
-          aria-labelledby="colorHistoryLabel"
-          aria-live="polite"
-        ></ul>
+        <ul id="colorHistory" aria-labelledby="colorHistoryLabel" aria-live="polite"></ul>
       </div>
-
       <div class="group">
-        <label class="visually-hidden" for="lineWidth"
-          >Line width (pixels)</label
-        >
-        <input type="number" id="lineWidth" min="1" value="1" />
+        <label class="visually-hidden" for="lineWidth">Line width (pixels)</label>
+        <input type="number" id="lineWidth" min="1" value="2" />
       </div>
-
       <div class="group">
         <label class="visually-hidden" for="fontFamily">Font family</label>
         <select id="fontFamily">
@@ -41,17 +20,14 @@
           <option value="monospace">Monospace</option>
         </select>
       </div>
-
       <div class="group">
         <label class="visually-hidden" for="fontSize">Font size (pixels)</label>
         <input type="number" id="fontSize" min="1" value="16" />
       </div>
-
       <div class="group">
         <input type="checkbox" id="fillMode" />
         <label for="fillMode">Fill shapes</label>
       </div>
-
       <button id="pencil" class="tool-button" title="Pencil">
         <img src="icons/pencil.svg" alt="Pencil" />
       </button>
@@ -76,26 +52,20 @@
       <button id="bucket" class="tool-button" title="Bucket">
         <img src="icons/paint-bucket.svg" alt="Bucket" />
       </button>
-
       <div class="group">
-        <label class="visually-hidden" for="imageLoader"
-          >Import image</label
-        >
+        <label class="visually-hidden" for="imageLoader">Import image</label>
         <input type="file" id="imageLoader" accept="image/*" />
       </div>
-
       <button id="undo" class="tool-button" title="Undo" disabled>
         <img src="icons/undo.svg" alt="Undo" />
       </button>
       <button id="redo" class="tool-button" title="Redo" disabled>
         <img src="icons/redo.svg" alt="Redo" />
       </button>
-
       <div class="group" role="group" aria-labelledby="layerSelectLabel">
         <label id="layerSelectLabel" for="layerSelect">Layer</label>
         <select id="layerSelect"></select>
       </div>
-
       <div class="group">
         <label class="visually-hidden" for="formatSelect">Export format</label>
         <select id="formatSelect">
@@ -103,32 +73,17 @@
           <option value="jpeg">JPEG</option>
         </select>
       </div>
-
       <button id="save" class="tool-button" title="Save" type="button">
         <img src="icons/save.svg" alt="Save" />
       </button>
-
-      <button
-        id="openShortcuts"
-        class="tool-button"
-        type="button"
-        aria-haspopup="dialog"
-        aria-controls="shortcutsDialog"
-      >
+      <button id="openShortcuts" class="tool-button" type="button" aria-haspopup="dialog" aria-controls="shortcutsDialog">
         Shortcuts
       </button>
     </div>
-    <dialog
-      id="shortcutsDialog"
-      aria-labelledby="shortcutsDialogTitle"
-      aria-describedby="shortcutsDialogDescription"
-      aria-modal="true"
-    >
+    <dialog id="shortcutsDialog" aria-labelledby="shortcutsDialogTitle" aria-describedby="shortcutsDialogDescription" aria-modal="true">
       <form method="dialog">
         <h2 id="shortcutsDialogTitle">Keyboard shortcuts</h2>
-        <p id="shortcutsDialogDescription">
-          Use these keys to quickly switch tools and undo actions.
-        </p>
+        <p id="shortcutsDialogDescription">Use these keys to quickly switch tools and undo actions.</p>
         <dl>
           <div>
             <dt><kbd>P</kbd></dt>
@@ -152,31 +107,41 @@
           </div>
         </dl>
         <div class="dialog-actions">
-          <button
-            type="button"
-            value="close"
-            data-dialog-close
-            data-initial-focus
-          >
-            Close
-          </button>
+          <button type="button" value="close" data-dialog-close data-initial-focus>Close</button>
         </div>
       </form>
     </dialog>
-    <div id="canvasContainer">
-      <canvas
-        id="canvas"
-        width="800"
-        height="600"
-        aria-label="Primary drawing layer"
-      ></canvas>
-      <canvas
-        id="layer2"
-        width="800"
-        height="600"
-        aria-label="Secondary drawing layer"
-      ></canvas>
-    </div>
-    <script type="module" src="dist/index.js"></script>
-  </body>
-</html>
+    <canvas id="canvas" width="800" height="600" aria-label="Primary drawing layer"></canvas>
+    <canvas id="layer2" width="800" height="600" aria-label="Secondary drawing layer"></canvas>
+  `;
+
+  const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+  const canvas2 = document.getElementById("layer2") as HTMLCanvasElement;
+  const ctx = {
+    setTransform: jest.fn(),
+    scale: jest.fn(),
+    getImageData: jest.fn(),
+    putImageData: jest.fn(),
+    clearRect: jest.fn(),
+    drawImage: jest.fn(),
+  } as Partial<CanvasRenderingContext2D>;
+  const ctx2 = { ...ctx } as Partial<CanvasRenderingContext2D>;
+
+  [canvas, canvas2].forEach((c, index) => {
+    c.getContext = jest
+      .fn()
+      .mockReturnValue((index === 0 ? ctx : ctx2) as CanvasRenderingContext2D);
+    c.getBoundingClientRect = () => ({
+      width: 800,
+      height: 600,
+      top: 0,
+      left: 0,
+      bottom: 600,
+      right: 800,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    });
+  });
+  return { canvas, canvas2 };
+}

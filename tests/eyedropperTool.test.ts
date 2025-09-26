@@ -137,12 +137,12 @@ describe("EyedropperTool color history", () => {
   });
 
   it("records sampled colors in the color history", () => {
-    const history = document.getElementById("colorHistory") as HTMLDivElement;
-    expect(history.children).toHaveLength(1);
+    const history = document.getElementById("colorHistory") as HTMLUListElement;
+    expect(history.querySelectorAll("button")).toHaveLength(1);
     const tool = new EyedropperTool();
     tool.onPointerDown({ offsetX: 0, offsetY: 0 } as PointerEvent, handle.editor);
-    expect(history.children).toHaveLength(2);
-    const swatch = history.children[0] as HTMLButtonElement;
+    expect(history.querySelectorAll("button")).toHaveLength(2);
+    const swatch = history.querySelector("li:first-child button") as HTMLButtonElement;
     expect(swatch.style.backgroundColor).toBe("rgb(12, 34, 56)");
   });
 });

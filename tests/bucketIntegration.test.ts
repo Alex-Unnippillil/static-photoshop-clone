@@ -19,6 +19,7 @@ describe("bucket tool integration", () => {
       <button id="circle"></button>
       <button id="text"></button>
       <button id="bucket">Bucket</button>
+      <button id="cloneStamp"></button>
       <button id="eyedropper"></button>
       <select id="formatSelect"><option value="png">PNG</option></select>
       <button id="save"></button>

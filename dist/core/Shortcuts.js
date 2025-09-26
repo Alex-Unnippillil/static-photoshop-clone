@@ -6,6 +6,7 @@ import { TextTool } from "../tools/TextTool.js";
 import { EraserTool } from "../tools/EraserTool.js";
 import { BucketFillTool } from "../tools/BucketFillTool.js";
 import { EyedropperTool } from "../tools/EyedropperTool.js";
+import { CloneStampTool } from "../tools/CloneStampTool.js";
 /**
  * Keyboard shortcuts handler for the editor.
  * Maps specific key presses to tool changes or editor actions.
@@ -66,6 +67,10 @@ export class Shortcuts {
             case "b":
                 e.preventDefault();
                 this.editor.setTool(new BucketFillTool());
+                break;
+            case "s":
+                e.preventDefault();
+                this.editor.setTool(new CloneStampTool());
                 break;
             case "i":
                 e.preventDefault();

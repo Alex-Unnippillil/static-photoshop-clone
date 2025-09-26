@@ -6,6 +6,8 @@ import { LineTool } from "../src/tools/LineTool.js";
 import { CircleTool } from "../src/tools/CircleTool.js";
 import { TextTool } from "../src/tools/TextTool.js";
 import { EyedropperTool } from "../src/tools/EyedropperTool.js";
+import { BucketFillTool } from "../src/tools/BucketFillTool.js";
+import { CloneStampTool } from "../src/tools/CloneStampTool.js";
 
 describe("toolbar controls", () => {
   let handle: EditorHandle;
@@ -26,8 +28,9 @@ describe("toolbar controls", () => {
       <button id="line"></button>
       <button id="circle"></button>
       <button id="text"></button>
-      <button id="eyedropper"></button>
       <button id="bucket"></button>
+      <button id="cloneStamp"></button>
+      <button id="eyedropper"></button>
 
       <select id="formatSelect"><option value="png">PNG</option></select>
       <button id="save"></button>
@@ -97,8 +100,14 @@ describe("toolbar controls", () => {
       (document.getElementById("text") as HTMLButtonElement).click();
       expect(spy.mock.calls[5][0]).toBeInstanceOf(TextTool);
 
+      (document.getElementById("bucket") as HTMLButtonElement).click();
+      expect(spy.mock.calls[6][0]).toBeInstanceOf(BucketFillTool);
+
+      (document.getElementById("cloneStamp") as HTMLButtonElement).click();
+      expect(spy.mock.calls[7][0]).toBeInstanceOf(CloneStampTool);
+
       (document.getElementById("eyedropper") as HTMLButtonElement).click();
-      expect(spy.mock.calls[6][0]).toBeInstanceOf(EyedropperTool);
+      expect(spy.mock.calls[8][0]).toBeInstanceOf(EyedropperTool);
     });
 
     it("routes tool changes to the selected layer", () => {

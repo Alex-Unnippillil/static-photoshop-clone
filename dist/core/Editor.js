@@ -6,7 +6,9 @@ export class Editor {
         this.handlePointerDown = (e) => {
             // Capture the pointer once before recording canvas state
             this.canvas.setPointerCapture(e.pointerId);
-            this.saveState();
+            if (!e.altKey) {
+                this.saveState();
+            }
             this.currentTool?.onPointerDown(e, this);
         };
         this.handlePointerMove = (e) => {

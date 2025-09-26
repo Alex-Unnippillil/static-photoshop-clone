@@ -8,6 +8,7 @@ import { CircleTool } from "./tools/CircleTool.js";
 import { TextTool } from "./tools/TextTool.js";
 import { BucketFillTool } from "./tools/BucketFillTool.js";
 import { EyedropperTool } from "./tools/EyedropperTool.js";
+import { CloneStampTool } from "./tools/CloneStampTool.js";
 /** Utility to listen to events and auto-remove on destroy. */
 function listen(el, type, handler, list) {
     if (!el)
@@ -31,6 +32,7 @@ export function initEditor() {
         text: TextTool,
         bucket: BucketFillTool,
         eyedropper: EyedropperTool,
+        cloneStamp: CloneStampTool,
     };
     const toolButtons = {};
     const constructorToId = new Map();

@@ -152,8 +152,15 @@ describe("editor toolbar controls", () => {
     expect(ctx.ellipse).toHaveBeenCalled();
   });
 
-  it("writes text with text tool", () => {
+  const flushPromises = async () => {
+    await Promise.resolve();
+    await Promise.resolve();
+  };
+
+  it("writes text with text tool", async () => {
+    await handle.loadTool("text");
     (document.getElementById("text") as HTMLButtonElement).click();
+    await flushPromises();
     dispatch("pointerdown", 10, 10, 1);
     const textarea = document.querySelector("textarea") as HTMLTextAreaElement;
     textarea.value = "hi";

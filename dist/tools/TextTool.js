@@ -1,9 +1,7 @@
 export class TextTool {
-    constructor() {
-        this.textarea = null;
-        this.blurListener = null;
-        this.keydownListener = null;
-    }
+    textarea = null;
+    blurListener = null;
+    keydownListener = null;
     onPointerDown(e, editor) {
         this.cleanup();
         const textarea = document.createElement("textarea");

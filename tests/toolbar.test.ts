@@ -63,8 +63,6 @@ describe("toolbar controls", () => {
         toJSON: () => {},
       });
     });
-
-
     handle = initEditor();
   });
 
@@ -77,45 +75,47 @@ describe("toolbar controls", () => {
     expect(select.options.length).toBe(2);
   });
 
-    it("switches tools when buttons are clicked", () => {
-      const spy = jest.spyOn(handle.editor, "setTool");
-      (document.getElementById("pencil") as HTMLButtonElement).click();
-      expect(spy.mock.calls[0][0]).toBeInstanceOf(PencilTool);
+  it("switches tools when buttons are clicked", async () => {
+    const spy = jest.spyOn(handle.editor, "setTool");
+    (document.getElementById("pencil") as HTMLButtonElement).click();
+    expect(spy.mock.calls[0][0]).toBeInstanceOf(PencilTool);
 
-      (document.getElementById("eraser") as HTMLButtonElement).click();
-      expect(spy.mock.calls[1][0]).toBeInstanceOf(EraserTool);
+    (document.getElementById("eraser") as HTMLButtonElement).click();
+    expect(spy.mock.calls[1][0]).toBeInstanceOf(EraserTool);
 
-      (document.getElementById("rectangle") as HTMLButtonElement).click();
-      expect(spy.mock.calls[2][0]).toBeInstanceOf(RectangleTool);
+    (document.getElementById("rectangle") as HTMLButtonElement).click();
+    expect(spy.mock.calls[2][0]).toBeInstanceOf(RectangleTool);
 
-      (document.getElementById("line") as HTMLButtonElement).click();
-      expect(spy.mock.calls[3][0]).toBeInstanceOf(LineTool);
+    (document.getElementById("line") as HTMLButtonElement).click();
+    expect(spy.mock.calls[3][0]).toBeInstanceOf(LineTool);
 
-      (document.getElementById("circle") as HTMLButtonElement).click();
-      expect(spy.mock.calls[4][0]).toBeInstanceOf(CircleTool);
+    (document.getElementById("circle") as HTMLButtonElement).click();
+    expect(spy.mock.calls[4][0]).toBeInstanceOf(CircleTool);
 
-      (document.getElementById("text") as HTMLButtonElement).click();
-      expect(spy.mock.calls[5][0]).toBeInstanceOf(TextTool);
+    await handle.loadTool("text");
+    (document.getElementById("text") as HTMLButtonElement).click();
+    expect(spy.mock.calls[5][0]).toBeInstanceOf(TextTool);
 
-      (document.getElementById("eyedropper") as HTMLButtonElement).click();
-      expect(spy.mock.calls[6][0]).toBeInstanceOf(EyedropperTool);
-    });
+    await handle.loadTool("eyedropper");
+    (document.getElementById("eyedropper") as HTMLButtonElement).click();
+    expect(spy.mock.calls[6][0]).toBeInstanceOf(EyedropperTool);
+  });
 
-    it("routes tool changes to the selected layer", () => {
-      const firstSpy = jest.spyOn(handle.editors[0], "setTool");
-      const secondSpy = jest.spyOn(handle.editors[1], "setTool");
+  it("routes tool changes to the selected layer", () => {
+    const firstSpy = jest.spyOn(handle.editors[0], "setTool");
+    const secondSpy = jest.spyOn(handle.editors[1], "setTool");
 
-      (document.getElementById("pencil") as HTMLButtonElement).click();
-      expect(firstSpy).toHaveBeenCalled();
-      expect(secondSpy).not.toHaveBeenCalled();
+    (document.getElementById("pencil") as HTMLButtonElement).click();
+    expect(firstSpy).toHaveBeenCalled();
+    expect(secondSpy).not.toHaveBeenCalled();
 
-      const select = document.getElementById("layerSelect") as HTMLSelectElement;
-      select.value = "1";
-      select.dispatchEvent(new Event("change"));
+    const select = document.getElementById("layerSelect") as HTMLSelectElement;
+    select.value = "1";
+    select.dispatchEvent(new Event("change"));
 
-      (document.getElementById("eraser") as HTMLButtonElement).click();
-      expect(secondSpy).toHaveBeenCalled();
-    });
+    (document.getElementById("eraser") as HTMLButtonElement).click();
+    expect(secondSpy).toHaveBeenCalled();
+  });
 
   it("triggers undo and redo when buttons are clicked", () => {
     const undo = jest.spyOn(handle.editor, "undo").mockImplementation(() => {});

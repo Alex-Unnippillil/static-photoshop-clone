@@ -1,4 +1,5 @@
 import { initEditor, EditorHandle } from "../src/editor.js";
+import { mockPreviewCanvas, type PreviewCanvasMock } from "./helpers.js";
 import { RectangleTool } from "../src/tools/RectangleTool.js";
 import { PencilTool } from "../src/tools/PencilTool.js";
 import { EraserTool } from "../src/tools/EraserTool.js";
@@ -14,6 +15,7 @@ describe("keyboard shortcuts", () => {
   let handle: EditorHandle;
   let canvas: HTMLCanvasElement;
   let ctx: Partial<CanvasRenderingContext2D>;
+  let preview: PreviewCanvasMock;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -21,6 +23,7 @@ describe("keyboard shortcuts", () => {
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
       <input id="fillMode" type="checkbox" />
+      <input id="showPreviews" type="checkbox" checked />
       <button id="pencil"></button>
       <button id="eraser"></button>
       <button id="rectangle"></button>
@@ -32,6 +35,7 @@ describe("keyboard shortcuts", () => {
       <select id="formatSelect"><option value="png">PNG</option></select>
       <button id="save"></button>
     `;
+    preview = mockPreviewCanvas();
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
     (canvas as any).setPointerCapture = jest.fn();
     (canvas as any).releasePointerCapture = jest.fn();
@@ -59,6 +63,7 @@ describe("keyboard shortcuts", () => {
 
   afterEach(() => {
     handle.destroy();
+    preview.restore();
   });
 
   it("switches tools with letter keys", () => {

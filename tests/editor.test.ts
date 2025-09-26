@@ -1,4 +1,5 @@
 import { initEditor, EditorHandle } from "../src/editor.js";
+import { mockPreviewCanvas, type PreviewCanvasMock } from "./helpers.js";
 
 // Integration tests ensuring toolbar controls are wired to the editor
 // and trigger the expected behavior.
@@ -6,6 +7,7 @@ describe("editor toolbar controls", () => {
   let canvas: HTMLCanvasElement;
   let ctx: Partial<CanvasRenderingContext2D>;
   let handle: EditorHandle;
+  let preview: PreviewCanvasMock;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -13,6 +15,7 @@ describe("editor toolbar controls", () => {
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
       <input id="fillMode" type="checkbox" />
+      <input id="showPreviews" type="checkbox" checked />
       <button id="pencil"></button>
       <button id="eraser"></button>
       <button id="rectangle"></button>
@@ -28,6 +31,7 @@ describe("editor toolbar controls", () => {
       <button id="save"></button>
     `;
 
+    preview = mockPreviewCanvas();
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
     (canvas as any).setPointerCapture = jest.fn();
     (canvas as any).releasePointerCapture = jest.fn();
@@ -78,6 +82,7 @@ describe("editor toolbar controls", () => {
 
   afterEach(() => {
     handle.destroy();
+    preview.restore();
   });
 
   function dispatch(type: string, x: number, y: number, buttons = 0) {
@@ -130,9 +135,7 @@ describe("editor toolbar controls", () => {
     (document.getElementById("rectangle") as HTMLButtonElement).click();
     dispatch("pointerdown", 1, 1, 1);
     dispatch("pointermove", 3, 4, 1);
-    expect(ctx.getImageData).toHaveBeenCalled();
-    expect(ctx.putImageData).toHaveBeenCalled();
-    expect(ctx.strokeRect).toHaveBeenCalledWith(1, 1, 2, 3);
+    expect(preview.ctx.strokeRect).toHaveBeenCalledWith(1, 1, 2, 3);
   });
 
   it("draws line with line tool", () => {

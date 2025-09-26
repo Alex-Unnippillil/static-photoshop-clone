@@ -1,10 +1,12 @@
 import { Editor } from "../src/core/Editor.js";
 import { BucketFillTool } from "../src/tools/BucketFillTool.js";
+import { mockPreviewCanvas, type PreviewCanvasMock } from "./helpers.js";
 
 describe("BucketFillTool", () => {
   let canvas: HTMLCanvasElement;
   let ctx: Partial<CanvasRenderingContext2D>;
   let editor: Editor;
+  let preview: PreviewCanvasMock;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -12,7 +14,9 @@ describe("BucketFillTool", () => {
       <input id="colorPicker" value="#0000ff" />
       <input id="lineWidth" value="1" />
       <input id="fillMode" type="checkbox" />
+      <input id="showPreviews" type="checkbox" checked />
     `;
+    preview = mockPreviewCanvas();
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
     (canvas as any).setPointerCapture = jest.fn();
     (canvas as any).releasePointerCapture = jest.fn();
@@ -45,7 +49,15 @@ describe("BucketFillTool", () => {
       document.getElementById("colorPicker") as HTMLInputElement,
       document.getElementById("lineWidth") as HTMLInputElement,
       document.getElementById("fillMode") as HTMLInputElement,
+      undefined,
+      undefined,
+      undefined,
+      document.getElementById("showPreviews") as HTMLInputElement,
     );
+  });
+
+  afterEach(() => {
+    preview.restore();
   });
 
   it("fills enclosed areas with the selected color", () => {

@@ -1,9 +1,11 @@
 import { Editor } from "../src/core/Editor.js";
 import { CircleTool } from "../src/tools/CircleTool.js";
+import { mockPreviewCanvas, type PreviewCanvasMock } from "./helpers.js";
 
 describe("CircleTool", () => {
   let editor: Editor;
   let ctx: Partial<CanvasRenderingContext2D>;
+  let preview: PreviewCanvasMock;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -11,7 +13,9 @@ describe("CircleTool", () => {
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
       <input id="fillMode" type="checkbox" />
+      <input id="showPreviews" type="checkbox" checked />
     `;
+    preview = mockPreviewCanvas();
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
     (canvas as any).setPointerCapture = jest.fn();
     (canvas as any).releasePointerCapture = jest.fn();
@@ -35,7 +39,15 @@ describe("CircleTool", () => {
       document.getElementById("colorPicker") as HTMLInputElement,
       document.getElementById("lineWidth") as HTMLInputElement,
       document.getElementById("fillMode") as HTMLInputElement,
+      undefined,
+      undefined,
+      undefined,
+      document.getElementById("showPreviews") as HTMLInputElement,
     );
+  });
+
+  afterEach(() => {
+    preview.restore();
   });
 
   it("previews circle during pointer move", () => {
@@ -47,17 +59,21 @@ describe("CircleTool", () => {
       buttons: 1,
     } as PointerEvent, editor);
 
-    expect(ctx.getImageData).toHaveBeenCalled();
-    const image = (ctx.getImageData as jest.Mock).mock.results[0].value;
-    expect(ctx.putImageData).toHaveBeenCalledWith(image, 0, 0);
     const dx = 5 - 2;
     const dy = 7 - 3;
     const radiusX = Math.abs(dx);
     const radiusY = Math.abs(dy);
-    expect(ctx.beginPath).toHaveBeenCalled();
-    expect(ctx.ellipse).toHaveBeenCalledWith(2, 3, radiusX, radiusY, 0, 0, Math.PI * 2);
-    expect(ctx.stroke).toHaveBeenCalled();
-    expect(ctx.closePath).toHaveBeenCalled();
+    expect(preview.ctx.beginPath).toHaveBeenCalled();
+    expect(preview.ctx.ellipse).toHaveBeenCalledWith(
+      2,
+      3,
+      radiusX,
+      radiusY,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    expect(preview.ctx.stroke).toHaveBeenCalled();
   });
 
   it("fills circle on pointer up when enabled", () => {

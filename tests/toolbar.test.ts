@@ -6,11 +6,13 @@ import { LineTool } from "../src/tools/LineTool.js";
 import { CircleTool } from "../src/tools/CircleTool.js";
 import { TextTool } from "../src/tools/TextTool.js";
 import { EyedropperTool } from "../src/tools/EyedropperTool.js";
+import { mockPreviewCanvas, type PreviewCanvasMock } from "./helpers.js";
 
 describe("toolbar controls", () => {
   let handle: EditorHandle;
   let canvas: HTMLCanvasElement;
   let ctx: Partial<CanvasRenderingContext2D>;
+  let preview: PreviewCanvasMock;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -19,6 +21,7 @@ describe("toolbar controls", () => {
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
       <input id="fillMode" type="checkbox" />
+      <input id="showPreviews" type="checkbox" checked />
 
       <button id="pencil"></button>
       <button id="eraser"></button>
@@ -37,6 +40,7 @@ describe("toolbar controls", () => {
       <select id="layerSelect"></select>
     `;
 
+    preview = mockPreviewCanvas();
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
     const canvas2 = document.getElementById("canvas2") as HTMLCanvasElement;
     ctx = {
@@ -70,6 +74,7 @@ describe("toolbar controls", () => {
 
   afterEach(() => {
     handle.destroy();
+    preview.restore();
   });
 
   it("populates layer select", () => {

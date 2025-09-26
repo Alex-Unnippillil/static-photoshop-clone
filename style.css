@@ -99,4 +99,9 @@ body {
   box-sizing: border-box;
 }
 
+#canvasContainer .preview-overlay {
+  pointer-events: none;
+  z-index: 10;
+}
+
 

@@ -3,11 +3,13 @@ import { PencilTool } from "../src/tools/PencilTool.js";
 import { LineTool } from "../src/tools/LineTool.js";
 import { CircleTool } from "../src/tools/CircleTool.js";
 import { TextTool } from "../src/tools/TextTool.js";
+import { mockPreviewCanvas, type PreviewCanvasMock } from "./helpers.js";
 
 describe("additional tools", () => {
   let canvas: HTMLCanvasElement;
   let ctx: Partial<CanvasRenderingContext2D>;
   let editor: Editor;
+  let preview: PreviewCanvasMock;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -15,7 +17,9 @@ describe("additional tools", () => {
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
       <input id="fillMode" type="checkbox" />
+      <input id="showPreviews" type="checkbox" checked />
     `;
+    preview = mockPreviewCanvas();
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
     (canvas as any).setPointerCapture = jest.fn();
     (canvas as any).releasePointerCapture = jest.fn();
@@ -46,7 +50,15 @@ describe("additional tools", () => {
       document.getElementById("colorPicker") as HTMLInputElement,
       document.getElementById("lineWidth") as HTMLInputElement,
       document.getElementById("fillMode") as HTMLInputElement,
+      undefined,
+      undefined,
+      undefined,
+      document.getElementById("showPreviews") as HTMLInputElement,
     );
+  });
+
+  afterEach(() => {
+    preview.restore();
   });
 
   it("pencil draws lines", () => {

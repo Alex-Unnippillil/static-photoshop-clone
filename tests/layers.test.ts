@@ -1,4 +1,5 @@
 import { initEditor, EditorHandle } from "../src/editor.js";
+import { mockPreviewCanvas, type PreviewCanvasMock } from "./helpers.js";
 
 describe("layer-specific undo/redo", () => {
   let handle: EditorHandle;
@@ -8,6 +9,7 @@ describe("layer-specific undo/redo", () => {
   let ctx2: Partial<CanvasRenderingContext2D>;
   let undoBtn: HTMLButtonElement;
   let redoBtn: HTMLButtonElement;
+  let preview: PreviewCanvasMock;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -16,6 +18,7 @@ describe("layer-specific undo/redo", () => {
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
       <input id="fillMode" type="checkbox" />
+      <input id="showPreviews" type="checkbox" checked />
       <button id="pencil"></button>
       <button id="eraser"></button>
       <button id="rectangle"></button>
@@ -30,6 +33,7 @@ describe("layer-specific undo/redo", () => {
       <button id="redo"></button>
     `;
 
+    preview = mockPreviewCanvas();
     canvas1 = document.getElementById("c1") as HTMLCanvasElement;
     canvas2 = document.getElementById("c2") as HTMLCanvasElement;
 
@@ -81,7 +85,10 @@ describe("layer-specific undo/redo", () => {
     redoBtn = document.getElementById("redo") as HTMLButtonElement;
   });
 
-  afterEach(() => handle.destroy());
+  afterEach(() => {
+    handle.destroy();
+    preview.restore();
+  });
 
   it("targets the active layer and toggles button states", () => {
     // initially disabled

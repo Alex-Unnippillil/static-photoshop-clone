@@ -1,7 +1,9 @@
 import { initEditor, EditorHandle } from "../src/editor.js";
+import { mockPreviewCanvas, type PreviewCanvasMock } from "./helpers.js";
 
 describe("layer opacity", () => {
   let handle: EditorHandle;
+  let preview: PreviewCanvasMock;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -12,6 +14,7 @@ describe("layer opacity", () => {
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
       <input id="fillMode" type="checkbox" />
+      <input id="showPreviews" type="checkbox" checked />
       <input id="layer2Opacity" value="100" />
       <button id="pencil"></button>
       <button id="eraser"></button>
@@ -25,6 +28,7 @@ describe("layer opacity", () => {
       <button id="save"></button>
     `;
 
+    preview = mockPreviewCanvas();
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
     const ctx = {
       drawImage: jest.fn(),
@@ -56,6 +60,7 @@ describe("layer opacity", () => {
 
   afterEach(() => {
     handle.destroy();
+    preview.restore();
     jest.restoreAllMocks();
   });
 
@@ -86,12 +91,13 @@ describe("layer opacity", () => {
       toDataURL: jest.fn().mockReturnValue("data"),
     } as any;
     const origCreate = document.createElement.bind(document);
-    const createSpy = jest
-      .spyOn(document, "createElement")
-      .mockImplementation((tag: string) => {
-        if (tag === "canvas") return tempCanvas;
-        return origCreate(tag);
-      });
+    const originalCreate = preview.spy.getMockImplementation() as (
+      tag: string,
+    ) => any;
+    const createSpy = preview.spy.mockImplementation((tag: string) => {
+      if (tag === "canvas") return tempCanvas;
+      return originalCreate(tag);
+    });
 
     const save = document.getElementById("save") as HTMLButtonElement;
     save.click();

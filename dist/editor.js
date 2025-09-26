@@ -69,6 +69,7 @@ export function initEditor() {
     const colorPicker = document.getElementById("colorPicker");
     const lineWidth = document.getElementById("lineWidth");
     const fillMode = document.getElementById("fillMode");
+    const showPreviews = document.getElementById("showPreviews");
     const fontFamily = document.getElementById("fontFamily");
     const fontSize = document.getElementById("fontSize");
     const layerSelect = document.getElementById("layerSelect");
@@ -84,6 +85,9 @@ export function initEditor() {
     }
     if (!fillMode) {
         throw new Error("Missing #fillMode input");
+    }
+    if (!showPreviews) {
+        throw new Error("Missing #showPreviews input");
     }
     if (!saveBtn) {
         throw new Error("Missing #save button");
@@ -166,7 +170,7 @@ export function initEditor() {
         try {
             const e = new Editor(c, colorPicker, lineWidth, fillMode, () => {
                 updateHistoryButtons();
-            }, fontFamily ?? undefined, fontSize ?? undefined);
+            }, fontFamily ?? undefined, fontSize ?? undefined, showPreviews);
             editors.push(e);
         }
         catch {
@@ -203,6 +207,11 @@ export function initEditor() {
     listen(redoBtn, "click", () => {
         editor.redo();
         updateHistoryButtons();
+    }, listeners);
+    listen(showPreviews, "change", () => {
+        if (!showPreviews.checked) {
+            editors.forEach((e) => e.clearPreview());
+        }
     }, listeners);
     // saving
     listen(saveBtn, "click", () => {

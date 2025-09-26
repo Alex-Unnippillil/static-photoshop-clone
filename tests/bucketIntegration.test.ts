@@ -1,10 +1,12 @@
 import { initEditor, EditorHandle } from "../src/editor.js";
 import { BucketFillTool } from "../src/tools/BucketFillTool.js";
+import { mockPreviewCanvas, type PreviewCanvasMock } from "./helpers.js";
 
 describe("bucket tool integration", () => {
   let handle: EditorHandle;
   let canvas: HTMLCanvasElement;
   let ctx: Partial<CanvasRenderingContext2D>;
+  let preview: PreviewCanvasMock;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -12,6 +14,7 @@ describe("bucket tool integration", () => {
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="1" />
       <input id="fillMode" type="checkbox" />
+      <input id="showPreviews" type="checkbox" checked />
       <button id="pencil"></button>
       <button id="eraser"></button>
       <button id="rectangle"></button>
@@ -23,6 +26,7 @@ describe("bucket tool integration", () => {
       <select id="formatSelect"><option value="png">PNG</option></select>
       <button id="save"></button>
     `;
+    preview = mockPreviewCanvas();
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
     (canvas as any).setPointerCapture = jest.fn();
     (canvas as any).releasePointerCapture = jest.fn();
@@ -51,6 +55,7 @@ describe("bucket tool integration", () => {
 
   afterEach(() => {
     handle.destroy();
+    preview.restore();
   });
 
   it("activates bucket tool from toolbar", () => {

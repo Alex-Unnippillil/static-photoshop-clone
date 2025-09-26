@@ -1,4 +1,5 @@
 import { Editor } from "../core/Editor.js";
+import { t } from "../i18n/index.js";
 import { Tool } from "./Tool.js";
 
 /**
@@ -15,7 +16,7 @@ export class BucketFillTool implements Tool {
 
     const pixelCount = width * height;
     if (pixelCount > BucketFillTool.MAX_FILL_PIXELS) {
-      console.warn("Bucket fill aborted: area too large");
+      console.warn(t("warning.bucket.tooLarge"));
       return;
     }
 
@@ -55,7 +56,7 @@ export class BucketFillTool implements Tool {
       data[offset + 3] = 255;
       processed++;
       if (processed > BucketFillTool.MAX_FILL_PIXELS) {
-        console.warn("Bucket fill aborted: exceeded pixel limit");
+        console.warn(t("warning.bucket.exceeded"));
         break;
       }
 

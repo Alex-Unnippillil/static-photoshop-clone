@@ -1,4 +1,5 @@
 import { Tool } from "../tools/Tool.js";
+import { t } from "../i18n/index.js";
 
 export class Editor {
   canvas: HTMLCanvasElement;
@@ -24,7 +25,7 @@ export class Editor {
   ) {
     this.canvas = canvas;
     const ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error("Unable to get 2D context");
+    if (!ctx) throw new Error(t("error.context"));
     this.ctx = ctx;
     this.colorPicker = colorPicker;
     this.lineWidth = lineWidth;

@@ -1,3 +1,4 @@
+import { t } from "../i18n/index.js";
 export class Editor {
     constructor(canvas, colorPicker, lineWidth, fillMode, onChange, fontFamily, fontSize) {
         this.undoStack = [];
@@ -24,7 +25,7 @@ export class Editor {
         this.canvas = canvas;
         const ctx = canvas.getContext("2d");
         if (!ctx)
-            throw new Error("Unable to get 2D context");
+            throw new Error(t("error.context"));
         this.ctx = ctx;
         this.colorPicker = colorPicker;
         this.lineWidth = lineWidth;

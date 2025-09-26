@@ -8,6 +8,7 @@ import { CircleTool } from "./tools/CircleTool.js";
 import { TextTool } from "./tools/TextTool.js";
 import { BucketFillTool } from "./tools/BucketFillTool.js";
 import { EyedropperTool } from "./tools/EyedropperTool.js";
+import { t } from "./i18n/index.js";
 /** Utility to listen to events and auto-remove on destroy. */
 function listen(el, type, handler, list) {
     if (!el)
@@ -40,7 +41,7 @@ export function initEditor() {
     Object.entries(toolConstructors).forEach(([id, Ctor]) => {
         const btn = document.getElementById(id);
         if (!btn) {
-            throw new Error(`Missing #${id} button`);
+            throw new Error(t("error.missingButton", { id }));
         }
         toolButtons[id] = btn;
         constructorToId.set(Ctor, id);
@@ -77,30 +78,29 @@ export function initEditor() {
     const formatSelect = document.getElementById("formatSelect");
     const colorHistory = document.getElementById("colorHistory");
     if (!colorPicker) {
-        throw new Error("Missing #colorPicker input");
+        throw new Error(t("error.missingElement", { selector: "#colorPicker input" }));
     }
     if (!lineWidth) {
-        throw new Error("Missing #lineWidth input");
+        throw new Error(t("error.missingElement", { selector: "#lineWidth input" }));
     }
     if (!fillMode) {
-        throw new Error("Missing #fillMode input");
+        throw new Error(t("error.missingElement", { selector: "#fillMode input" }));
     }
     if (!saveBtn) {
-        throw new Error("Missing #save button");
+        throw new Error(t("error.missingElement", { selector: "#save button" }));
     }
     if (!formatSelect) {
-        throw new Error("Missing #formatSelect select");
+        throw new Error(t("error.missingElement", { selector: "#formatSelect select" }));
     }
     if (layerSelect) {
         layerSelect.innerHTML = "";
     }
+    const opacityLabels = new Map();
     canvases.forEach((c, i) => {
         const canvasId = c.id || `layer${i + 1}`;
-        const name = c.id || `Layer ${i + 1}`;
         if (layerSelect) {
             const opt = document.createElement("option");
             opt.value = String(i);
-            opt.textContent = name;
             layerSelect.appendChild(opt);
         }
         if (!document.getElementById(`${canvasId}Opacity`) && i > 0) {
@@ -108,7 +108,6 @@ export function initEditor() {
             group.className = "group";
             const label = document.createElement("label");
             label.htmlFor = `${canvasId}Opacity`;
-            label.textContent = `${name} Opacity`;
             const input = document.createElement("input");
             input.id = `${canvasId}Opacity`;
             input.type = "number";
@@ -118,8 +117,23 @@ export function initEditor() {
             group.appendChild(label);
             group.appendChild(input);
             toolbar.appendChild(group);
+            opacityLabels.set(c, label);
         }
     });
+    const updateLayerNames = () => {
+        canvases.forEach((canvas, index) => {
+            const displayName = canvas.id || t("layers.defaultName", { index: String(index + 1) });
+            if (layerSelect) {
+                const option = layerSelect.options[index];
+                if (option)
+                    option.textContent = displayName;
+            }
+            const label = opacityLabels.get(canvas);
+            if (label) {
+                label.textContent = t("layers.opacityLabel", { name: displayName });
+            }
+        });
+    };
     const undoBtn = document.getElementById("undo");
     const redoBtn = document.getElementById("redo");
     const listeners = [];
@@ -134,7 +148,7 @@ export function initEditor() {
             btn.type = "button";
             btn.className = "color-swatch";
             btn.style.backgroundColor = color;
-            btn.setAttribute("aria-label", `Select ${color}`);
+            btn.setAttribute("aria-label", t("aria.selectColor", { color }));
             btn.addEventListener("click", () => {
                 colorPicker.value = color;
                 colorPicker.dispatchEvent(new Event("input"));
@@ -174,7 +188,7 @@ export function initEditor() {
         }
     });
     if (editors.length === 0) {
-        throw new Error("initEditor() requires at least one <canvas> element with a 2D context");
+        throw new Error(t("error.missingCanvas"));
     }
     editors.forEach((e) => {
         const original = e.setTool.bind(e);
@@ -285,10 +299,15 @@ export function initEditor() {
         if (layerSelect)
             layerSelect.value = String(index);
     }
+    const refreshLocalization = () => {
+        updateLayerNames();
+        renderColorHistory();
+    };
     const handle = {
         editor,
         editors,
         activateLayer,
+        refreshLocalization,
         destroy() {
             listeners.forEach((fn) => fn());
             shortcuts.destroy();
@@ -297,5 +316,6 @@ export function initEditor() {
     };
     recordColor(colorPicker.value);
     updateHistoryButtons();
+    refreshLocalization();
     return handle;
 }

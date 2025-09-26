@@ -1,4 +1,4 @@
-import { Editor } from "./core/Editor.js";
+import { Editor, ViewState } from "./core/Editor.js";
 import { Shortcuts } from "./core/Shortcuts.js";
 import { PencilTool } from "./tools/PencilTool.js";
 import { EraserTool } from "./tools/EraserTool.js";
@@ -38,6 +38,13 @@ export function initEditor(): EditorHandle {
   const canvases = Array.from(
     document.querySelectorAll<HTMLCanvasElement>("canvas"),
   );
+
+  const listeners: Array<() => void> = [];
+
+  const createHTMLElement = <T extends HTMLElement>(tag: string): T | null => {
+    const el = document.createElement(tag);
+    return el instanceof HTMLElement ? (el as T) : null;
+  };
 
   const toolConstructors: Record<string, new () => Tool> = {
     pencil: PencilTool,
@@ -116,6 +123,47 @@ export function initEditor(): EditorHandle {
     throw new Error("Missing #formatSelect select");
   }
 
+  const zoomControls = createHTMLElement<HTMLDivElement>("div");
+  const zoomOutBtn = createHTMLElement<HTMLButtonElement>("button");
+  const zoomDisplay = createHTMLElement<HTMLSpanElement>("span");
+  const zoomInBtn = createHTMLElement<HTMLButtonElement>("button");
+  const zoomResetBtn = createHTMLElement<HTMLButtonElement>("button");
+
+  if (zoomControls) {
+    zoomControls.className = "group zoom-controls";
+  }
+  if (zoomOutBtn) {
+    zoomOutBtn.type = "button";
+    zoomOutBtn.className = "tool-button";
+    zoomOutBtn.textContent = "-";
+    zoomOutBtn.title = "Zoom out (Ctrl+-)";
+    zoomOutBtn.setAttribute("aria-label", "Zoom out");
+  }
+  if (zoomDisplay) {
+    zoomDisplay.className = "zoom-display";
+    zoomDisplay.textContent = "100%";
+    zoomDisplay.setAttribute("aria-live", "polite");
+  }
+  if (zoomInBtn) {
+    zoomInBtn.type = "button";
+    zoomInBtn.className = "tool-button";
+    zoomInBtn.textContent = "+";
+    zoomInBtn.title = "Zoom in (Ctrl+=)";
+    zoomInBtn.setAttribute("aria-label", "Zoom in");
+  }
+  if (zoomResetBtn) {
+    zoomResetBtn.type = "button";
+    zoomResetBtn.className = "tool-button";
+    zoomResetBtn.textContent = "Reset";
+    zoomResetBtn.title = "Reset zoom (Ctrl+0)";
+    zoomResetBtn.setAttribute("aria-label", "Reset zoom");
+  }
+
+  if (zoomControls && zoomOutBtn && zoomDisplay && zoomInBtn && zoomResetBtn) {
+    zoomControls.append(zoomOutBtn, zoomDisplay, zoomInBtn, zoomResetBtn);
+    toolbar.appendChild(zoomControls);
+  }
+
   if (layerSelect) {
     layerSelect.innerHTML = "";
   }
@@ -154,7 +202,6 @@ export function initEditor(): EditorHandle {
 
   const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
   const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
-  const listeners: Array<() => void> = [];
 
   const recentColors: string[] = [];
   const maxRecentColors = 10;
@@ -194,12 +241,27 @@ export function initEditor(): EditorHandle {
 
   let editor: Editor; // set after editors created
 
+  const updateZoomDisplay = (zoom: number) => {
+    if (zoomDisplay) {
+      zoomDisplay.textContent = `${Math.round(zoom * 100)}%`;
+    }
+  };
+
   const updateHistoryButtons = () => {
     if (undoBtn) undoBtn.disabled = !editor?.canUndo;
     if (redoBtn) redoBtn.disabled = !editor?.canRedo;
   };
 
   const editors: Editor[] = [];
+
+  const syncView = (source: Editor, state: ViewState) => {
+    editors.forEach((target) => {
+      if (target !== source) {
+        target.syncViewState(state);
+      }
+    });
+    updateZoomDisplay(state.zoom);
+  };
   canvases.forEach((c) => {
     try {
       const e = new Editor(
@@ -214,6 +276,8 @@ export function initEditor(): EditorHandle {
         fontSize ?? undefined,
       );
       editors.push(e);
+      const unsubscribe = e.onViewChange((state) => syncView(e, state));
+      listeners.push(unsubscribe);
     } catch {
       /* skip canvases without 2D context */
     }
@@ -238,6 +302,7 @@ export function initEditor(): EditorHandle {
 
   // active editor defaults to the first successfully created editor
   editor = editors[0];
+  updateZoomDisplay(editor.zoomFactor);
 
   // default tool
   editor.setTool(new PencilTool());
@@ -246,6 +311,62 @@ export function initEditor(): EditorHandle {
 
   // keyboard shortcuts
   const shortcuts = new Shortcuts(editor);
+
+  const getCanvasCenter = () => {
+    const rect = editor.canvas.getBoundingClientRect();
+    return { x: rect.width / 2, y: rect.height / 2 };
+  };
+
+  listen(
+    zoomOutBtn,
+    "click",
+    () => {
+      editor.zoomOut(getCanvasCenter());
+    },
+    listeners,
+  );
+
+  listen(
+    zoomInBtn,
+    "click",
+    () => {
+      editor.zoomIn(getCanvasCenter());
+    },
+    listeners,
+  );
+
+  listen(
+    zoomResetBtn,
+    "click",
+    () => {
+      editor.resetView();
+    },
+    listeners,
+  );
+
+  const handleZoomShortcut = (ev: KeyboardEvent) => {
+    if (!(ev.ctrlKey || ev.metaKey)) return;
+    const target = ev.target;
+    if (
+      target instanceof HTMLElement &&
+      target.closest("input, textarea, select, [contenteditable]")
+    ) {
+      return;
+    }
+    const key = ev.key;
+    if (key === "=" || key === "+") {
+      ev.preventDefault();
+      editor.zoomIn(getCanvasCenter());
+    } else if (key === "-") {
+      ev.preventDefault();
+      editor.zoomOut(getCanvasCenter());
+    } else if (key === "0") {
+      ev.preventDefault();
+      editor.resetView();
+    }
+  };
+  document.addEventListener("keydown", handleZoomShortcut);
+  listeners.push(() => document.removeEventListener("keydown", handleZoomShortcut));
 
   // map button id to tool constructor
   Object.entries(toolConstructors).forEach(([id, ToolCtor]) =>
@@ -379,6 +500,7 @@ export function initEditor(): EditorHandle {
     const ToolCtor = editorToolConstructors.get(editor) ?? activeToolCtor;
     editor.setTool(new ToolCtor());
     updateHistoryButtons();
+    updateZoomDisplay(editor.zoomFactor);
     if (layerSelect) layerSelect.value = String(index);
   }
 

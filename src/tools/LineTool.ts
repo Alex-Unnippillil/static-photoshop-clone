@@ -8,8 +8,9 @@ export class LineTool extends DrawingTool {
 
   onPointerDown(e: PointerEvent, editor: Editor): void {
     const ctx = editor.ctx;
-    this.startX = e.offsetX;
-    this.startY = e.offsetY;
+    const { x, y } = editor.getCanvasPoint(e);
+    this.startX = x;
+    this.startY = y;
     this.applyStroke(ctx, editor);
     this.imageData = ctx.getImageData(
       0,
@@ -26,8 +27,7 @@ export class LineTool extends DrawingTool {
     this.applyStroke(ctx, editor);
     ctx.beginPath();
     ctx.moveTo(this.startX, this.startY);
-    let x = e.offsetX;
-    let y = e.offsetY;
+    let { x, y } = editor.getCanvasPoint(e);
     if (e.shiftKey) {
       const dx = x - this.startX;
       const dy = y - this.startY;
@@ -50,8 +50,7 @@ export class LineTool extends DrawingTool {
     this.applyStroke(ctx, editor);
     ctx.beginPath();
     ctx.moveTo(this.startX, this.startY);
-    let x = e.offsetX;
-    let y = e.offsetY;
+    let { x, y } = editor.getCanvasPoint(e);
     if (e.shiftKey) {
       const dx = x - this.startX;
       const dy = y - this.startY;

@@ -19,9 +19,10 @@ export class BucketFillTool implements Tool {
       return;
     }
 
-    const dpr = window.devicePixelRatio || 1;
-    const sx = Math.max(0, Math.min(width - 1, Math.floor(e.offsetX * dpr)));
-    const sy = Math.max(0, Math.min(height - 1, Math.floor(e.offsetY * dpr)));
+    const { x, y } = editor.getCanvasPoint(e);
+    const dpr = editor.pixelRatioValue;
+    const sx = Math.max(0, Math.min(width - 1, Math.floor(x * dpr)));
+    const sy = Math.max(0, Math.min(height - 1, Math.floor(y * dpr)));
     const start = sy * width + sx;
     const targetOffset = start * 4;
     const tr = data[targetOffset];

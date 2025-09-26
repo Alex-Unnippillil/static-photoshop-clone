@@ -22,7 +22,6 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 - Image import/export
 - Multi-layer support
 
-
 ### Keyboard Shortcuts
 
 - `P`: Pencil
@@ -33,7 +32,6 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 - `E`: Eraser
 - `Ctrl+Z`: Undo
 - `Ctrl+Shift+Z`: Redo
-
 
 ## Usage
 
@@ -88,6 +86,12 @@ Install the project dependencies using npm:
 ```bash
 npm ci
 ```
+
+## Contributor Setup
+
+1. Install dependencies with `npm ci` (or `npm install` when updating locally).
+2. Git hooks are installed automatically via the `prepare` script. If you ever need to reinstall them, run `npm run prepare`.
+3. A pre-commit hook will run Prettier and ESLint on staged files through `lint-staged`. You can trigger the same checks manually with `npx lint-staged` to verify your changes before committing.
 
 ## Building
 

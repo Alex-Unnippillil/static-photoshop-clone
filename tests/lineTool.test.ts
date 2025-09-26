@@ -38,6 +38,17 @@ describe("LineTool", () => {
     canvas.getContext = jest
       .fn()
       .mockReturnValue(ctx as CanvasRenderingContext2D);
+    canvas.getBoundingClientRect = () => ({
+      width: 100,
+      height: 100,
+      top: 0,
+      left: 0,
+      bottom: 100,
+      right: 100,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    });
     editor = new Editor(
       canvas,
       document.getElementById("colorPicker") as HTMLInputElement,
@@ -54,18 +65,24 @@ describe("LineTool", () => {
       offsetY: 4,
       buttons: 1,
     } as PointerEvent, editor);
+    tool.onPointerMove({
+      offsetX: 4,
+      offsetY: 5,
+      buttons: 1,
+    } as PointerEvent, editor);
     tool.onPointerUp({ offsetX: 3, offsetY: 4 } as PointerEvent, editor);
 
     expect(ctx.getImageData).toHaveBeenCalled();
     const image = (ctx.getImageData as jest.Mock).mock.results[0].value;
-    expect(ctx.putImageData).toHaveBeenCalledTimes(2);
-    expect(ctx.putImageData).toHaveBeenNthCalledWith(1, image, 0, 0);
-    expect(ctx.putImageData).toHaveBeenNthCalledWith(2, image, 0, 0);
-    expect(ctx.beginPath).toHaveBeenCalledTimes(2);
+    const calls = (ctx.putImageData as jest.Mock).mock.calls;
+    expect(calls.length).toBe(2);
+    expect(calls[0]).toEqual([image, 0, 0, 0, 1, 4, 4]);
+    expect(calls[1]).toEqual([image, 0, 0, 0, 1, 5, 5]);
+    expect(ctx.beginPath).toHaveBeenCalledTimes(3);
     expect(ctx.moveTo).toHaveBeenCalledWith(1, 2);
     expect(ctx.lineTo).toHaveBeenCalledWith(3, 4);
-    expect(ctx.stroke).toHaveBeenCalledTimes(2);
-    expect(ctx.closePath).toHaveBeenCalledTimes(2);
+    expect(ctx.stroke).toHaveBeenCalledTimes(3);
+    expect(ctx.closePath).toHaveBeenCalledTimes(3);
     expect(ctx.strokeStyle).toBe(editor.strokeStyle);
     expect(ctx.fillStyle).toBe(editor.fillStyle);
     expect(ctx.lineWidth).toBe(editor.lineWidthValue);
@@ -75,7 +92,7 @@ describe("LineTool", () => {
     const tool = new LineTool();
     tool.onPointerDown({ offsetX: 1, offsetY: 2 } as PointerEvent, editor);
     tool.onPointerUp({ offsetX: 5, offsetY: 6 } as PointerEvent, editor);
-    expect(ctx.putImageData).toHaveBeenCalled();
+    expect((ctx.putImageData as jest.Mock).mock.calls).toHaveLength(0);
     expect(ctx.beginPath).toHaveBeenCalled();
     expect(ctx.moveTo).toHaveBeenCalledWith(1, 2);
     expect(ctx.lineTo).toHaveBeenCalledWith(5, 6);
@@ -90,7 +107,7 @@ describe("LineTool", () => {
     tool.onPointerUp({ offsetX: 1, offsetY: 1 } as PointerEvent, editor);
     editor.undo();
     expect(ctx.clearRect).toHaveBeenCalledTimes(1);
-    expect(ctx.putImageData).toHaveBeenCalledTimes(2);
+    expect(ctx.putImageData).toHaveBeenCalled();
   });
 
   it("snaps angles to 45° increments when shift is held", () => {

@@ -30,6 +30,17 @@ describe("CircleTool", () => {
     canvas.getContext = jest
       .fn()
       .mockReturnValue(ctx as CanvasRenderingContext2D);
+    canvas.getBoundingClientRect = () => ({
+      width: 100,
+      height: 100,
+      top: 0,
+      left: 0,
+      bottom: 100,
+      right: 100,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    });
     editor = new Editor(
       canvas,
       document.getElementById("colorPicker") as HTMLInputElement,
@@ -46,10 +57,15 @@ describe("CircleTool", () => {
       offsetY: 7,
       buttons: 1,
     } as PointerEvent, editor);
+    tool.onPointerMove({
+      offsetX: 6,
+      offsetY: 8,
+      buttons: 1,
+    } as PointerEvent, editor);
 
     expect(ctx.getImageData).toHaveBeenCalled();
     const image = (ctx.getImageData as jest.Mock).mock.results[0].value;
-    expect(ctx.putImageData).toHaveBeenCalledWith(image, 0, 0);
+    expect(ctx.putImageData).toHaveBeenCalledWith(image, 0, 0, 0, 0, 6, 8);
     const dx = 5 - 2;
     const dy = 7 - 3;
     const radiusX = Math.abs(dx);

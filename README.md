@@ -20,6 +20,7 @@ A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaSc
 - Bucket fill tool for coloring regions
 - Eyedropper tool for sampling colors
 - Image import/export
+- Drag-and-drop image import directly onto the canvas area
 - Multi-layer support
 
 
@@ -113,7 +114,9 @@ Execute the test suite:
 npm test
 ```
 
-Open `index.html` in your browser to use the app.
+Open `index.html` in your browser to use the app. You can import artwork by
+selecting a file with the toolbar input or by dragging an image file over the
+canvas area until the drop indicator appears.
 
 ## Deployment
 

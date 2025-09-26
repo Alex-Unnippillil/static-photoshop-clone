@@ -88,6 +88,11 @@ body {
   background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
 }
 
+#canvasContainer.drag-over {
+  outline: 4px solid #1e90ff;
+  outline-offset: -4px;
+}
+
 #canvasContainer canvas {
   position: absolute;
   top: 0;

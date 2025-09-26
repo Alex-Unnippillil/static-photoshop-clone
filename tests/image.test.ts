@@ -11,7 +11,9 @@ describe("image load and save", () => {
 
   beforeEach(() => {
     document.body.innerHTML = `
-      <canvas id="canvas"></canvas>
+      <div id="canvasContainer">
+        <canvas id="canvas"></canvas>
+      </div>
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
       <input id="fillMode" type="checkbox" />
@@ -152,6 +154,49 @@ describe("image load and save", () => {
 
     await selectFile();
     expect(ctx.drawImage).toHaveBeenCalledTimes(2);
+  });
+
+  it("highlights the canvas container during drag interactions", () => {
+    const container = document.getElementById(
+      "canvasContainer",
+    ) as HTMLDivElement;
+
+    const dragEnter = new Event("dragenter", {
+      bubbles: true,
+      cancelable: true,
+    });
+    container.dispatchEvent(dragEnter);
+    expect(dragEnter.defaultPrevented).toBe(true);
+    expect(container.classList.contains("drag-over")).toBe(true);
+
+    const dragLeave = new Event("dragleave", { bubbles: true });
+    container.dispatchEvent(dragLeave);
+    expect(container.classList.contains("drag-over")).toBe(false);
+  });
+
+  it("imports an image when a file is dropped", async () => {
+    const container = document.getElementById(
+      "canvasContainer",
+    ) as HTMLDivElement;
+    const file = new File([""], "drop.png", { type: "image/png" });
+
+    const dropEvent = new Event("drop", { bubbles: true, cancelable: true });
+    Object.defineProperty(dropEvent, "dataTransfer", {
+      value: {
+        files: [file],
+        items: [],
+        types: ["Files"],
+        dropEffect: "",
+      },
+      configurable: true,
+    });
+
+    container.dispatchEvent(dropEvent);
+
+    expect(dropEvent.defaultPrevented).toBe(true);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(ctx.drawImage).toHaveBeenCalled();
+    expect(container.classList.contains("drag-over")).toBe(false);
   });
 
   it("saves the canvas as an image", () => {

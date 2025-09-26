@@ -47,6 +47,50 @@ body {
   gap: 8px;
 }
 
+.layer-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+}
+
+.layer-panel-label {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.layer-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.layer-item {
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: grab;
+  user-select: none;
+  border-radius: 4px;
+}
+
+.layer-item:active {
+  cursor: grabbing;
+}
+
+.layer-item.active {
+  border-color: #007bff;
+  background: #e6f0ff;
+}
+
+.layer-item.dragging {
+  opacity: 0.6;
+}
+
 .tool-button {
   width: 32px;
   height: 32px;

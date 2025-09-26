@@ -158,6 +158,38 @@ export function initEditor(): EditorHandle {
 
   const recentColors: string[] = [];
   const maxRecentColors = 10;
+  let activeSwatchIndex: number | null = null;
+
+  const getSwatches = () =>
+    colorHistory
+      ? Array.from(
+          colorHistory.querySelectorAll<HTMLButtonElement>(".color-swatch"),
+        )
+      : [];
+
+  const updateSwatchTabIndexes = () => {
+    const swatches = getSwatches();
+    if (!swatches.length) return;
+    if (
+      activeSwatchIndex === null ||
+      activeSwatchIndex < 0 ||
+      activeSwatchIndex >= swatches.length
+    ) {
+      activeSwatchIndex = 0;
+    }
+    swatches.forEach((swatch, index) => {
+      swatch.tabIndex = index === activeSwatchIndex ? 0 : -1;
+    });
+  };
+
+  const focusSwatch = (index: number) => {
+    const swatches = getSwatches();
+    if (!swatches.length) return;
+    const normalizedIndex = ((index % swatches.length) + swatches.length) % swatches.length;
+    activeSwatchIndex = normalizedIndex;
+    updateSwatchTabIndexes();
+    swatches[normalizedIndex].focus();
+  };
   const renderColorHistory = () => {
     if (!colorHistory) return;
     colorHistory.innerHTML = "";
@@ -167,12 +199,40 @@ export function initEditor(): EditorHandle {
       btn.className = "color-swatch";
       btn.style.backgroundColor = color;
       btn.setAttribute("aria-label", `Select ${color}`);
+      btn.title = color;
       btn.addEventListener("click", () => {
         colorPicker.value = color;
         colorPicker.dispatchEvent(new Event("input"));
       });
+      btn.addEventListener("focus", () => {
+        const swatches = getSwatches();
+        const index = swatches.indexOf(btn);
+        if (index !== -1) {
+          activeSwatchIndex = index;
+          updateSwatchTabIndexes();
+        }
+      });
+      btn.addEventListener("keydown", (event) => {
+        const { key } = event;
+        if (key === "ArrowRight" || key === "ArrowDown") {
+          event.preventDefault();
+          const swatches = getSwatches();
+          const index = swatches.indexOf(btn);
+          if (index !== -1) {
+            focusSwatch(index + 1);
+          }
+        } else if (key === "ArrowLeft" || key === "ArrowUp") {
+          event.preventDefault();
+          const swatches = getSwatches();
+          const index = swatches.indexOf(btn);
+          if (index !== -1) {
+            focusSwatch(index - 1);
+          }
+        }
+      });
       colorHistory.appendChild(btn);
     });
+    updateSwatchTabIndexes();
   };
 
   const recordColor = (color: string) => {
@@ -180,6 +240,7 @@ export function initEditor(): EditorHandle {
     if (existing !== -1) recentColors.splice(existing, 1);
     recentColors.unshift(color);
     if (recentColors.length > maxRecentColors) recentColors.pop();
+    activeSwatchIndex = 0;
     renderColorHistory();
   };
 

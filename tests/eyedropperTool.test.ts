@@ -145,5 +145,42 @@ describe("EyedropperTool color history", () => {
     const swatch = history.children[0] as HTMLButtonElement;
     expect(swatch.style.backgroundColor).toBe("rgb(12, 34, 56)");
   });
+
+  it("sets tooltip labels for color history swatches", () => {
+    const history = document.getElementById("colorHistory") as HTMLDivElement;
+    const swatch = history.querySelector<HTMLButtonElement>(".color-swatch");
+    expect(swatch).not.toBeNull();
+    expect(swatch?.title).toBe("#000000");
+  });
+
+  it("supports arrow key navigation with roving tab indexes", () => {
+    const history = document.getElementById("colorHistory") as HTMLDivElement;
+    const colorPicker = document.getElementById("colorPicker") as HTMLInputElement;
+
+    colorPicker.value = "#112233";
+    colorPicker.dispatchEvent(new Event("input", { bubbles: true }));
+
+    const swatches = history.querySelectorAll<HTMLButtonElement>(".color-swatch");
+    expect(swatches).toHaveLength(2);
+    expect(swatches[0].tabIndex).toBe(0);
+    expect(swatches[1].tabIndex).toBe(-1);
+
+    swatches[0].focus();
+    swatches[0].dispatchEvent(
+      new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }),
+    );
+
+    expect(document.activeElement).toBe(swatches[1]);
+    expect(swatches[0].tabIndex).toBe(-1);
+    expect(swatches[1].tabIndex).toBe(0);
+
+    swatches[1].dispatchEvent(
+      new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }),
+    );
+
+    expect(document.activeElement).toBe(swatches[0]);
+    expect(swatches[0].tabIndex).toBe(0);
+    expect(swatches[1].tabIndex).toBe(-1);
+  });
 });
 

@@ -8,6 +8,7 @@ import { CircleTool } from "./tools/CircleTool.js";
 import { TextTool } from "./tools/TextTool.js";
 import { BucketFillTool } from "./tools/BucketFillTool.js";
 import { EyedropperTool } from "./tools/EyedropperTool.js";
+import { contrastRatio, suggestContrastColor, } from "./core/contrast.js";
 /** Utility to listen to events and auto-remove on destroy. */
 function listen(el, type, handler, list) {
     if (!el)
@@ -76,6 +77,65 @@ export function initEditor() {
     const saveBtn = document.getElementById("save");
     const formatSelect = document.getElementById("formatSelect");
     const colorHistory = document.getElementById("colorHistory");
+    const minTextContrast = 4.5;
+    const minUiContrast = 3;
+    const ensureContrastPanel = () => {
+        const containerId = "contrastInfo";
+        let panel = document.getElementById(containerId);
+        if (!panel) {
+            panel = document.createElement("div");
+            panel.id = containerId;
+            panel.className = "contrast-info";
+            toolbar.appendChild(panel);
+        }
+        panel.setAttribute("role", "group");
+        panel.setAttribute("aria-label", "Contrast guidance");
+        const ensureRow = (key, label, backgroundColor) => {
+            let row = panel.querySelector(`[data-contrast-row="${key}"]`);
+            if (!row) {
+                row = document.createElement("div");
+                row.dataset.contrastRow = key;
+                row.className = "contrast-row";
+                const labelEl = document.createElement("span");
+                labelEl.className = "contrast-label";
+                labelEl.textContent = label;
+                const valueEl = document.createElement("span");
+                valueEl.className = "contrast-value";
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "contrast-adjust";
+                button.dataset.backgroundColor = backgroundColor;
+                button.textContent = "Auto-adjust";
+                row.append(labelEl, valueEl, button);
+                panel.appendChild(row);
+            }
+            const valueEl = row.querySelector(".contrast-value");
+            const button = row.querySelector(".contrast-adjust");
+            if (!valueEl || !button) {
+                throw new Error("Contrast row is missing required elements");
+            }
+            return {
+                backgroundLabel: label,
+                backgroundColor,
+                rowEl: row,
+                valueEl,
+                adjustButton: button,
+            };
+        };
+        const lightRow = ensureRow("light", "Light background", "#ffffff");
+        const darkRow = ensureRow("dark", "Dark background", "#1b1b1b");
+        let messageEl = panel.querySelector("[data-role=contrast-message]");
+        if (!messageEl) {
+            messageEl = document.createElement("div");
+            messageEl.dataset.role = "contrast-message";
+            messageEl.className = "contrast-message";
+            messageEl.setAttribute("role", "status");
+            messageEl.setAttribute("aria-live", "polite");
+            panel.appendChild(messageEl);
+        }
+        return { panel, rows: [lightRow, darkRow], messageEl };
+    };
+    const contrastUi = ensureContrastPanel();
     if (!colorPicker) {
         throw new Error("Missing #colorPicker input");
     }
@@ -123,6 +183,65 @@ export function initEditor() {
     const undoBtn = document.getElementById("undo");
     const redoBtn = document.getElementById("redo");
     const listeners = [];
+    const applySuggestedColor = (value) => {
+        colorPicker.value = value;
+        colorPicker.dispatchEvent(new Event("input", { bubbles: true }));
+    };
+    contrastUi.rows.forEach((row) => {
+        const handler = () => {
+            const suggestion = row.adjustButton.dataset.suggestedColor;
+            if (suggestion) {
+                applySuggestedColor(suggestion);
+            }
+        };
+        row.adjustButton.addEventListener("click", handler);
+        listeners.push(() => row.adjustButton.removeEventListener("click", handler));
+    });
+    const formatRatio = (ratio) => `${ratio.toFixed(2)}:1`;
+    const updateContrastFeedback = () => {
+        const warnings = [];
+        contrastUi.rows.forEach((row) => {
+            const ratio = contrastRatio(colorPicker.value, row.backgroundColor);
+            const passesUi = ratio >= minUiContrast;
+            const passesText = ratio >= minTextContrast;
+            const statusLabel = `${formatRatio(ratio)} • ${passesText ? "AA text ✓" : "AA text ✗"} • ${passesUi ? "UI ✓" : "UI ✗"}`;
+            row.valueEl.textContent = statusLabel;
+            row.rowEl.classList.toggle("contrast-pass", passesText);
+            row.rowEl.classList.toggle("contrast-warning", !passesText);
+            row.rowEl.classList.toggle("contrast-critical", !passesUi);
+            let suggestion = null;
+            if (!passesText) {
+                suggestion = suggestContrastColor(colorPicker.value, row.backgroundColor, minTextContrast);
+            }
+            if (suggestion) {
+                row.adjustButton.disabled = false;
+                row.adjustButton.dataset.suggestedColor = suggestion.color;
+                row.adjustButton.textContent = `Adjust to ${suggestion.color.toUpperCase()}`;
+            }
+            else {
+                row.adjustButton.disabled = true;
+                row.adjustButton.dataset.suggestedColor = "";
+                row.adjustButton.textContent = passesText
+                    ? "AA compliant"
+                    : "Adjust to improve";
+            }
+            if (!passesUi) {
+                warnings.push(`${row.backgroundLabel} contrast is ${formatRatio(ratio)}, below the 3:1 minimum for UI elements.`);
+            }
+            else if (!passesText) {
+                warnings.push(`${row.backgroundLabel} contrast is ${formatRatio(ratio)}, below the 4.5:1 WCAG AA text requirement.`);
+            }
+        });
+        if (warnings.length === 0) {
+            contrastUi.messageEl.textContent =
+                "Selected color meets WCAG AA guidance on light and dark backgrounds.";
+            contrastUi.messageEl.classList.remove("contrast-message-warning");
+        }
+        else {
+            contrastUi.messageEl.textContent = warnings.join(" ");
+            contrastUi.messageEl.classList.add("contrast-message-warning");
+        }
+    };
     const recentColors = [];
     const maxRecentColors = 10;
     const renderColorHistory = () => {
@@ -151,9 +270,11 @@ export function initEditor() {
             recentColors.pop();
         renderColorHistory();
     };
-    listen(colorPicker, "input", () => {
+    const handleColorInput = () => {
         recordColor(colorPicker.value);
-    }, listeners);
+        updateContrastFeedback();
+    };
+    listen(colorPicker, "input", handleColorInput, listeners);
     let editor; // set after editors created
     const updateHistoryButtons = () => {
         if (undoBtn)
@@ -296,6 +417,7 @@ export function initEditor() {
         },
     };
     recordColor(colorPicker.value);
+    updateContrastFeedback();
     updateHistoryButtons();
     return handle;
 }

@@ -38,7 +38,15 @@ describe("save button", () => {
     const click = jest.fn();
     const anchor = { href: "", download: "", click } as any;
 
-    jest.spyOn(document, "createElement").mockReturnValue(anchor);
+    const nativeCreateElement = Document.prototype.createElement;
+    jest
+      .spyOn(document, "createElement")
+      .mockImplementation((tag: string) => {
+        if (tag.toLowerCase() === "a") {
+          return anchor;
+        }
+        return nativeCreateElement.call(document, tag);
+      });
 
     const handle = initEditor();
 
@@ -85,7 +93,15 @@ describe("save button", () => {
 
     const click = jest.fn();
     const anchor = { href: "", download: "", click } as any;
-    jest.spyOn(document, "createElement").mockReturnValue(anchor);
+    const nativeCreateElement = Document.prototype.createElement;
+    jest
+      .spyOn(document, "createElement")
+      .mockImplementation((tag: string) => {
+        if (tag.toLowerCase() === "a") {
+          return anchor;
+        }
+        return nativeCreateElement.call(document, tag);
+      });
 
     const handle = initEditor();
 

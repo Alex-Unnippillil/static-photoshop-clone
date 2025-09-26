@@ -65,6 +65,29 @@
         <img src="icons/save.svg" alt="Save" />
       </button>
 
+      <div id="contrastInfo" class="contrast-info" role="group" aria-label="Contrast guidance">
+        <div class="contrast-row" data-contrast-row="light">
+          <span class="contrast-label">Light background</span>
+          <span class="contrast-value">--</span>
+          <button type="button" class="contrast-adjust" disabled>
+            Auto-adjust
+          </button>
+        </div>
+        <div class="contrast-row" data-contrast-row="dark">
+          <span class="contrast-label">Dark background</span>
+          <span class="contrast-value">--</span>
+          <button type="button" class="contrast-adjust" disabled>
+            Auto-adjust
+          </button>
+        </div>
+        <div
+          class="contrast-message"
+          data-role="contrast-message"
+          role="status"
+          aria-live="polite"
+        ></div>
+      </div>
+
     </div>
     <div id="canvasContainer">
       <canvas id="canvas" width="800" height="600"></canvas>

@@ -132,5 +132,39 @@ describe("toolbar controls", () => {
     redoBtn.click();
     expect(redo).toHaveBeenCalled();
   });
+
+  it("shows contrast warnings when the selected color fails WCAG thresholds", () => {
+    const colorInput = document.getElementById("colorPicker") as HTMLInputElement;
+    colorInput.value = "#f7f7f7";
+    colorInput.dispatchEvent(new Event("input", { bubbles: true }));
+
+    const message = document.querySelector(
+      "[data-role=contrast-message]",
+    ) as HTMLDivElement;
+    expect(message.textContent).toContain("Light background");
+
+    const adjustButton = document.querySelector(
+      '[data-contrast-row="light"] .contrast-adjust',
+    ) as HTMLButtonElement;
+    expect(adjustButton.disabled).toBe(false);
+  });
+
+  it("auto-adjusts the color to meet contrast guidance", () => {
+    const colorInput = document.getElementById("colorPicker") as HTMLInputElement;
+    colorInput.value = "#f8f8f8";
+    colorInput.dispatchEvent(new Event("input", { bubbles: true }));
+
+    const adjustButton = document.querySelector(
+      '[data-contrast-row="light"] .contrast-adjust',
+    ) as HTMLButtonElement;
+    const previousValue = colorInput.value;
+    adjustButton.click();
+    expect(colorInput.value).not.toBe(previousValue);
+
+    const lightRow = document.querySelector(
+      '[data-contrast-row="light"]',
+    ) as HTMLDivElement;
+    expect(lightRow.classList.contains("contrast-warning")).toBe(false);
+  });
 });
 

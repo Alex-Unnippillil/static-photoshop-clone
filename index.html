@@ -36,6 +36,23 @@
       <button id="circle" class="tool-button" title="Circle">
         <img src="icons/circle.svg" alt="Circle" />
       </button>
+      <button id="polygon" class="tool-button" title="Polygon">
+        <img src="icons/polygon.svg" alt="Polygon" />
+      </button>
+      <div class="group">
+        <label for="polygonVertices">Vertices</label>
+        <input
+          type="number"
+          id="polygonVertices"
+          min="3"
+          max="24"
+          value="5"
+        />
+      </div>
+      <label>
+        <input type="checkbox" id="polygonStarMode" />
+        Star
+      </label>
       <button id="text" class="tool-button" title="Text">
         <img src="icons/type.svg" alt="Text" />
       </button>

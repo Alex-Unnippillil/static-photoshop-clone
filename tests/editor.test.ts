@@ -18,6 +18,9 @@ describe("editor toolbar controls", () => {
       <button id="rectangle"></button>
       <button id="line"></button>
       <button id="circle"></button>
+      <button id="polygon"></button>
+      <input id="polygonVertices" type="number" value="5" />
+      <input id="polygonStarMode" type="checkbox" />
       <button id="text"></button>
       <button id="bucket"></button>
       <button id="eyedropper"></button>

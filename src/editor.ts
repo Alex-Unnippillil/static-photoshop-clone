@@ -8,6 +8,7 @@ import { CircleTool } from "./tools/CircleTool.js";
 import { TextTool } from "./tools/TextTool.js";
 import { BucketFillTool } from "./tools/BucketFillTool.js";
 import { EyedropperTool } from "./tools/EyedropperTool.js";
+import { PolygonTool } from "./tools/PolygonTool.js";
 import type { Tool } from "./tools/Tool.js";
 
 /** Utility to listen to events and auto-remove on destroy. */
@@ -45,6 +46,7 @@ export function initEditor(): EditorHandle {
     rectangle: RectangleTool,
     line: LineTool,
     circle: CircleTool,
+    polygon: PolygonTool,
     text: TextTool,
     bucket: BucketFillTool,
     eyedropper: EyedropperTool,
@@ -91,6 +93,12 @@ export function initEditor(): EditorHandle {
   const fillMode = document.getElementById("fillMode") as HTMLInputElement | null;
   const fontFamily = document.getElementById("fontFamily") as HTMLSelectElement | null;
   const fontSize = document.getElementById("fontSize") as HTMLInputElement | null;
+  const polygonVertices = document.getElementById(
+    "polygonVertices",
+  ) as HTMLInputElement | null;
+  const polygonStarMode = document.getElementById(
+    "polygonStarMode",
+  ) as HTMLInputElement | null;
   const layerSelect = document.getElementById("layerSelect") as HTMLSelectElement | null;
   const toolbar = document.getElementById("toolbar") || document.body;
   const saveBtn = document.getElementById("save") as HTMLButtonElement | null;
@@ -108,6 +116,12 @@ export function initEditor(): EditorHandle {
   }
   if (!fillMode) {
     throw new Error("Missing #fillMode input");
+  }
+  if (!polygonVertices) {
+    throw new Error("Missing #polygonVertices input");
+  }
+  if (!polygonStarMode) {
+    throw new Error("Missing #polygonStarMode input");
   }
   if (!saveBtn) {
     throw new Error("Missing #save button");
@@ -212,6 +226,8 @@ export function initEditor(): EditorHandle {
         },
         fontFamily ?? undefined,
         fontSize ?? undefined,
+        polygonVertices,
+        polygonStarMode,
       );
       editors.push(e);
     } catch {

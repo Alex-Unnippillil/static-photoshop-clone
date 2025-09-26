@@ -9,6 +9,7 @@ import { TextTool } from "../src/tools/TextTool.js";
 import { BucketFillTool } from "../src/tools/BucketFillTool.js";
 import { Shortcuts } from "../src/core/Shortcuts.js";
 import { Editor } from "../src/core/Editor.js";
+import { PolygonTool } from "../src/tools/PolygonTool.js";
 
 describe("keyboard shortcuts", () => {
   let handle: EditorHandle;
@@ -26,6 +27,9 @@ describe("keyboard shortcuts", () => {
       <button id="rectangle"></button>
       <button id="line"></button>
       <button id="circle"></button>
+      <button id="polygon"></button>
+      <input id="polygonVertices" type="number" value="5" />
+      <input id="polygonStarMode" type="checkbox" />
       <button id="text"></button>
       <button id="bucket"></button>
       <button id="eyedropper"></button>
@@ -70,6 +74,7 @@ describe("keyboard shortcuts", () => {
       ["i", EyedropperTool],
       ["l", LineTool],
       ["c", CircleTool],
+      ["o", PolygonTool],
       ["t", TextTool],
       ["b", BucketFillTool],
     ];

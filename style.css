@@ -1,6 +1,7 @@
-button:focus-visible, input:focus-visible {
-  outline: 2px solid #1e90ff;
-  outline-offset: 2px;
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid #1e90ff;
+  outline-offset: 3px;
 }
 
 html,
@@ -29,10 +30,11 @@ body {
 }
 
 .color-swatch {
-  width: 24px;
-  height: 24px;
+  width: 48px;
+  height: 48px;
   border: 1px solid #ccc;
-  padding: 0;
+  border-radius: 6px;
+  padding: 4px;
   background: #fff;
   cursor: pointer;
 }
@@ -48,20 +50,21 @@ body {
 }
 
 .tool-button {
-  width: 32px;
-  height: 32px;
+  min-width: 48px;
+  min-height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px;
+  padding: 8px;
   border: 1px solid #ccc;
+  border-radius: 6px;
   background: #fff;
   cursor: pointer;
 }
 
 .tool-button img {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   pointer-events: none;
 }
 
@@ -75,6 +78,46 @@ body {
 
 .tool-button.active img {
   filter: brightness(0) invert(1);
+}
+
+.tool-button:focus-visible,
+.color-swatch:focus-visible {
+  outline-width: 3px;
+  outline-offset: 4px;
+}
+
+@media (max-width: 600px) {
+  #toolbar {
+    gap: 12px;
+    padding: 12px;
+  }
+
+  #toolbar .group {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .tool-button {
+    flex: 1 0 calc(50% - 12px);
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .tool-button img {
+    width: 28px;
+    height: 28px;
+  }
+
+  #colorHistory {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .color-swatch {
+    width: 44px;
+    height: 44px;
+    padding: 2px;
+  }
 }
 
 #canvasContainer {

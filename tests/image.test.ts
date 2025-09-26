@@ -6,8 +6,13 @@ describe("image load and save", () => {
   let handle: EditorHandle;
   let anchor: { href: string; download: string; click: jest.Mock };
   let createElementSpy: jest.SpyInstance;
-  let fileReaderSpy: jest.SpyInstance;
-  let imageSpy: jest.SpyInstance;
+  let createImageBitmapMock: jest.Mock;
+  let originalCreateImageBitmap: typeof window.createImageBitmap | undefined;
+  let mockBitmap: ImageBitmap;
+  let fileReaderSpy: jest.SpyInstance | undefined;
+  let imageSpy: jest.SpyInstance | undefined;
+
+  const flushPromises = () => new Promise((resolve) => setTimeout(resolve, 0));
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -63,27 +68,14 @@ describe("image load and save", () => {
       .spyOn(document, "createElement")
       .mockReturnValue(anchor as any);
 
-    class MockFileReader {
-      result: string | ArrayBuffer | null = null;
-      onload: () => void = () => {};
-      readAsDataURL(_file: Blob) {
-        this.result = "data:image/png;base64,LOAD";
-        this.onload();
-      }
-    }
-    fileReaderSpy = jest
-      .spyOn(window as any, "FileReader")
-      .mockImplementation(() => new MockFileReader() as any);
-
-    class MockImage {
-      onload: () => void = () => {};
-      set src(_src: string) {
-        setTimeout(() => this.onload(), 0);
-      }
-    }
-    imageSpy = jest
-      .spyOn(window as any, "Image")
-      .mockImplementation(() => new MockImage() as any);
+    mockBitmap = { width: 200, height: 100 } as unknown as ImageBitmap;
+    createImageBitmapMock = jest.fn(async () => mockBitmap);
+    originalCreateImageBitmap = window.createImageBitmap;
+    Object.defineProperty(window, "createImageBitmap", {
+      configurable: true,
+      writable: true,
+      value: createImageBitmapMock,
+    });
 
     handle = initEditor();
   });
@@ -91,8 +83,13 @@ describe("image load and save", () => {
   afterEach(() => {
     handle.destroy();
     createElementSpy.mockRestore();
-    fileReaderSpy.mockRestore();
-    imageSpy.mockRestore();
+    fileReaderSpy?.mockRestore();
+    imageSpy?.mockRestore();
+    if (originalCreateImageBitmap) {
+      window.createImageBitmap = originalCreateImageBitmap;
+    } else {
+      delete (window as any).createImageBitmap;
+    }
   });
 
   it("loads an image from input", async () => {
@@ -103,8 +100,15 @@ describe("image load and save", () => {
       configurable: true,
     });
     loader.dispatchEvent(new Event("change"));
-    await new Promise((r) => setTimeout(r, 0));
-    expect(ctx.drawImage).toHaveBeenCalled();
+    await flushPromises();
+    expect(createImageBitmapMock).toHaveBeenCalledWith(file);
+    expect(ctx.drawImage).toHaveBeenCalledWith(
+      mockBitmap,
+      0,
+      0,
+      canvas.width,
+      canvas.height,
+    );
   });
 
   it("adds state to undo stack when loading image", async () => {
@@ -115,7 +119,7 @@ describe("image load and save", () => {
       configurable: true,
     });
     loader.dispatchEvent(new Event("change"));
-    await new Promise((r) => setTimeout(r, 0));
+    await flushPromises();
     expect(handle.editor.canUndo).toBe(true);
     handle.editor.undo();
     expect(ctx.putImageData).toHaveBeenCalled();
@@ -140,7 +144,7 @@ describe("image load and save", () => {
       });
       if (loader.value !== prev) {
         loader.dispatchEvent(new Event("change"));
-        await new Promise((r) => setTimeout(r, 0));
+        await flushPromises();
       }
     };
 
@@ -152,6 +156,51 @@ describe("image load and save", () => {
 
     await selectFile();
     expect(ctx.drawImage).toHaveBeenCalledTimes(2);
+  });
+
+  it("falls back to FileReader when createImageBitmap is unavailable", async () => {
+    delete (window as any).createImageBitmap;
+
+    class MockFileReader {
+      result: string | ArrayBuffer | null = null;
+      onload: () => void = () => {};
+      readAsDataURL(_file: Blob) {
+        this.result = "data:image/png;base64,LOAD";
+        this.onload();
+      }
+    }
+    fileReaderSpy = jest
+      .spyOn(window as any, "FileReader")
+      .mockImplementation(() => new MockFileReader() as any);
+
+    class MockImage {
+      onload: () => void = () => {};
+      set src(_src: string) {
+        setTimeout(() => this.onload(), 0);
+      }
+    }
+    imageSpy = jest
+      .spyOn(window as any, "Image")
+      .mockImplementation(() => new MockImage() as any);
+
+    const file = new File([""], "test.png", { type: "image/png" });
+    const loader = document.getElementById("imageLoader") as HTMLInputElement;
+    Object.defineProperty(loader, "files", {
+      value: [file],
+      configurable: true,
+    });
+    loader.dispatchEvent(new Event("change"));
+    await flushPromises();
+    await flushPromises();
+    expect(fileReaderSpy).toHaveBeenCalled();
+    expect(imageSpy).toHaveBeenCalled();
+    expect(ctx.drawImage).toHaveBeenCalledWith(
+      expect.any(Object),
+      0,
+      0,
+      canvas.width,
+      canvas.height,
+    );
   });
 
   it("saves the canvas as an image", () => {

@@ -20,6 +20,7 @@ describe("image load and save", () => {
       <button id="rectangle"></button>
       <button id="line"></button>
       <button id="circle"></button>
+      <button id="gradient"></button>
       <button id="text"></button>
       <button id="bucket"></button>
       <button id="eyedropper"></button>
@@ -59,9 +60,15 @@ describe("image load and save", () => {
     });
 
     anchor = { href: "", download: "", click: jest.fn() };
+    const realCreateElement = document.createElement.bind(document);
     createElementSpy = jest
       .spyOn(document, "createElement")
-      .mockReturnValue(anchor as any);
+      .mockImplementation((tagName: string, options?: unknown) => {
+        if (tagName.toLowerCase() === "a") {
+          return anchor as any;
+        }
+        return realCreateElement(tagName, options as any);
+      });
 
     class MockFileReader {
       result: string | ArrayBuffer | null = null;

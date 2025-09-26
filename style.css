@@ -47,6 +47,30 @@ body {
   gap: 8px;
 }
 
+.gradient-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+#gradientStops {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gradient-stop {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gradient-stop-percent {
+  min-width: 3ch;
+  text-align: right;
+}
+
 .tool-button {
   width: 32px;
   height: 32px;

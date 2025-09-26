@@ -12,6 +12,7 @@ describe("save button", () => {
       <button id="rectangle"></button>
       <button id="line"></button>
       <button id="circle"></button>
+      <button id="gradient"></button>
       <button id="text"></button>
       <button id="bucket"></button>
       <button id="eyedropper"></button>
@@ -38,7 +39,17 @@ describe("save button", () => {
     const click = jest.fn();
     const anchor = { href: "", download: "", click } as any;
 
-    jest.spyOn(document, "createElement").mockReturnValue(anchor);
+    const originalCreateElement = document.createElement;
+    (document as unknown as { createElement: typeof document.createElement }).createElement = function (
+      this: Document,
+      tagName: string,
+      options?: unknown,
+    ) {
+      if (tagName.toLowerCase() === "a") {
+        return anchor;
+      }
+      return originalCreateElement.call(this, tagName, options as any);
+    };
 
     const handle = initEditor();
 
@@ -47,6 +58,8 @@ describe("save button", () => {
     expect(click).toHaveBeenCalled();
 
     handle.destroy();
+    (document as unknown as { createElement: typeof document.createElement }).createElement =
+      originalCreateElement;
   });
 
   it("supports selecting jpeg format", () => {
@@ -60,6 +73,7 @@ describe("save button", () => {
       <button id="rectangle"></button>
       <button id="line"></button>
       <button id="circle"></button>
+      <button id="gradient"></button>
       <button id="text"></button>
       <button id="bucket"></button>
       <button id="eyedropper"></button>
@@ -85,7 +99,17 @@ describe("save button", () => {
 
     const click = jest.fn();
     const anchor = { href: "", download: "", click } as any;
-    jest.spyOn(document, "createElement").mockReturnValue(anchor);
+    const originalCreateElement = document.createElement;
+    (document as unknown as { createElement: typeof document.createElement }).createElement = function (
+      this: Document,
+      tagName: string,
+      options?: unknown,
+    ) {
+      if (tagName.toLowerCase() === "a") {
+        return anchor;
+      }
+      return originalCreateElement.call(this, tagName, options as any);
+    };
 
     const handle = initEditor();
 
@@ -95,5 +119,7 @@ describe("save button", () => {
     expect(click).toHaveBeenCalled();
 
     handle.destroy();
+    (document as unknown as { createElement: typeof document.createElement }).createElement =
+      originalCreateElement;
   });
 });

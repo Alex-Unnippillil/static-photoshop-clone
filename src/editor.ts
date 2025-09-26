@@ -8,6 +8,12 @@ import { CircleTool } from "./tools/CircleTool.js";
 import { TextTool } from "./tools/TextTool.js";
 import { BucketFillTool } from "./tools/BucketFillTool.js";
 import { EyedropperTool } from "./tools/EyedropperTool.js";
+import {
+  GradientTool,
+  type GradientConfig,
+  type GradientStop,
+  type GradientType,
+} from "./tools/GradientTool.js";
 import type { Tool } from "./tools/Tool.js";
 
 /** Utility to listen to events and auto-remove on destroy. */
@@ -39,6 +45,12 @@ export function initEditor(): EditorHandle {
     document.querySelectorAll<HTMLCanvasElement>("canvas"),
   );
 
+  class ConfiguredGradientTool extends GradientTool {
+    constructor() {
+      super(gradientConfig);
+    }
+  }
+
   const toolConstructors: Record<string, new () => Tool> = {
     pencil: PencilTool,
     eraser: EraserTool,
@@ -48,6 +60,7 @@ export function initEditor(): EditorHandle {
     text: TextTool,
     bucket: BucketFillTool,
     eyedropper: EyedropperTool,
+    gradient: ConfiguredGradientTool,
   };
 
   const toolButtons: Record<string, HTMLButtonElement> = {};
@@ -115,6 +128,213 @@ export function initEditor(): EditorHandle {
   if (!formatSelect) {
     throw new Error("Missing #formatSelect select");
   }
+
+  const clamp = (value: number, min: number, max: number) =>
+    Math.min(max, Math.max(min, value));
+
+  const gradientListeners = new Set<() => void>();
+  let gradientStopId = 0;
+  const gradientConfig: GradientConfig = {
+    type: "linear",
+    stops: [
+      { id: gradientStopId++, offset: 0, color: colorPicker.value },
+      { id: gradientStopId++, offset: 1, color: "#ffffff" },
+    ],
+    addListener(listener: () => void) {
+      gradientListeners.add(listener);
+      return () => {
+        gradientListeners.delete(listener);
+      };
+    },
+    notifyChange() {
+      gradientListeners.forEach((fn) => fn());
+    },
+  };
+
+  const gradientControls = document.createElement("div");
+  gradientControls.className = "group gradient-controls";
+
+  const gradientTitle = document.createElement("span");
+  gradientTitle.textContent = "Gradient";
+  gradientControls.appendChild(gradientTitle);
+
+  const gradientTypeSelect = document.createElement("select");
+  gradientTypeSelect.id = "gradientType";
+  const typeOptions: Array<[GradientType, string]> = [
+    ["linear", "Linear"],
+    ["radial", "Radial"],
+  ];
+  typeOptions.forEach(([value, label]) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    gradientTypeSelect.appendChild(option);
+  });
+  gradientTypeSelect.value = gradientConfig.type;
+  gradientTypeSelect.addEventListener("change", () => {
+    gradientConfig.type = gradientTypeSelect.value as GradientType;
+    gradientConfig.notifyChange();
+  });
+  gradientControls.appendChild(gradientTypeSelect);
+
+  const stopList = document.createElement("div");
+  stopList.id = "gradientStops";
+  gradientControls.appendChild(stopList);
+
+  const stopElements = new Map<
+    number,
+    {
+      row: HTMLDivElement;
+      color: HTMLInputElement;
+      offset: HTMLInputElement;
+      percent: HTMLSpanElement;
+      remove: HTMLButtonElement;
+    }
+  >();
+
+  const updateRemoveButtons = () => {
+    const disable = gradientConfig.stops.length <= 2;
+    stopElements.forEach(({ remove }) => {
+      remove.disabled = disable;
+    });
+  };
+
+  const syncStopInputs = () => {
+    const sorted = [...gradientConfig.stops].sort((a, b) => a.offset - b.offset);
+    sorted.forEach((stop) => {
+      const entry = stopElements.get(stop.id);
+      if (!entry) return;
+      if (entry.color.value !== stop.color) {
+        entry.color.value = stop.color;
+      }
+      const percentValue = Math.round(stop.offset * 100);
+      if (entry.offset.value !== String(percentValue)) {
+        entry.offset.value = String(percentValue);
+      }
+      entry.percent.textContent = `${percentValue}%`;
+      stopList.appendChild(entry.row);
+    });
+    updateRemoveButtons();
+  };
+
+  const ensureStopRow = (stop: GradientStop) => {
+    if (stopElements.has(stop.id)) {
+      return stopElements.get(stop.id)!;
+    }
+
+    const row = document.createElement("div");
+    row.className = "gradient-stop";
+
+    const colorInput = document.createElement("input");
+    colorInput.type = "color";
+    colorInput.addEventListener("input", () => {
+      stop.color = colorInput.value;
+      gradientConfig.notifyChange();
+    });
+    row.appendChild(colorInput);
+
+    const offsetInput = document.createElement("input");
+    offsetInput.type = "range";
+    offsetInput.min = "0";
+    offsetInput.max = "100";
+    offsetInput.step = "1";
+    offsetInput.addEventListener("input", () => {
+      const parsed = parseInt(offsetInput.value, 10);
+      const normalized = clamp(isNaN(parsed) ? stop.offset : parsed / 100, 0, 1);
+      stop.offset = normalized;
+      percent.textContent = `${Math.round(normalized * 100)}%`;
+      gradientConfig.notifyChange();
+    });
+    offsetInput.addEventListener("change", () => {
+      gradientConfig.stops.sort((a, b) => a.offset - b.offset);
+      renderStopList();
+    });
+    row.appendChild(offsetInput);
+
+    const percent = document.createElement("span");
+    percent.className = "gradient-stop-percent";
+    row.appendChild(percent);
+
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.textContent = "Remove";
+    removeButton.addEventListener("click", () => {
+      if (gradientConfig.stops.length <= 2) return;
+      const index = gradientConfig.stops.findIndex((s) => s.id === stop.id);
+      if (index !== -1) {
+        gradientConfig.stops.splice(index, 1);
+        stopElements.delete(stop.id);
+        row.remove();
+        updateRemoveButtons();
+        gradientConfig.notifyChange();
+      }
+    });
+    row.appendChild(removeButton);
+
+    const entry = {
+      row,
+      color: colorInput,
+      offset: offsetInput,
+      percent,
+      remove: removeButton,
+    };
+    stopElements.set(stop.id, entry);
+    return entry;
+  };
+
+  const renderStopList = () => {
+    const sorted = [...gradientConfig.stops].sort((a, b) => a.offset - b.offset);
+    sorted.forEach((stop) => ensureStopRow(stop));
+
+    // remove stale rows
+    Array.from(stopElements.keys()).forEach((id) => {
+      if (!gradientConfig.stops.some((s) => s.id === id)) {
+        const entry = stopElements.get(id);
+        if (entry) {
+          entry.row.remove();
+        }
+        stopElements.delete(id);
+      }
+    });
+
+    sorted.forEach((stop) => {
+      const entry = stopElements.get(stop.id);
+      if (entry) {
+        stopList.appendChild(entry.row);
+      }
+    });
+    syncStopInputs();
+  };
+
+  gradientConfig.addListener(() => {
+    gradientTypeSelect.value = gradientConfig.type;
+    syncStopInputs();
+  });
+
+  const addStopButton = document.createElement("button");
+  addStopButton.type = "button";
+  addStopButton.textContent = "Add Stop";
+  addStopButton.addEventListener("click", () => {
+    const midpoint = gradientConfig.stops.reduce((sum, stop) => sum + stop.offset, 0);
+    const offset =
+      gradientConfig.stops.length === 0
+        ? 0.5
+        : clamp(midpoint / gradientConfig.stops.length, 0, 1);
+    const newStop: GradientStop = {
+      id: gradientStopId++,
+      offset,
+      color: colorPicker.value,
+    };
+    gradientConfig.stops.push(newStop);
+    gradientConfig.stops.sort((a, b) => a.offset - b.offset);
+    renderStopList();
+    updateRemoveButtons();
+    gradientConfig.notifyChange();
+  });
+  gradientControls.appendChild(addStopButton);
+
+  renderStopList();
+  toolbar.appendChild(gradientControls);
 
   if (layerSelect) {
     layerSelect.innerHTML = "";
@@ -245,7 +465,7 @@ export function initEditor(): EditorHandle {
   updateLayerInteractivity();
 
   // keyboard shortcuts
-  const shortcuts = new Shortcuts(editor);
+  const shortcuts = new Shortcuts(editor, () => new ConfiguredGradientTool());
 
   // map button id to tool constructor
   Object.entries(toolConstructors).forEach(([id, ToolCtor]) =>

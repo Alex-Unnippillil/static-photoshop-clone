@@ -7,6 +7,7 @@ import { TextTool } from "../tools/TextTool.js";
 import { EraserTool } from "../tools/EraserTool.js";
 import { BucketFillTool } from "../tools/BucketFillTool.js";
 import { EyedropperTool } from "../tools/EyedropperTool.js";
+import type { Tool } from "../tools/Tool.js";
 
 
 /**
@@ -16,9 +17,11 @@ import { EyedropperTool } from "../tools/EyedropperTool.js";
 export class Shortcuts {
   private readonly handler: (e: KeyboardEvent) => void;
   private editor: Editor;
+  private readonly gradientFactory?: () => Tool;
 
-  constructor(editor: Editor) {
+  constructor(editor: Editor, gradientFactory?: () => Tool) {
     this.editor = editor;
+    this.gradientFactory = gradientFactory;
     this.handler = (e: KeyboardEvent) => this.onKeyDown(e);
     document.addEventListener("keydown", this.handler);
   }
@@ -74,6 +77,12 @@ export class Shortcuts {
       case "b":
         e.preventDefault();
         this.editor.setTool(new BucketFillTool());
+        break;
+      case "g":
+        if (this.gradientFactory) {
+          e.preventDefault();
+          this.editor.setTool(this.gradientFactory());
+        }
         break;
       case "i":
         e.preventDefault();

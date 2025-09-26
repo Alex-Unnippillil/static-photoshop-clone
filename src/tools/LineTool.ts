@@ -26,17 +26,7 @@ export class LineTool extends DrawingTool {
     this.applyStroke(ctx, editor);
     ctx.beginPath();
     ctx.moveTo(this.startX, this.startY);
-    let x = e.offsetX;
-    let y = e.offsetY;
-    if (e.shiftKey) {
-      const dx = x - this.startX;
-      const dy = y - this.startY;
-      const angle = Math.atan2(dy, dx);
-      const snapped = Math.round(angle / (Math.PI / 4)) * (Math.PI / 4);
-      const length = Math.sqrt(dx * dx + dy * dy);
-      x = this.startX + length * Math.cos(snapped);
-      y = this.startY + length * Math.sin(snapped);
-    }
+    const { x, y } = this.getEndPoint(e);
     ctx.lineTo(x, y);
     ctx.stroke();
     ctx.closePath();
@@ -50,6 +40,15 @@ export class LineTool extends DrawingTool {
     this.applyStroke(ctx, editor);
     ctx.beginPath();
     ctx.moveTo(this.startX, this.startY);
+    const { x, y } = this.getEndPoint(e);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.closePath();
+    this.recordDiff(editor, x, y);
+    this.imageData = null;
+  }
+
+  private getEndPoint(e: PointerEvent): { x: number; y: number } {
     let x = e.offsetX;
     let y = e.offsetY;
     if (e.shiftKey) {
@@ -61,9 +60,20 @@ export class LineTool extends DrawingTool {
       x = this.startX + length * Math.cos(snapped);
       y = this.startY + length * Math.sin(snapped);
     }
-    ctx.lineTo(x, y);
-    ctx.stroke();
-    ctx.closePath();
-    this.imageData = null;
+    return { x, y };
+  }
+
+  private recordDiff(editor: Editor, endX: number, endY: number) {
+    const padding = Math.ceil(editor.lineWidthValue / 2) + 2;
+    const minX = Math.min(this.startX, endX);
+    const maxX = Math.max(this.startX, endX);
+    const minY = Math.min(this.startY, endY);
+    const maxY = Math.max(this.startY, endY);
+    editor.recordDiff({
+      x: minX - padding,
+      y: minY - padding,
+      width: Math.max(1, maxX - minX + padding * 2),
+      height: Math.max(1, maxY - minY + padding * 2),
+    });
   }
 }

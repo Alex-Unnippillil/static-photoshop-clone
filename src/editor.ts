@@ -1,4 +1,5 @@
 import { Editor } from "./core/Editor.js";
+import { LayerManager } from "./core/LayerManager.js";
 import { Shortcuts } from "./core/Shortcuts.js";
 import { PencilTool } from "./tools/PencilTool.js";
 import { EraserTool } from "./tools/EraserTool.js";
@@ -54,7 +55,6 @@ export function initEditor(): EditorHandle {
   const constructorToId = new Map<new () => Tool, string>();
   const editorToolConstructors = new Map<Editor, new () => Tool>();
   let activeToolCtor: new () => Tool = PencilTool;
-  let activeLayerIndex = 0;
   Object.entries(toolConstructors).forEach(([id, Ctor]) => {
     const btn = document.getElementById(id) as HTMLButtonElement | null;
     if (!btn) {
@@ -77,12 +77,6 @@ export function initEditor(): EditorHandle {
       }
     }
     return null;
-  };
-
-  const updateLayerInteractivity = () => {
-    canvases.forEach((canvas, index) => {
-      canvas.style.pointerEvents = index === activeLayerIndex ? "auto" : "none";
-    });
   };
 
   const colorPicker =
@@ -115,42 +109,6 @@ export function initEditor(): EditorHandle {
   if (!formatSelect) {
     throw new Error("Missing #formatSelect select");
   }
-
-  if (layerSelect) {
-    layerSelect.innerHTML = "";
-  }
-
-  canvases.forEach((c, i) => {
-    const canvasId = c.id || `layer${i + 1}`;
-    const name = c.id || `Layer ${i + 1}`;
-
-    if (layerSelect) {
-      const opt = document.createElement("option");
-      opt.value = String(i);
-      opt.textContent = name;
-      layerSelect.appendChild(opt);
-    }
-
-    if (!document.getElementById(`${canvasId}Opacity`) && i > 0) {
-      const group = document.createElement("div");
-      group.className = "group";
-
-      const label = document.createElement("label");
-      label.htmlFor = `${canvasId}Opacity`;
-      label.textContent = `${name} Opacity`;
-
-      const input = document.createElement("input");
-      input.id = `${canvasId}Opacity`;
-      input.type = "number";
-      input.min = "0";
-      input.max = "100";
-      input.value = "100";
-
-      group.appendChild(label);
-      group.appendChild(input);
-      toolbar.appendChild(group);
-    }
-  });
 
   const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
   const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
@@ -199,7 +157,7 @@ export function initEditor(): EditorHandle {
     if (redoBtn) redoBtn.disabled = !editor?.canRedo;
   };
 
-  const editors: Editor[] = [];
+  const layerEntries: Array<{ canvas: HTMLCanvasElement; editor: Editor }> = [];
   canvases.forEach((c) => {
     try {
       const e = new Editor(
@@ -213,11 +171,13 @@ export function initEditor(): EditorHandle {
         fontFamily ?? undefined,
         fontSize ?? undefined,
       );
-      editors.push(e);
+      layerEntries.push({ canvas: c, editor: e });
     } catch {
       /* skip canvases without 2D context */
     }
   });
+
+  const editors = layerEntries.map((entry) => entry.editor);
 
   if (editors.length === 0) {
     throw new Error(
@@ -242,10 +202,24 @@ export function initEditor(): EditorHandle {
   // default tool
   editor.setTool(new PencilTool());
   editorToolConstructors.set(editor, PencilTool);
-  updateLayerInteractivity();
 
   // keyboard shortcuts
   const shortcuts = new Shortcuts(editor);
+
+  let handle: EditorHandle | null = null;
+  const layerManager = new LayerManager({
+    layers: layerEntries,
+    layerSelect,
+    toolbar,
+    onActivate: (nextEditor) => {
+      editor = nextEditor;
+      if (handle) handle.editor = editor;
+      shortcuts.switchEditor(editor);
+      const ToolCtor = editorToolConstructors.get(editor) ?? activeToolCtor;
+      editor.setTool(new ToolCtor());
+      updateHistoryButtons();
+    },
+  });
 
   // map button id to tool constructor
   Object.entries(toolConstructors).forEach(([id, ToolCtor]) =>
@@ -341,58 +315,21 @@ export function initEditor(): EditorHandle {
     listeners,
   );
 
-  document
-    .querySelectorAll<HTMLInputElement>('input[id$="Opacity"]')
-    .forEach((input) => {
-      const targetId = input.id.replace(/Opacity$/, "");
-      const layer = document.getElementById(targetId) as HTMLCanvasElement | null;
-      if (!layer) return;
-      listen(
-        input,
-        "input",
-        () => {
-          const value = parseFloat(input.value);
-          layer.style.opacity = isNaN(value) ? "1" : String(value / 100);
-        },
-        listeners,
-      );
-    });
-
-  // layer selection
-  listen(
-    layerSelect,
-    "change",
-    () => {
-      const idx = parseInt(layerSelect!.value, 10);
-      activateLayer(idx);
-    },
-    listeners,
-  );
-
-  function activateLayer(index: number) {
-    if (index < 0 || index >= editors.length) return;
-    activeLayerIndex = index;
-    editor = editors[index];
-    handle.editor = editor;
-    shortcuts.switchEditor(editor);
-    updateLayerInteractivity();
-    const ToolCtor = editorToolConstructors.get(editor) ?? activeToolCtor;
-    editor.setTool(new ToolCtor());
-    updateHistoryButtons();
-    if (layerSelect) layerSelect.value = String(index);
-  }
-
-  const handle: EditorHandle = {
+  const handleObject: EditorHandle = {
     editor,
     editors,
-    activateLayer,
+    activateLayer(index: number) {
+      layerManager.activateLayer(index);
+    },
     destroy() {
       listeners.forEach((fn) => fn());
       shortcuts.destroy();
       editors.forEach((e) => e.destroy());
+      layerManager.destroy();
     },
   };
+  handle = handleObject;
   recordColor(colorPicker.value);
   updateHistoryButtons();
-  return handle;
+  return handleObject;
 }

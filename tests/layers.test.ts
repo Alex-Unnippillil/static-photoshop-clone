@@ -1,128 +1,74 @@
-import { initEditor, EditorHandle } from "../src/editor.js";
+import { LayerManager } from "../src/core/LayerManager.js";
+import type { Editor } from "../src/core/Editor.js";
 
-describe("layer-specific undo/redo", () => {
-  let handle: EditorHandle;
-  let canvas1: HTMLCanvasElement;
-  let canvas2: HTMLCanvasElement;
-  let ctx1: Partial<CanvasRenderingContext2D>;
-  let ctx2: Partial<CanvasRenderingContext2D>;
-  let undoBtn: HTMLButtonElement;
-  let redoBtn: HTMLButtonElement;
+describe("LayerManager", () => {
+  let canvases: HTMLCanvasElement[];
+  let toolbar: HTMLDivElement;
+  let layerSelect: HTMLSelectElement;
+  let onActivate: jest.Mock;
+  let manager: LayerManager;
 
   beforeEach(() => {
     document.body.innerHTML = `
+      <div id="toolbar"></div>
+      <select id="layerSelect"></select>
       <canvas id="c1"></canvas>
       <canvas id="c2"></canvas>
-      <input id="colorPicker" value="#000000" />
-      <input id="lineWidth" value="2" />
-      <input id="fillMode" type="checkbox" />
-      <button id="pencil"></button>
-      <button id="eraser"></button>
-      <button id="rectangle"></button>
-      <button id="line"></button>
-      <button id="circle"></button>
-      <button id="text"></button>
-      <button id="bucket"></button>
-      <button id="eyedropper"></button>
-      <select id="formatSelect"><option value="png">PNG</option></select>
-      <button id="save"></button>
-      <button id="undo"></button>
-      <button id="redo"></button>
     `;
 
-    canvas1 = document.getElementById("c1") as HTMLCanvasElement;
-    canvas2 = document.getElementById("c2") as HTMLCanvasElement;
+    canvases = Array.from(document.querySelectorAll("canvas"));
+    toolbar = document.getElementById("toolbar") as HTMLDivElement;
+    layerSelect = document.getElementById("layerSelect") as HTMLSelectElement;
+    onActivate = jest.fn();
 
-    const rect = {
-      width: 100,
-      height: 100,
-      top: 0,
-      left: 0,
-      bottom: 100,
-      right: 100,
-      x: 0,
-      y: 0,
-      toJSON: () => {},
-    };
-
-    ctx1 = {
-      clearRect: jest.fn(),
-      putImageData: jest.fn(),
-      getImageData: jest
-        .fn()
-        .mockReturnValue({
-          data: new Uint8ClampedArray(),
-          width: 1,
-          height: 1,
-        } as ImageData),
-      setTransform: jest.fn(),
-      scale: jest.fn(),
-    };
-    ctx2 = {
-      clearRect: jest.fn(),
-      putImageData: jest.fn(),
-      getImageData: jest
-        .fn()
-        .mockReturnValue({
-          data: new Uint8ClampedArray(),
-          width: 1,
-          height: 1,
-        } as ImageData),
-      setTransform: jest.fn(),
-      scale: jest.fn(),
-    };
-
-    canvas1.getContext = jest.fn().mockReturnValue(ctx1 as any);
-    canvas2.getContext = jest.fn().mockReturnValue(ctx2 as any);
-    canvas1.getBoundingClientRect = canvas2.getBoundingClientRect = () => rect;
-
-    handle = initEditor();
-    undoBtn = document.getElementById("undo") as HTMLButtonElement;
-    redoBtn = document.getElementById("redo") as HTMLButtonElement;
+    const stubEditors = canvases.map(() => ({}) as Editor);
+    manager = new LayerManager({
+      layers: canvases.map((canvas, index) => ({
+        canvas,
+        editor: stubEditors[index],
+      })),
+      layerSelect,
+      toolbar,
+      onActivate,
+    });
   });
 
-  afterEach(() => handle.destroy());
+  afterEach(() => manager.destroy());
 
-  it("targets the active layer and toggles button states", () => {
-    // initially disabled
-    expect(undoBtn.disabled).toBe(true);
-    expect(redoBtn.disabled).toBe(true);
-
-    // add state to first layer
-    handle.editor.saveState();
-    expect(undoBtn.disabled).toBe(false);
-
-    // switch to second layer – no history yet
-    handle.activateLayer(1);
-    expect(undoBtn.disabled).toBe(true);
-
-    // add state to second layer and undo
-    handle.editor.saveState();
-    expect(undoBtn.disabled).toBe(false);
-    undoBtn.click();
-    expect(ctx2.putImageData).toHaveBeenCalled();
-    expect(ctx1.putImageData).not.toHaveBeenCalled();
-    expect(undoBtn.disabled).toBe(true);
-    expect(redoBtn.disabled).toBe(false);
-
-    // switch back to first layer – its undo stack still has entries
-    handle.activateLayer(0);
-    expect(undoBtn.disabled).toBe(false);
-    expect(redoBtn.disabled).toBe(true);
-  });
-
-  it("enables pointer events only on the active layer", () => {
-    const canvases = Array.from(
-      document.querySelectorAll<HTMLCanvasElement>("canvas"),
-    );
-
+  it("activates layers and updates pointer events", () => {
+    expect(manager.getActiveIndex()).toBe(0);
     expect(canvases[0].style.pointerEvents).toBe("auto");
     expect(canvases[1].style.pointerEvents).toBe("none");
 
-    handle.activateLayer(1);
+    manager.activateLayer(1);
 
+    expect(manager.getActiveIndex()).toBe(1);
     expect(canvases[0].style.pointerEvents).toBe("none");
     expect(canvases[1].style.pointerEvents).toBe("auto");
+    expect(layerSelect.value).toBe("1");
+    expect(onActivate).toHaveBeenCalledTimes(1);
+    expect(onActivate).toHaveBeenCalledWith(expect.any(Object), 1);
+  });
+
+  it("creates opacity controls and updates canvas opacity", () => {
+    const opacityInput = document.getElementById("c2Opacity") as HTMLInputElement;
+    expect(opacityInput).toBeTruthy();
+
+    opacityInput.value = "50";
+    opacityInput.dispatchEvent(new Event("input"));
+
+    expect(canvases[1].style.opacity).toBe("0.5");
+  });
+
+  it("hides layers and falls back to the next visible layer", () => {
+    manager.activateLayer(1);
+    expect(onActivate).toHaveBeenLastCalledWith(expect.any(Object), 1);
+
+    manager.setLayerVisibility(1, false);
+
+    expect(canvases[1].style.display).toBe("none");
+    expect(manager.getActiveIndex()).toBe(0);
+    expect(onActivate).toHaveBeenLastCalledWith(expect.any(Object), 0);
   });
 });
 

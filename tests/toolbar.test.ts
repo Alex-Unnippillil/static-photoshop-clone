@@ -6,6 +6,7 @@ import { LineTool } from "../src/tools/LineTool.js";
 import { CircleTool } from "../src/tools/CircleTool.js";
 import { TextTool } from "../src/tools/TextTool.js";
 import { EyedropperTool } from "../src/tools/EyedropperTool.js";
+import { LassoTool } from "../src/tools/LassoTool.js";
 
 describe("toolbar controls", () => {
   let handle: EditorHandle;
@@ -25,6 +26,7 @@ describe("toolbar controls", () => {
       <button id="rectangle"></button>
       <button id="line"></button>
       <button id="circle"></button>
+      <button id="lasso"></button>
       <button id="text"></button>
       <button id="eyedropper"></button>
       <button id="bucket"></button>
@@ -94,11 +96,14 @@ describe("toolbar controls", () => {
       (document.getElementById("circle") as HTMLButtonElement).click();
       expect(spy.mock.calls[4][0]).toBeInstanceOf(CircleTool);
 
+      (document.getElementById("lasso") as HTMLButtonElement).click();
+      expect(spy.mock.calls[5][0]).toBeInstanceOf(LassoTool);
+
       (document.getElementById("text") as HTMLButtonElement).click();
-      expect(spy.mock.calls[5][0]).toBeInstanceOf(TextTool);
+      expect(spy.mock.calls[6][0]).toBeInstanceOf(TextTool);
 
       (document.getElementById("eyedropper") as HTMLButtonElement).click();
-      expect(spy.mock.calls[6][0]).toBeInstanceOf(EyedropperTool);
+      expect(spy.mock.calls[7][0]).toBeInstanceOf(EyedropperTool);
     });
 
     it("routes tool changes to the selected layer", () => {

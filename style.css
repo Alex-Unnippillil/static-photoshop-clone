@@ -47,6 +47,12 @@ body {
   gap: 8px;
 }
 
+#autosaveStatus {
+  flex: 1 1 100%;
+  font-size: 0.9rem;
+  color: #555;
+}
+
 .tool-button {
   width: 32px;
   height: 32px;

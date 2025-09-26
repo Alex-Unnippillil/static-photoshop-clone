@@ -1,4 +1,4 @@
-import { Editor } from "./core/Editor.js";
+import { Editor, DEFAULT_HISTORY_LIMIT } from "./core/Editor.js";
 import { Shortcuts } from "./core/Shortcuts.js";
 import { PencilTool } from "./tools/PencilTool.js";
 import { EraserTool } from "./tools/EraserTool.js";
@@ -30,14 +30,23 @@ export interface EditorHandle {
   destroy(): void;
 }
 
+export interface EditorInitOptions {
+  /** Maximum number of undo/redo states; defaults to {@link DEFAULT_HISTORY_LIMIT}. */
+  historyLimit?: number;
+}
+
 /**
  * Initialize the editor by wiring up DOM controls and returning an
  * {@link EditorHandle} that allows tests or callers to tear down the editor.
+ *
+ * @param options Optional configuration such as a custom history limit.
  */
-export function initEditor(): EditorHandle {
+export function initEditor(options: EditorInitOptions = {}): EditorHandle {
   const canvases = Array.from(
     document.querySelectorAll<HTMLCanvasElement>("canvas"),
   );
+
+  const historyLimit = options.historyLimit ?? DEFAULT_HISTORY_LIMIT;
 
   const toolConstructors: Record<string, new () => Tool> = {
     pencil: PencilTool,
@@ -212,6 +221,7 @@ export function initEditor(): EditorHandle {
         },
         fontFamily ?? undefined,
         fontSize ?? undefined,
+        { historyLimit },
       );
       editors.push(e);
     } catch {

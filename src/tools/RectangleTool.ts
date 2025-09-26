@@ -20,15 +20,7 @@ export class RectangleTool extends DrawingTool {
     ctx.putImageData(this.imageData, 0, 0);
     this.applyStroke(editor.ctx, editor);
 
-    const x = e.offsetX;
-    const y = e.offsetY;
-    let width = x - this.startX;
-    let height = y - this.startY;
-    if (e.shiftKey) {
-      const size = Math.min(Math.abs(width), Math.abs(height));
-      width = size * Math.sign(width);
-      height = size * Math.sign(height);
-    }
+    const { width, height } = this.getDimensions(e);
     ctx.strokeRect(this.startX, this.startY, width, height);
     if (editor.fill) {
       ctx.fillRect(this.startX, this.startY, width, height);
@@ -42,19 +34,39 @@ export class RectangleTool extends DrawingTool {
     }
 
     this.applyStroke(editor.ctx, editor);
-    const x = e.offsetX;
-    const y = e.offsetY;
-    let width = x - this.startX;
-    let height = y - this.startY;
+    const { width, height } = this.getDimensions(e);
+    ctx.strokeRect(this.startX, this.startY, width, height);
+    if (editor.fill) {
+      ctx.fillRect(this.startX, this.startY, width, height);
+    }
+    this.recordDiff(editor, width, height);
+    this.imageData = null;
+  }
+
+  private getDimensions(e: PointerEvent): { width: number; height: number } {
+    let width = e.offsetX - this.startX;
+    let height = e.offsetY - this.startY;
     if (e.shiftKey) {
       const size = Math.min(Math.abs(width), Math.abs(height));
       width = size * Math.sign(width);
       height = size * Math.sign(height);
     }
-    ctx.strokeRect(this.startX, this.startY, width, height);
-    if (editor.fill) {
-      ctx.fillRect(this.startX, this.startY, width, height);
-    }
-    this.imageData = null;
+    return { width, height };
+  }
+
+  private recordDiff(editor: Editor, width: number, height: number) {
+    const padding = Math.ceil(editor.lineWidthValue / 2) + 2;
+    const endX = this.startX + width;
+    const endY = this.startY + height;
+    const minX = Math.min(this.startX, endX);
+    const maxX = Math.max(this.startX, endX);
+    const minY = Math.min(this.startY, endY);
+    const maxY = Math.max(this.startY, endY);
+    editor.recordDiff({
+      x: minX - padding,
+      y: minY - padding,
+      width: Math.max(1, maxX - minX + padding * 2),
+      height: Math.max(1, maxY - minY + padding * 2),
+    });
   }
 }

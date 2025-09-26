@@ -1,5 +1,5 @@
 export class Editor {
-    constructor(canvas, colorPicker, lineWidth, fillMode, onChange, fontFamily, fontSize) {
+    constructor(canvas, colorPicker, lineWidth, fillMode, onChange, fontFamily, fontSize, fontWeight, fontStyleControl, textAlignControl, textMultilineToggle) {
         this.undoStack = [];
         this.redoStack = [];
         this.currentTool = null;
@@ -32,6 +32,10 @@ export class Editor {
         this.onChange = onChange;
         this.fontFamily = fontFamily ?? null;
         this.fontSize = fontSize ?? null;
+        this.fontWeight = fontWeight ?? null;
+        this.fontStyleControl = fontStyleControl ?? null;
+        this.textAlignControl = textAlignControl ?? null;
+        this.textMultilineToggle = textMultilineToggle ?? null;
         this.adjustForPixelRatio();
         window.addEventListener("resize", this.handleResize);
         this.canvas.addEventListener("pointerdown", this.handlePointerDown);
@@ -97,6 +101,22 @@ export class Editor {
     }
     get fontSizeValue() {
         return parseInt(this.fontSize?.value ?? "", 10) || 16;
+    }
+    get fontWeightValue() {
+        return this.fontWeight?.value || "normal";
+    }
+    get fontStyleValue() {
+        return this.fontStyleControl?.value || "normal";
+    }
+    get textAlignValue() {
+        const value = this.textAlignControl?.value || "left";
+        if (value === "center" || value === "right" || value === "left") {
+            return value;
+        }
+        return "left";
+    }
+    get textMultiline() {
+        return Boolean(this.textMultilineToggle?.checked ?? true);
     }
     /**
      * Remove all event listeners registered by the editor.

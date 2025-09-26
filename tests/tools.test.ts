@@ -15,6 +15,16 @@ describe("additional tools", () => {
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
       <input id="fillMode" type="checkbox" />
+      <select id="fontFamily"><option value="sans-serif">sans-serif</option></select>
+      <input id="fontSize" value="16" />
+      <select id="fontWeight"><option value="normal">normal</option></select>
+      <select id="fontStyle"><option value="normal">normal</option></select>
+      <select id="textAlign">
+        <option value="left">left</option>
+        <option value="center">center</option>
+        <option value="right">right</option>
+      </select>
+      <input id="textMultiline" type="checkbox" />
     `;
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
     (canvas as any).setPointerCapture = jest.fn();
@@ -37,6 +47,13 @@ describe("additional tools", () => {
           height: 1,
         } as ImageData),
       putImageData: jest.fn(),
+      save: jest.fn(),
+      restore: jest.fn(),
+      measureText: jest.fn().mockReturnValue({
+        width: 40,
+        actualBoundingBoxAscent: 12,
+        actualBoundingBoxDescent: 4,
+      }),
     };
     canvas.getContext = jest
       .fn()
@@ -46,6 +63,13 @@ describe("additional tools", () => {
       document.getElementById("colorPicker") as HTMLInputElement,
       document.getElementById("lineWidth") as HTMLInputElement,
       document.getElementById("fillMode") as HTMLInputElement,
+      undefined,
+      document.getElementById("fontFamily") as HTMLSelectElement,
+      document.getElementById("fontSize") as HTMLInputElement,
+      document.getElementById("fontWeight") as HTMLSelectElement,
+      document.getElementById("fontStyle") as HTMLSelectElement,
+      document.getElementById("textAlign") as HTMLSelectElement,
+      document.getElementById("textMultiline") as HTMLInputElement,
     );
   });
 
@@ -79,21 +103,23 @@ describe("additional tools", () => {
 
   it("text tool commits text on Enter", () => {
     const tool = new TextTool();
+    const multilineToggle = document.getElementById("textMultiline") as HTMLInputElement;
+    multilineToggle.checked = false;
     tool.onPointerDown({ offsetX: 1, offsetY: 2 } as PointerEvent, editor);
     const textarea = document.querySelector("textarea") as HTMLTextAreaElement;
     textarea.value = "Hi";
     textarea.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
-    expect(ctx.fillText).toHaveBeenCalledWith("Hi", 1, 2);
+    expect(ctx.fillText).toHaveBeenCalledWith("Hi", 1, 14);
     expect(document.querySelector("textarea")).toBeNull();
   });
 
-  it("text tool cancels on blur", () => {
+  it("text tool commits on blur", () => {
     const tool = new TextTool();
     tool.onPointerDown({ offsetX: 1, offsetY: 2 } as PointerEvent, editor);
     const textarea = document.querySelector("textarea") as HTMLTextAreaElement;
     textarea.value = "Blur";
     textarea.dispatchEvent(new Event("blur"));
-    expect(ctx.fillText).not.toHaveBeenCalled();
+    expect(ctx.fillText).toHaveBeenCalledWith("Blur", 1, 14);
     expect(document.querySelector("textarea")).toBeNull();
   });
 

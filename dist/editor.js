@@ -71,6 +71,10 @@ export function initEditor() {
     const fillMode = document.getElementById("fillMode");
     const fontFamily = document.getElementById("fontFamily");
     const fontSize = document.getElementById("fontSize");
+    const fontWeight = document.getElementById("fontWeight");
+    const fontStyleControl = document.getElementById("fontStyle");
+    const textAlignControl = document.getElementById("textAlign");
+    const textMultilineToggle = document.getElementById("textMultiline");
     const layerSelect = document.getElementById("layerSelect");
     const toolbar = document.getElementById("toolbar") || document.body;
     const saveBtn = document.getElementById("save");
@@ -166,7 +170,7 @@ export function initEditor() {
         try {
             const e = new Editor(c, colorPicker, lineWidth, fillMode, () => {
                 updateHistoryButtons();
-            }, fontFamily ?? undefined, fontSize ?? undefined);
+            }, fontFamily ?? undefined, fontSize ?? undefined, fontWeight ?? undefined, fontStyleControl ?? undefined, textAlignControl ?? undefined, textMultilineToggle ?? undefined);
             editors.push(e);
         }
         catch {

@@ -119,6 +119,17 @@ Open `index.html` in your browser to use the app.
 
 Build the project and publish the `dist` directory to the `gh-pages` branch to deploy on GitHub Pages.
 
+### Creating a Release Tag
+
+1. Ensure all desired changes are merged into `main`.
+2. Run `npm ci && npm run build` locally to verify the build succeeds.
+3. Create an annotated tag following the `vX.Y.Z` convention, for example:
+   ```bash
+   git tag -a v1.2.3 -m "Release v1.2.3"
+   git push origin v1.2.3
+   ```
+4. Pushing the tag triggers the Pages deployment workflow, which builds the project and publishes the `dist/` directory.
+
 ## Lifecycle
 
 `initEditor()` returns an object containing the editor instance and a `destroy` function.

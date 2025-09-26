@@ -53,15 +53,24 @@ describe("bucket tool integration", () => {
     handle.destroy();
   });
 
-  it("activates bucket tool from toolbar", () => {
+  const flushPromises = async () => {
+    await Promise.resolve();
+    await Promise.resolve();
+  };
+
+  it("activates bucket tool from toolbar", async () => {
     const spy = jest.spyOn(handle.editor, "setTool");
+    await handle.loadTool("bucket");
     (document.getElementById("bucket") as HTMLButtonElement).click();
+    await flushPromises();
     expect(spy.mock.calls[0][0]).toBeInstanceOf(BucketFillTool);
   });
 
-  it("activates bucket tool via shortcut", () => {
+  it("activates bucket tool via shortcut", async () => {
     const spy = jest.spyOn(handle.editor, "setTool");
+    await handle.loadTool("bucket");
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "b" }));
+    await flushPromises();
     expect(spy.mock.calls[0][0]).toBeInstanceOf(BucketFillTool);
   });
 });

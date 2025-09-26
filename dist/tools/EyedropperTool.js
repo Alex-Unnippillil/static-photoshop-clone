@@ -3,9 +3,7 @@
  * the editor's color picker to the sampled value.
  */
 export class EyedropperTool {
-    constructor() {
-        this.cursor = "crosshair";
-    }
+    cursor = "crosshair";
     onPointerDown(e, editor) {
         const { width, height } = editor.canvas;
         const dpr = window.devicePixelRatio || 1;

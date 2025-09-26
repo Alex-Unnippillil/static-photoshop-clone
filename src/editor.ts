@@ -5,16 +5,13 @@ import { EraserTool } from "./tools/EraserTool.js";
 import { RectangleTool } from "./tools/RectangleTool.js";
 import { LineTool } from "./tools/LineTool.js";
 import { CircleTool } from "./tools/CircleTool.js";
-import { TextTool } from "./tools/TextTool.js";
-import { BucketFillTool } from "./tools/BucketFillTool.js";
-import { EyedropperTool } from "./tools/EyedropperTool.js";
 import type { Tool } from "./tools/Tool.js";
 
 /** Utility to listen to events and auto-remove on destroy. */
 function listen<T extends Event>(
   el: HTMLElement | null,
   type: string,
-  handler: (e: T) => void,
+  handler: (e: T) => void | Promise<void>,
   list: Array<() => void>,
 ) {
   if (!el) return;
@@ -23,10 +20,13 @@ function listen<T extends Event>(
   list.push(() => el.removeEventListener(type, wrapped));
 }
 
+type ToolCtor = new () => Tool;
+
 export interface EditorHandle {
   editor: Editor;
   editors: Editor[];
   activateLayer(index: number): void;
+  loadTool(id: string): Promise<void>;
   destroy(): void;
 }
 
@@ -39,30 +39,95 @@ export function initEditor(): EditorHandle {
     document.querySelectorAll<HTMLCanvasElement>("canvas"),
   );
 
-  const toolConstructors: Record<string, new () => Tool> = {
+  const eagerToolConstructors: Record<string, ToolCtor> = {
     pencil: PencilTool,
     eraser: EraserTool,
     rectangle: RectangleTool,
     line: LineTool,
     circle: CircleTool,
-    text: TextTool,
-    bucket: BucketFillTool,
-    eyedropper: EyedropperTool,
+  };
+
+  const toolLoaders: Record<string, () => Promise<ToolCtor>> = {
+    pencil: async () => PencilTool,
+    eraser: async () => EraserTool,
+    rectangle: async () => RectangleTool,
+    line: async () => LineTool,
+    circle: async () => CircleTool,
+    text: async () => (await import("./tools/TextTool.js")).TextTool,
+    bucket: async () => (await import("./tools/BucketFillTool.js")).BucketFillTool,
+    eyedropper: async () =>
+      (await import("./tools/EyedropperTool.js")).EyedropperTool,
   };
 
   const toolButtons: Record<string, HTMLButtonElement> = {};
-  const constructorToId = new Map<new () => Tool, string>();
-  const editorToolConstructors = new Map<Editor, new () => Tool>();
-  let activeToolCtor: new () => Tool = PencilTool;
+  const constructorToId = new Map<ToolCtor, string>();
+  const editorToolConstructors = new Map<Editor, ToolCtor>();
+  const loadedToolConstructors = new Map<string, ToolCtor>();
+  const loadingToolConstructors = new Map<string, Promise<ToolCtor>>();
+  let activeToolCtor: ToolCtor = PencilTool;
   let activeLayerIndex = 0;
-  Object.entries(toolConstructors).forEach(([id, Ctor]) => {
+  Object.entries(toolLoaders).forEach(([id]) => {
     const btn = document.getElementById(id) as HTMLButtonElement | null;
     if (!btn) {
       throw new Error(`Missing #${id} button`);
     }
     toolButtons[id] = btn;
+    if (!(id in eagerToolConstructors)) {
+      btn.dataset.placeholder = btn.dataset.placeholder ?? "Loads on demand";
+    }
+  });
+
+  Object.entries(eagerToolConstructors).forEach(([id, Ctor]) => {
+    loadedToolConstructors.set(id, Ctor);
     constructorToId.set(Ctor, id);
   });
+
+  async function ensureToolLoaded(id: string): Promise<ToolCtor> {
+    const cached = loadedToolConstructors.get(id);
+    if (cached) {
+      return cached;
+    }
+    const existingPromise = loadingToolConstructors.get(id);
+    if (existingPromise) {
+      return existingPromise;
+    }
+    const loader = toolLoaders[id];
+    if (!loader) {
+      throw new Error(`Unknown tool: ${id}`);
+    }
+    const btn = toolButtons[id];
+    const originalLabel = btn?.textContent ?? null;
+    if (btn) {
+      btn.disabled = true;
+      btn.dataset.loading = "true";
+      if (!btn.dataset.loadingText) {
+        btn.dataset.loadingText = "Loading...";
+      }
+      btn.textContent = btn.dataset.loadingText;
+    }
+    const promise = loader()
+      .then((Ctor) => {
+        loadedToolConstructors.set(id, Ctor);
+        constructorToId.set(Ctor, id);
+        return Ctor;
+      })
+      .catch((error) => {
+        loadingToolConstructors.delete(id);
+        throw error;
+      })
+      .finally(() => {
+        loadingToolConstructors.delete(id);
+        if (btn) {
+          btn.disabled = false;
+          btn.dataset.loading = "false";
+          if (originalLabel !== null) {
+            btn.textContent = originalLabel;
+          }
+        }
+      });
+    loadingToolConstructors.set(id, promise);
+    return promise;
+  }
 
   let activeButton: HTMLButtonElement | null = null;
   const setActiveButton = (btn: HTMLButtonElement | null) => {
@@ -71,12 +136,8 @@ export function initEditor(): EditorHandle {
     activeButton = btn;
   };
   const buttonForTool = (tool: Tool): HTMLButtonElement | null => {
-    for (const [id, ToolCtor] of Object.entries(toolConstructors)) {
-      if (tool instanceof ToolCtor) {
-        return toolButtons[id];
-      }
-    }
-    return null;
+    const id = constructorToId.get(tool.constructor as ToolCtor);
+    return id ? toolButtons[id] ?? null : null;
   };
 
   const updateLayerInteractivity = () => {
@@ -245,11 +306,19 @@ export function initEditor(): EditorHandle {
   updateLayerInteractivity();
 
   // keyboard shortcuts
-  const shortcuts = new Shortcuts(editor);
+  const shortcuts = new Shortcuts(editor, ensureToolLoaded);
 
   // map button id to tool constructor
-  Object.entries(toolConstructors).forEach(([id, ToolCtor]) =>
-    listen(toolButtons[id], "click", () => editor.setTool(new ToolCtor()), listeners),
+  Object.keys(toolLoaders).forEach((id) =>
+    listen(toolButtons[id], "click", async () => {
+      const cachedCtor = loadedToolConstructors.get(id);
+      if (cachedCtor) {
+        editor.setTool(new cachedCtor());
+        return;
+      }
+      const ToolCtor = await ensureToolLoaded(id);
+      editor.setTool(new ToolCtor());
+    }, listeners),
   );
 
   listen(
@@ -386,6 +455,9 @@ export function initEditor(): EditorHandle {
     editor,
     editors,
     activateLayer,
+    async loadTool(id: string) {
+      await ensureToolLoaded(id);
+    },
     destroy() {
       listeners.forEach((fn) => fn());
       shortcuts.destroy();

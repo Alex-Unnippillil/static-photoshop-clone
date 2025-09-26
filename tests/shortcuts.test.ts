@@ -61,27 +61,39 @@ describe("keyboard shortcuts", () => {
     handle.destroy();
   });
 
-  it("switches tools with letter keys", () => {
+  const flushPromises = async () => {
+    await Promise.resolve();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  };
+
+  it("switches tools with letter keys", async () => {
     const spy = jest.spyOn(handle.editor, "setTool");
-    const cases: [string, any][] = [
-      ["r", RectangleTool],
-      ["p", PencilTool],
-      ["e", EraserTool],
-      ["i", EyedropperTool],
-      ["l", LineTool],
-      ["c", CircleTool],
-      ["t", TextTool],
-      ["b", BucketFillTool],
+    const cases: Array<[string, any, string]> = [
+      ["r", RectangleTool, "rectangle"],
+      ["p", PencilTool, "pencil"],
+      ["e", EraserTool, "eraser"],
+      ["i", EyedropperTool, "eyedropper"],
+      ["l", LineTool, "line"],
+      ["c", CircleTool, "circle"],
+      ["t", TextTool, "text"],
+      ["b", BucketFillTool, "bucket"],
     ];
 
-    cases.forEach(([key, ToolClass], index) => {
+    const lazyToolIds = new Set(["text", "bucket", "eyedropper"]);
+
+    for (const [key, ToolClass, toolId] of cases) {
+      if (lazyToolIds.has(toolId)) {
+        await handle.loadTool(toolId);
+      }
       const event = new KeyboardEvent("keydown", { key, cancelable: true });
       const prevent = jest.spyOn(event, "preventDefault");
       document.dispatchEvent(event);
-      expect(spy.mock.calls[index][0]).toBeInstanceOf(ToolClass);
+      await flushPromises();
+      const lastCall = spy.mock.calls[spy.mock.calls.length - 1];
+      expect(lastCall?.[0]).toBeInstanceOf(ToolClass);
       expect(prevent).toHaveBeenCalled();
       expect(event.defaultPrevented).toBe(true);
-    });
+    }
   });
 
   it("performs undo and redo with shortcuts", () => {
@@ -127,7 +139,7 @@ describe("keyboard shortcuts", () => {
     expect(redoEventCmdShiftZ.defaultPrevented).toBe(true);
   });
 
-  it("switches active editor when requested", () => {
+  it("switches active editor when requested", async () => {
     const e1 = {
       setTool: jest.fn(),
       undo: jest.fn(),
@@ -139,12 +151,14 @@ describe("keyboard shortcuts", () => {
       redo: jest.fn(),
     } as unknown as Editor;
 
-    const shortcuts = new Shortcuts(e1);
+    const shortcuts = new Shortcuts(e1, async () => PencilTool);
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "p" }));
+    await flushPromises();
     expect(e1.setTool).toHaveBeenCalled();
 
     shortcuts.switchEditor(e2);
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "p" }));
+    await flushPromises();
     expect(e2.setTool).toHaveBeenCalled();
     shortcuts.destroy();
   });

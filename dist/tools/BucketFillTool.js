@@ -3,6 +3,7 @@
  * Uses an iterative flood fill with typed-array backed queue to reduce memory churn.
  */
 export class BucketFillTool {
+    static MAX_FILL_PIXELS = 1_000_000;
     onPointerDown(e, editor) {
         const ctx = editor.ctx;
         const image = ctx.getImageData(0, 0, editor.canvas.width, editor.canvas.height);
@@ -96,4 +97,3 @@ export class BucketFillTool {
         return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
     }
 }
-BucketFillTool.MAX_FILL_PIXELS = 1000000;

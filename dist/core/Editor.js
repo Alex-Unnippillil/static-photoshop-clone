@@ -1,26 +1,16 @@
 export class Editor {
+    canvas;
+    ctx;
+    undoStack = [];
+    redoStack = [];
+    currentTool = null;
+    colorPicker;
+    lineWidth;
+    fillMode;
+    fontFamily;
+    fontSize;
+    onChange;
     constructor(canvas, colorPicker, lineWidth, fillMode, onChange, fontFamily, fontSize) {
-        this.undoStack = [];
-        this.redoStack = [];
-        this.currentTool = null;
-        this.handlePointerDown = (e) => {
-            // Capture the pointer once before recording canvas state
-            this.canvas.setPointerCapture(e.pointerId);
-            this.saveState();
-            this.currentTool?.onPointerDown(e, this);
-        };
-        this.handlePointerMove = (e) => {
-            this.currentTool?.onPointerMove(e, this);
-        };
-        this.handlePointerUp = (e) => {
-            this.currentTool?.onPointerUp(e, this);
-            this.canvas.releasePointerCapture(e.pointerId);
-        };
-        this.handleResize = () => {
-            const data = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-            this.adjustForPixelRatio();
-            this.ctx.putImageData(data, 0, 0);
-        };
         this.canvas = canvas;
         const ctx = canvas.getContext("2d");
         if (!ctx)
@@ -43,6 +33,19 @@ export class Editor {
         this.currentTool = tool;
         this.canvas.style.cursor = tool.cursor || "crosshair";
     }
+    handlePointerDown = (e) => {
+        // Capture the pointer once before recording canvas state
+        this.canvas.setPointerCapture(e.pointerId);
+        this.saveState();
+        this.currentTool?.onPointerDown(e, this);
+    };
+    handlePointerMove = (e) => {
+        this.currentTool?.onPointerMove(e, this);
+    };
+    handlePointerUp = (e) => {
+        this.currentTool?.onPointerUp(e, this);
+        this.canvas.releasePointerCapture(e.pointerId);
+    };
     adjustForPixelRatio() {
         const dpr = window.devicePixelRatio || 1;
         const rect = this.canvas.getBoundingClientRect();
@@ -52,6 +55,11 @@ export class Editor {
         // Reset any existing transforms
         this.ctx.scale(1, 1);
     }
+    handleResize = () => {
+        const data = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+        this.adjustForPixelRatio();
+        this.ctx.putImageData(data, 0, 0);
+    };
     saveState() {
         this.undoStack.push(this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height));
         if (this.undoStack.length > 50)

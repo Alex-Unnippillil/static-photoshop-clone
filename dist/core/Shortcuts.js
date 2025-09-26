@@ -1,26 +1,34 @@
-import { PencilTool } from "../tools/PencilTool.js";
-import { RectangleTool } from "../tools/RectangleTool.js";
-import { LineTool } from "../tools/LineTool.js";
-import { CircleTool } from "../tools/CircleTool.js";
-import { TextTool } from "../tools/TextTool.js";
-import { EraserTool } from "../tools/EraserTool.js";
-import { BucketFillTool } from "../tools/BucketFillTool.js";
-import { EyedropperTool } from "../tools/EyedropperTool.js";
+const keyToToolId = {
+    p: "pencil",
+    r: "rectangle",
+    l: "line",
+    c: "circle",
+    e: "eraser",
+    t: "text",
+    b: "bucket",
+    i: "eyedropper",
+};
 /**
  * Keyboard shortcuts handler for the editor.
  * Maps specific key presses to tool changes or editor actions.
  */
 export class Shortcuts {
-    constructor(editor) {
+    handler;
+    editor;
+    loadTool;
+    constructor(editor, loadTool) {
         this.editor = editor;
-        this.handler = (e) => this.onKeyDown(e);
+        this.loadTool = loadTool;
+        this.handler = (e) => {
+            void this.onKeyDown(e);
+        };
         document.addEventListener("keydown", this.handler);
     }
     /** Swap the editor that receives subsequent shortcut actions. */
     switchEditor(newEditor) {
         this.editor = newEditor;
     }
-    onKeyDown(e) {
+    async onKeyDown(e) {
         if (e.ctrlKey || e.metaKey) {
             const key = e.key.toLowerCase();
             if (key === "z") {
@@ -38,39 +46,17 @@ export class Shortcuts {
             }
             return;
         }
-        switch (e.key.toLowerCase()) {
-            case "p":
-                e.preventDefault();
-                this.editor.setTool(new PencilTool());
-                break;
-            case "r":
-                e.preventDefault();
-                this.editor.setTool(new RectangleTool());
-                break;
-            case "l":
-                e.preventDefault();
-                this.editor.setTool(new LineTool());
-                break;
-            case "c":
-                e.preventDefault();
-                this.editor.setTool(new CircleTool());
-                break;
-            case "e":
-                e.preventDefault();
-                this.editor.setTool(new EraserTool());
-                break;
-            case "t":
-                e.preventDefault();
-                this.editor.setTool(new TextTool());
-                break;
-            case "b":
-                e.preventDefault();
-                this.editor.setTool(new BucketFillTool());
-                break;
-            case "i":
-                e.preventDefault();
-                this.editor.setTool(new EyedropperTool());
-                break;
+        const key = e.key.toLowerCase();
+        const toolId = keyToToolId[key];
+        if (toolId) {
+            e.preventDefault();
+            try {
+                const ToolCtor = await this.loadTool(toolId);
+                this.editor.setTool(new ToolCtor());
+            }
+            catch {
+                /* ignore failed dynamic import */
+            }
         }
     }
     /** Remove keyboard listeners. */

@@ -1,11 +1,8 @@
 import { DrawingTool } from "./DrawingTool.js";
 export class RectangleTool extends DrawingTool {
-    constructor() {
-        super(...arguments);
-        this.startX = 0;
-        this.startY = 0;
-        this.imageData = null;
-    }
+    startX = 0;
+    startY = 0;
+    imageData = null;
     onPointerDown(e, editor) {
         this.startX = e.offsetX;
         this.startY = e.offsetY;

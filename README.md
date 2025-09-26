@@ -75,8 +75,8 @@ For additional layers, opacity inputs with IDs like `layer2Opacity` control
 the transparency of each canvas; these are created automatically if absent.
 
 Call `initEditor()` only after the DOM has been populated with these elements;
-the function returns an {@link EditorHandle} with a `destroy` method for
-cleanup.
+the function returns an {@link EditorHandle} with helpers such as `loadTool`
+for preloading lazily bundled tools and a `destroy` method for cleanup.
 
 Layer selectors and opacity sliders are generated dynamically, enabling
 switching between layers and adjusting their transparency on the fly.

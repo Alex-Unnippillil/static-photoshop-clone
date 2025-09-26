@@ -1,3 +1,4 @@
+import { DevicePixelRatioService } from "../src/core/DevicePixelRatioService.js";
 import { Editor } from "../src/core/Editor.js";
 import { BucketFillTool } from "../src/tools/BucketFillTool.js";
 
@@ -5,6 +6,7 @@ describe("BucketFillTool", () => {
   let canvas: HTMLCanvasElement;
   let ctx: Partial<CanvasRenderingContext2D>;
   let editor: Editor;
+  let dprService: DevicePixelRatioService;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -39,18 +41,41 @@ describe("BucketFillTool", () => {
       scale: jest.fn(),
     };
     canvas.getContext = jest.fn().mockReturnValue(ctx as CanvasRenderingContext2D);
+    canvas.getBoundingClientRect = () => ({
+      width: 100,
+      height: 100,
+      top: 0,
+      left: 0,
+      bottom: 100,
+      right: 100,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    });
 
+    dprService = new DevicePixelRatioService();
     editor = new Editor(
       canvas,
       document.getElementById("colorPicker") as HTMLInputElement,
       document.getElementById("lineWidth") as HTMLInputElement,
       document.getElementById("fillMode") as HTMLInputElement,
+      undefined,
+      undefined,
+      dprService,
     );
+  });
+
+  afterEach(() => {
+    editor.destroy();
+    dprService.destroy();
   });
 
   it("fills enclosed areas with the selected color", () => {
     const tool = new BucketFillTool();
-    tool.onPointerDown({ offsetX: 2, offsetY: 2 } as PointerEvent, editor);
+    tool.onPointerDown(
+      { offsetX: 2, offsetY: 2, clientX: 2, clientY: 2 } as PointerEvent,
+      editor,
+    );
 
     const image = (ctx.getImageData as jest.Mock).mock.results[0].value as ImageData;
     const center = (2 * 5 + 2) * 4;
@@ -81,7 +106,10 @@ describe("BucketFillTool", () => {
     (ctx.getImageData as jest.Mock).mockReturnValueOnce(image);
 
     const tool = new BucketFillTool();
-    tool.onPointerDown({ offsetX: 0, offsetY: 0 } as PointerEvent, editor);
+    tool.onPointerDown(
+      { offsetX: 0, offsetY: 0, clientX: 0, clientY: 0 } as PointerEvent,
+      editor,
+    );
 
     const last = (width * height - 1) * 4;
     expect(image.data[last]).toBe(0);

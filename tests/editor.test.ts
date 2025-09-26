@@ -84,6 +84,8 @@ describe("editor toolbar controls", () => {
     const event = new MouseEvent(type, { bubbles: true } as MouseEventInit);
     Object.defineProperty(event, "offsetX", { value: x });
     Object.defineProperty(event, "offsetY", { value: y });
+    Object.defineProperty(event, "clientX", { value: x });
+    Object.defineProperty(event, "clientY", { value: y });
     Object.defineProperty(event, "buttons", { value: buttons });
     Object.defineProperty(event, "pointerId", { value: 1 });
     canvas.dispatchEvent(event);

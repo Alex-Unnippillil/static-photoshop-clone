@@ -1,3 +1,4 @@
+import { DevicePixelRatioService } from "../src/core/DevicePixelRatioService.js";
 import { Editor } from "../src/core/Editor.js";
 import { TextTool } from "../src/tools/TextTool.js";
 
@@ -6,6 +7,7 @@ describe("TextTool", () => {
   let ctx: Partial<CanvasRenderingContext2D>;
   let canvas: HTMLCanvasElement;
   let mockImage: ImageData;
+  let dprService: DevicePixelRatioService;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -45,10 +47,10 @@ describe("TextTool", () => {
     canvas.getBoundingClientRect = () => ({
       left: 0,
       top: 0,
-      right: 0,
-      bottom: 0,
-      width: 0,
-      height: 0,
+      right: 100,
+      bottom: 100,
+      width: 100,
+      height: 100,
       x: 0,
       y: 0,
       toJSON: () => {},
@@ -65,6 +67,7 @@ describe("TextTool", () => {
       toJSON: () => {},
     });
 
+    dprService = new DevicePixelRatioService();
     editor = new Editor(
       canvas,
       document.getElementById("colorPicker") as HTMLInputElement,
@@ -73,16 +76,21 @@ describe("TextTool", () => {
       undefined,
       document.getElementById("fontFamily") as HTMLSelectElement,
       document.getElementById("fontSize") as HTMLInputElement,
+      dprService,
     );
   });
 
   afterEach(() => {
     editor.destroy();
+    dprService.destroy();
   });
 
   it("creates textarea overlay on pointer down", () => {
     const tool = new TextTool();
-    tool.onPointerDown({ offsetX: 10, offsetY: 20 } as PointerEvent, editor);
+    tool.onPointerDown(
+      { offsetX: 10, offsetY: 20, clientX: 10, clientY: 20 } as PointerEvent,
+      editor,
+    );
     const ta = document.querySelector("textarea") as HTMLTextAreaElement;
     expect(ta).toBeTruthy();
     expect(ta.style.left).toBe("10px");
@@ -101,7 +109,10 @@ describe("TextTool", () => {
 
   it("commits text on Enter", () => {
     const tool = new TextTool();
-    tool.onPointerDown({ offsetX: 5, offsetY: 6 } as PointerEvent, editor);
+    tool.onPointerDown(
+      { offsetX: 5, offsetY: 6, clientX: 5, clientY: 6 } as PointerEvent,
+      editor,
+    );
     const ta = document.querySelector("textarea") as HTMLTextAreaElement;
     ta.value = "hello";
     ta.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
@@ -112,7 +123,10 @@ describe("TextTool", () => {
 
   it("cancels text on Escape", () => {
     const tool = new TextTool();
-    tool.onPointerDown({ offsetX: 7, offsetY: 8 } as PointerEvent, editor);
+    tool.onPointerDown(
+      { offsetX: 7, offsetY: 8, clientX: 7, clientY: 8 } as PointerEvent,
+      editor,
+    );
     const ta = document.querySelector("textarea") as HTMLTextAreaElement;
     ta.value = "cancel";
     ta.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
@@ -123,7 +137,10 @@ describe("TextTool", () => {
   it("supports undo with a single step after committing text", () => {
     const tool = new TextTool();
     editor.saveState();
-    tool.onPointerDown({ offsetX: 9, offsetY: 10 } as PointerEvent, editor);
+    tool.onPointerDown(
+      { offsetX: 9, offsetY: 10, clientX: 9, clientY: 10 } as PointerEvent,
+      editor,
+    );
     const ta = document.querySelector("textarea") as HTMLTextAreaElement;
     ta.value = "undo";
     ta.dispatchEvent(

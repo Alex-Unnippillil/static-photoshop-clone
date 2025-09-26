@@ -1,4 +1,9 @@
 import { Tool } from "../tools/Tool.js";
+import {
+  CanvasDprHandle,
+  DevicePixelRatioService,
+  NormalizedPointerEvent,
+} from "./DevicePixelRatioService.js";
 
 export class Editor {
   canvas: HTMLCanvasElement;
@@ -6,6 +11,8 @@ export class Editor {
   private undoStack: ImageData[] = [];
   private redoStack: ImageData[] = [];
   private currentTool: Tool | null = null;
+  private readonly dprHandle: CanvasDprHandle;
+  private readonly ownedDprService?: DevicePixelRatioService;
   colorPicker: HTMLInputElement;
   lineWidth: HTMLInputElement;
   fillMode: HTMLInputElement;
@@ -21,6 +28,7 @@ export class Editor {
     onChange?: () => void,
     fontFamily?: HTMLSelectElement | null,
     fontSize?: HTMLInputElement | null,
+    devicePixelRatioService?: DevicePixelRatioService,
   ) {
     this.canvas = canvas;
     const ctx = canvas.getContext("2d");
@@ -32,8 +40,11 @@ export class Editor {
     this.onChange = onChange;
     this.fontFamily = fontFamily ?? null;
     this.fontSize = fontSize ?? null;
-    this.adjustForPixelRatio();
-    window.addEventListener("resize", this.handleResize);
+    const service = devicePixelRatioService ?? new DevicePixelRatioService();
+    if (!devicePixelRatioService) {
+      this.ownedDprService = service;
+    }
+    this.dprHandle = service.registerCanvas(canvas, ctx);
 
     this.canvas.addEventListener("pointerdown", this.handlePointerDown);
     this.canvas.addEventListener("pointermove", this.handlePointerMove);
@@ -62,26 +73,9 @@ export class Editor {
     this.canvas.releasePointerCapture(e.pointerId);
   };
 
-  private adjustForPixelRatio() {
-    const dpr = window.devicePixelRatio || 1;
-    const rect = this.canvas.getBoundingClientRect();
-    this.canvas.width = rect.width * dpr;
-    this.canvas.height = rect.height * dpr;
-    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    // Reset any existing transforms
-    this.ctx.scale(1, 1);
+  normalizeEvent(event: PointerEvent): NormalizedPointerEvent {
+    return this.dprHandle.normalizeEvent(event);
   }
-
-  private handleResize = () => {
-    const data = this.ctx.getImageData(
-      0,
-      0,
-      this.canvas.width,
-      this.canvas.height,
-    );
-    this.adjustForPixelRatio();
-    this.ctx.putImageData(data, 0, 0);
-  };
 
   saveState() {
     this.undoStack.push(
@@ -149,9 +143,10 @@ export class Editor {
    */
   destroy(): void {
     this.currentTool?.destroy?.();
-    window.removeEventListener("resize", this.handleResize);
     this.canvas.removeEventListener("pointerdown", this.handlePointerDown);
     this.canvas.removeEventListener("pointermove", this.handlePointerMove);
     this.canvas.removeEventListener("pointerup", this.handlePointerUp);
+    this.dprHandle.destroy();
+    this.ownedDprService?.destroy();
   }
 }

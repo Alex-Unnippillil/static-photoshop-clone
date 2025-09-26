@@ -8,6 +8,7 @@ import { CircleTool } from "./tools/CircleTool.js";
 import { TextTool } from "./tools/TextTool.js";
 import { BucketFillTool } from "./tools/BucketFillTool.js";
 import { EyedropperTool } from "./tools/EyedropperTool.js";
+const PROJECT_MANIFEST_VERSION = 1;
 /** Utility to listen to events and auto-remove on destroy. */
 function listen(el, type, handler, list) {
     if (!el)
@@ -76,6 +77,8 @@ export function initEditor() {
     const saveBtn = document.getElementById("save");
     const formatSelect = document.getElementById("formatSelect");
     const colorHistory = document.getElementById("colorHistory");
+    const exportProjectBtn = document.getElementById("exportProject");
+    const importProjectInput = document.getElementById("importProject");
     if (!colorPicker) {
         throw new Error("Missing #colorPicker input");
     }
@@ -118,6 +121,11 @@ export function initEditor() {
             group.appendChild(label);
             group.appendChild(input);
             toolbar.appendChild(group);
+        }
+        const opacityInput = document.getElementById(`${canvasId}Opacity`);
+        if (opacityInput) {
+            const currentOpacity = parseFloat(c.style.opacity || "1");
+            opacityInput.value = String(Math.round((isNaN(currentOpacity) ? 1 : currentOpacity) * 100));
         }
     });
     const undoBtn = document.getElementById("undo");
@@ -266,6 +274,114 @@ export function initEditor() {
             layer.style.opacity = isNaN(value) ? "1" : String(value / 100);
         }, listeners);
     });
+    const getLayerName = (index) => {
+        const option = layerSelect?.options[index];
+        if (option?.textContent && option.textContent.trim().length > 0) {
+            return option.textContent;
+        }
+        const canvas = canvases[index];
+        return canvas?.id || `Layer ${index + 1}`;
+    };
+    const createProjectManifest = () => {
+        const baseCanvas = canvases[0];
+        return {
+            version: PROJECT_MANIFEST_VERSION,
+            canvas: {
+                width: baseCanvas?.width ?? 0,
+                height: baseCanvas?.height ?? 0,
+            },
+            layers: canvases.map((cv, index) => {
+                const opacity = parseFloat(cv.style.opacity || "1");
+                return {
+                    id: cv.id || `layer${index + 1}`,
+                    name: getLayerName(index),
+                    opacity: isNaN(opacity) ? 1 : opacity,
+                    blendMode: cv.style.mixBlendMode || "normal",
+                    asset: {
+                        type: "image/png",
+                        dataURL: cv.toDataURL("image/png"),
+                    },
+                };
+            }),
+        };
+    };
+    const getOpacityInputForCanvas = (canvas, index) => document.getElementById(`${canvas.id || `layer${index + 1}`}Opacity`);
+    const applyProjectManifest = async (manifest) => {
+        if (!manifest?.layers?.length) {
+            return;
+        }
+        const layerCount = Math.min(manifest.layers.length, editors.length);
+        if (layerCount === 0) {
+            return;
+        }
+        editors.forEach((ed) => ed.saveState());
+        const loadPromises = [];
+        for (let i = 0; i < layerCount; i += 1) {
+            const layer = manifest.layers[i];
+            const canvas = canvases[i];
+            const editorInstance = editors[i];
+            const opacity = typeof layer.opacity === "number" && !Number.isNaN(layer.opacity)
+                ? layer.opacity
+                : 1;
+            canvas.style.opacity = String(opacity);
+            canvas.style.mixBlendMode = layer.blendMode || "normal";
+            const opacityInput = getOpacityInputForCanvas(canvas, i);
+            if (opacityInput) {
+                opacityInput.value = String(Math.round(opacity * 100));
+            }
+            if (layerSelect && layerSelect.options[i]) {
+                layerSelect.options[i].textContent = layer.name;
+            }
+            const dataURL = layer.asset?.dataURL;
+            if (!dataURL) {
+                continue;
+            }
+            loadPromises.push(new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    editorInstance.ctx.clearRect(0, 0, editorInstance.canvas.width, editorInstance.canvas.height);
+                    editorInstance.ctx.drawImage(img, 0, 0, editorInstance.canvas.width, editorInstance.canvas.height);
+                    resolve();
+                };
+                img.onerror = () => reject(new Error(`Failed to load layer asset: ${layer.id}`));
+                img.src = dataURL;
+            }));
+        }
+        await Promise.all(loadPromises);
+        updateHistoryButtons();
+    };
+    listen(exportProjectBtn, "click", () => {
+        const manifest = createProjectManifest();
+        const blob = new Blob([JSON.stringify(manifest, null, 2)], {
+            type: "application/json",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "project-manifest.json";
+        a.click();
+        URL.revokeObjectURL(url);
+    }, listeners);
+    listen(importProjectInput, "change", async (e) => {
+        const input = e.target;
+        const file = input.files?.[0];
+        if (!file)
+            return;
+        try {
+            const text = await file.text();
+            const manifest = JSON.parse(text);
+            if (manifest.version !== PROJECT_MANIFEST_VERSION) {
+                console.warn(`Manifest version ${manifest.version} does not match expected ${PROJECT_MANIFEST_VERSION}. Attempting import anyway.`);
+            }
+            await applyProjectManifest(manifest);
+        }
+        catch (err) {
+            console.error("Failed to import project manifest", err);
+        }
+        finally {
+            input.value = "";
+        }
+    }, listeners);
     // layer selection
     listen(layerSelect, "change", () => {
         const idx = parseInt(layerSelect.value, 10);

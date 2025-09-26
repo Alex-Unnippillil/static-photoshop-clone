@@ -1,4 +1,5 @@
 import { initEditor, EditorHandle } from "../src/editor.js";
+import { mockPreviewCanvas, type PreviewCanvasMock } from "./helpers.js";
 
 describe("image load and save", () => {
   let canvas: HTMLCanvasElement;
@@ -8,6 +9,7 @@ describe("image load and save", () => {
   let createElementSpy: jest.SpyInstance;
   let fileReaderSpy: jest.SpyInstance;
   let imageSpy: jest.SpyInstance;
+  let preview: PreviewCanvasMock;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -15,6 +17,7 @@ describe("image load and save", () => {
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
       <input id="fillMode" type="checkbox" />
+      <input id="showPreviews" type="checkbox" checked />
       <button id="pencil"></button>
       <button id="eraser"></button>
       <button id="rectangle"></button>
@@ -28,6 +31,7 @@ describe("image load and save", () => {
       <button id="save"></button>
     `;
 
+    preview = mockPreviewCanvas();
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
     const imageData = {
       data: new Uint8ClampedArray(),
@@ -59,9 +63,15 @@ describe("image load and save", () => {
     });
 
     anchor = { href: "", download: "", click: jest.fn() };
-    createElementSpy = jest
-      .spyOn(document, "createElement")
-      .mockReturnValue(anchor as any);
+    const originalCreate = preview.spy.getMockImplementation() as (
+      tagName: string,
+    ) => any;
+    createElementSpy = preview.spy.mockImplementation((tagName: string) => {
+      if (tagName.toLowerCase() === "a") {
+        return anchor as any;
+      }
+      return originalCreate(tagName);
+    });
 
     class MockFileReader {
       result: string | ArrayBuffer | null = null;
@@ -90,7 +100,7 @@ describe("image load and save", () => {
 
   afterEach(() => {
     handle.destroy();
-    createElementSpy.mockRestore();
+    preview.restore();
     fileReaderSpy.mockRestore();
     imageSpy.mockRestore();
   });

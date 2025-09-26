@@ -1,4 +1,5 @@
 import { initEditor } from "../src/editor.js";
+import { mockPreviewCanvas } from "./helpers.js";
 
 describe("save button", () => {
   it("calls toDataURL on click", () => {
@@ -7,6 +8,7 @@ describe("save button", () => {
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
       <input id="fillMode" type="checkbox" />
+      <input id="showPreviews" type="checkbox" checked />
       <button id="pencil"></button>
       <button id="eraser"></button>
       <button id="rectangle"></button>
@@ -38,7 +40,16 @@ describe("save button", () => {
     const click = jest.fn();
     const anchor = { href: "", download: "", click } as any;
 
-    jest.spyOn(document, "createElement").mockReturnValue(anchor);
+    const preview = mockPreviewCanvas();
+    const originalCreate = preview.spy.getMockImplementation() as (
+      tag: string,
+    ) => any;
+    preview.spy.mockImplementation((tagName: string) => {
+      if (tagName.toLowerCase() === "a") {
+        return anchor;
+      }
+      return originalCreate(tagName);
+    });
 
     const handle = initEditor();
 
@@ -47,6 +58,7 @@ describe("save button", () => {
     expect(click).toHaveBeenCalled();
 
     handle.destroy();
+    preview.restore();
   });
 
   it("supports selecting jpeg format", () => {
@@ -55,6 +67,7 @@ describe("save button", () => {
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
       <input id="fillMode" type="checkbox" />
+      <input id="showPreviews" type="checkbox" checked />
       <button id="pencil"></button>
       <button id="eraser"></button>
       <button id="rectangle"></button>
@@ -85,7 +98,16 @@ describe("save button", () => {
 
     const click = jest.fn();
     const anchor = { href: "", download: "", click } as any;
-    jest.spyOn(document, "createElement").mockReturnValue(anchor);
+    const preview = mockPreviewCanvas();
+    const originalCreate = preview.spy.getMockImplementation() as (
+      tag: string,
+    ) => any;
+    preview.spy.mockImplementation((tagName: string) => {
+      if (tagName.toLowerCase() === "a") {
+        return anchor;
+      }
+      return originalCreate(tagName);
+    });
 
     const handle = initEditor();
 
@@ -95,5 +117,6 @@ describe("save button", () => {
     expect(click).toHaveBeenCalled();
 
     handle.destroy();
+    preview.restore();
   });
 });

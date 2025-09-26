@@ -1,18 +1,22 @@
 import { Editor } from "../src/core/Editor.js";
 import { EyedropperTool } from "../src/tools/EyedropperTool.js";
 import { initEditor, type EditorHandle } from "../src/editor.js";
+import { mockPreviewCanvas, type PreviewCanvasMock } from "./helpers.js";
 
 describe("EyedropperTool", () => {
   let canvas: HTMLCanvasElement;
   let editor: Editor;
   let ctx: Partial<CanvasRenderingContext2D>;
+  let preview: PreviewCanvasMock;
 
   beforeEach(() => {
+    preview = mockPreviewCanvas();
     document.body.innerHTML = `
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="1" />
       <input id="fillMode" type="checkbox" />
+      <input id="showPreviews" type="checkbox" checked />
       <div id="colorHistory"></div>
     `;
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -39,7 +43,15 @@ describe("EyedropperTool", () => {
       document.getElementById("colorPicker") as HTMLInputElement,
       document.getElementById("lineWidth") as HTMLInputElement,
       document.getElementById("fillMode") as HTMLInputElement,
+      undefined,
+      undefined,
+      undefined,
+      document.getElementById("showPreviews") as HTMLInputElement,
     );
+  });
+
+  afterEach(() => {
+    preview.restore();
   });
 
   it("updates the color picker based on canvas pixel", () => {
@@ -89,13 +101,16 @@ describe("EyedropperTool color history", () => {
   let handle: EditorHandle;
   let canvas: HTMLCanvasElement;
   let ctx: Partial<CanvasRenderingContext2D>;
+  let preview: PreviewCanvasMock;
 
   beforeEach(() => {
+    preview = mockPreviewCanvas();
     document.body.innerHTML = `
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="1" />
       <input id="fillMode" type="checkbox" />
+      <input id="showPreviews" type="checkbox" checked />
 
       <button id="pencil"></button>
       <button id="eraser"></button>
@@ -134,6 +149,7 @@ describe("EyedropperTool color history", () => {
 
   afterEach(() => {
     handle.destroy();
+    preview.restore();
   });
 
   it("records sampled colors in the color history", () => {

@@ -1,11 +1,13 @@
 import { Editor } from "../src/core/Editor.js";
 import { TextTool } from "../src/tools/TextTool.js";
+import { mockPreviewCanvas, type PreviewCanvasMock } from "./helpers.js";
 
 describe("TextTool", () => {
   let editor: Editor;
   let ctx: Partial<CanvasRenderingContext2D>;
   let canvas: HTMLCanvasElement;
   let mockImage: ImageData;
+  let preview: PreviewCanvasMock;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -17,7 +19,9 @@ describe("TextTool", () => {
       <input id="fillMode" type="checkbox" />
       <select id="fontFamily"><option value="serif">serif</option></select>
       <input id="fontSize" value="20" />
+      <input id="showPreviews" type="checkbox" checked />
     `;
+    preview = mockPreviewCanvas();
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
     (canvas as any).setPointerCapture = jest.fn();
@@ -73,11 +77,13 @@ describe("TextTool", () => {
       undefined,
       document.getElementById("fontFamily") as HTMLSelectElement,
       document.getElementById("fontSize") as HTMLInputElement,
+      document.getElementById("showPreviews") as HTMLInputElement,
     );
   });
 
   afterEach(() => {
     editor.destroy();
+    preview.restore();
   });
 
   it("creates textarea overlay on pointer down", () => {

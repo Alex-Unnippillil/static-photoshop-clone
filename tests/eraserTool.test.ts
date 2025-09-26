@@ -1,9 +1,11 @@
 import { Editor } from "../src/core/Editor.js";
 import { EraserTool } from "../src/tools/EraserTool.js";
+import { mockPreviewCanvas, type PreviewCanvasMock } from "./helpers.js";
 
 describe("EraserTool", () => {
   let editor: Editor;
   let ctx: Partial<CanvasRenderingContext2D>;
+  let preview: PreviewCanvasMock;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -11,7 +13,9 @@ describe("EraserTool", () => {
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="10" />
       <input id="fillMode" type="checkbox" />
+      <input id="showPreviews" type="checkbox" checked />
     `;
+    preview = mockPreviewCanvas();
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
     (canvas as any).setPointerCapture = jest.fn();
     (canvas as any).releasePointerCapture = jest.fn();
@@ -35,7 +39,15 @@ describe("EraserTool", () => {
       document.getElementById("colorPicker") as HTMLInputElement,
       document.getElementById("lineWidth") as HTMLInputElement,
       document.getElementById("fillMode") as HTMLInputElement,
+      undefined,
+      undefined,
+      undefined,
+      document.getElementById("showPreviews") as HTMLInputElement,
     );
+  });
+
+  afterEach(() => {
+    preview.restore();
   });
 
   it("uses destination-out compositing to erase", () => {

@@ -89,6 +89,8 @@ export function initEditor(): EditorHandle {
     document.getElementById("colorPicker") as HTMLInputElement | null;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement | null;
   const fillMode = document.getElementById("fillMode") as HTMLInputElement | null;
+  const showPreviews =
+    document.getElementById("showPreviews") as HTMLInputElement | null;
   const fontFamily = document.getElementById("fontFamily") as HTMLSelectElement | null;
   const fontSize = document.getElementById("fontSize") as HTMLInputElement | null;
   const layerSelect = document.getElementById("layerSelect") as HTMLSelectElement | null;
@@ -108,6 +110,9 @@ export function initEditor(): EditorHandle {
   }
   if (!fillMode) {
     throw new Error("Missing #fillMode input");
+  }
+  if (!showPreviews) {
+    throw new Error("Missing #showPreviews input");
   }
   if (!saveBtn) {
     throw new Error("Missing #save button");
@@ -212,6 +217,7 @@ export function initEditor(): EditorHandle {
         },
         fontFamily ?? undefined,
         fontSize ?? undefined,
+        showPreviews,
       );
       editors.push(e);
     } catch {
@@ -268,6 +274,17 @@ export function initEditor(): EditorHandle {
     () => {
       editor.redo();
       updateHistoryButtons();
+    },
+    listeners,
+  );
+
+  listen(
+    showPreviews,
+    "change",
+    () => {
+      if (!showPreviews!.checked) {
+        editors.forEach((e) => e.clearPreview());
+      }
     },
     listeners,
   );

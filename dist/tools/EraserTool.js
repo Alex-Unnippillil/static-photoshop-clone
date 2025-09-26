@@ -7,19 +7,36 @@ export class EraserTool extends DrawingTool {
         ctx.beginPath();
         ctx.moveTo(e.offsetX, e.offsetY);
         ctx.clearRect(e.offsetX - editor.lineWidthValue / 2, e.offsetY - editor.lineWidthValue / 2, editor.lineWidthValue, editor.lineWidthValue);
+        editor.showBrushPreview(e.offsetX, e.offsetY, {
+            color: "#000",
+            lineDash: [4, 4],
+        });
     }
     onPointerMove(e, editor) {
-        if (e.buttons !== 1)
+        if (e.buttons !== 1) {
+            editor.showBrushPreview(e.offsetX, e.offsetY, {
+                color: "#000",
+                lineDash: [4, 4],
+            });
             return;
+        }
         const ctx = editor.ctx;
         this.applyStroke(ctx, editor);
         ctx.lineTo(e.offsetX, e.offsetY);
         ctx.stroke();
         ctx.clearRect(e.offsetX - editor.lineWidthValue / 2, e.offsetY - editor.lineWidthValue / 2, editor.lineWidthValue, editor.lineWidthValue);
+        editor.showBrushPreview(e.offsetX, e.offsetY, {
+            color: "#000",
+            lineDash: [4, 4],
+        });
     }
-    onPointerUp(_e, editor) {
+    onPointerUp(e, editor) {
         const ctx = editor.ctx;
         ctx.closePath();
         ctx.globalCompositeOperation = "source-over";
+        editor.showBrushPreview(e.offsetX, e.offsetY, {
+            color: "#000",
+            lineDash: [4, 4],
+        });
     }
 }

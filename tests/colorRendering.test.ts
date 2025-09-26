@@ -1,6 +1,7 @@
 import { Editor } from "../src/core/Editor.js";
 import { PencilTool } from "../src/tools/PencilTool.js";
 import { RectangleTool } from "../src/tools/RectangleTool.js";
+import { mockPreviewCanvas, type PreviewCanvasMock } from "./helpers.js";
 
 describe("color rendering", () => {
   let canvas: HTMLCanvasElement;
@@ -10,6 +11,7 @@ describe("color rendering", () => {
     lineWidth: number;
   };
   let editor: Editor;
+  let preview: PreviewCanvasMock;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -17,7 +19,9 @@ describe("color rendering", () => {
       <input id="colorPicker" value="#111111" />
       <input id="lineWidth" value="2" />
       <input id="fillMode" type="checkbox" />
+      <input id="showPreviews" type="checkbox" checked />
     `;
+    preview = mockPreviewCanvas();
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
 
@@ -64,11 +68,16 @@ describe("color rendering", () => {
       document.getElementById("colorPicker") as HTMLInputElement,
       document.getElementById("lineWidth") as HTMLInputElement,
       document.getElementById("fillMode") as HTMLInputElement,
+      undefined,
+      undefined,
+      undefined,
+      document.getElementById("showPreviews") as HTMLInputElement,
     );
   });
 
   afterEach(() => {
     editor.destroy();
+    preview.restore();
   });
 
   it("uses the selected color for strokes and fills", () => {

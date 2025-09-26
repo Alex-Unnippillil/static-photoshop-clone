@@ -11,6 +11,8 @@ export class Editor {
   fillMode: HTMLInputElement;
   fontFamily: HTMLSelectElement | null;
   fontSize: HTMLInputElement | null;
+  private polygonVerticesInput: HTMLInputElement;
+  private polygonStarModeInput: HTMLInputElement;
   private onChange?: () => void;
 
   constructor(
@@ -21,6 +23,8 @@ export class Editor {
     onChange?: () => void,
     fontFamily?: HTMLSelectElement | null,
     fontSize?: HTMLInputElement | null,
+    polygonVertices?: HTMLInputElement | null,
+    polygonStarMode?: HTMLInputElement | null,
   ) {
     this.canvas = canvas;
     const ctx = canvas.getContext("2d");
@@ -32,6 +36,19 @@ export class Editor {
     this.onChange = onChange;
     this.fontFamily = fontFamily ?? null;
     this.fontSize = fontSize ?? null;
+    const verticesInput = polygonVertices ?? document.createElement("input");
+    if (!verticesInput.type) {
+      verticesInput.type = "number";
+    }
+    if (!verticesInput.value) {
+      verticesInput.value = "5";
+    }
+    const starInput = polygonStarMode ?? document.createElement("input");
+    if (!starInput.type) {
+      starInput.type = "checkbox";
+    }
+    this.polygonVerticesInput = verticesInput;
+    this.polygonStarModeInput = starInput;
     this.adjustForPixelRatio();
     window.addEventListener("resize", this.handleResize);
 
@@ -141,6 +158,31 @@ export class Editor {
 
   get fontSizeValue() {
     return parseInt(this.fontSize?.value ?? "", 10) || 16;
+  }
+
+  get polygonVertexCount() {
+    const value = parseInt(this.polygonVerticesInput.value, 10);
+    if (!Number.isFinite(value)) {
+      return 5;
+    }
+    const clamped = Math.min(Math.max(value, 3), 48);
+    if (clamped !== value) {
+      this.polygonVerticesInput.value = String(clamped);
+    }
+    return clamped;
+  }
+
+  get polygonStarMode() {
+    return this.polygonStarModeInput.checked;
+  }
+
+  get polygonStarInset() {
+    const attr = this.polygonStarModeInput.dataset.inset;
+    const parsed = attr ? Number.parseFloat(attr) : NaN;
+    if (Number.isFinite(parsed)) {
+      return Math.min(Math.max(parsed, 0.05), 0.95);
+    }
+    return 0.5;
   }
 
   /**

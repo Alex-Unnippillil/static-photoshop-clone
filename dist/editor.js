@@ -8,6 +8,7 @@ import { CircleTool } from "./tools/CircleTool.js";
 import { TextTool } from "./tools/TextTool.js";
 import { BucketFillTool } from "./tools/BucketFillTool.js";
 import { EyedropperTool } from "./tools/EyedropperTool.js";
+import { PolygonTool } from "./tools/PolygonTool.js";
 /** Utility to listen to events and auto-remove on destroy. */
 function listen(el, type, handler, list) {
     if (!el)
@@ -28,6 +29,7 @@ export function initEditor() {
         rectangle: RectangleTool,
         line: LineTool,
         circle: CircleTool,
+        polygon: PolygonTool,
         text: TextTool,
         bucket: BucketFillTool,
         eyedropper: EyedropperTool,
@@ -71,6 +73,8 @@ export function initEditor() {
     const fillMode = document.getElementById("fillMode");
     const fontFamily = document.getElementById("fontFamily");
     const fontSize = document.getElementById("fontSize");
+    const polygonVertices = document.getElementById("polygonVertices");
+    const polygonStarMode = document.getElementById("polygonStarMode");
     const layerSelect = document.getElementById("layerSelect");
     const toolbar = document.getElementById("toolbar") || document.body;
     const saveBtn = document.getElementById("save");
@@ -84,6 +88,12 @@ export function initEditor() {
     }
     if (!fillMode) {
         throw new Error("Missing #fillMode input");
+    }
+    if (!polygonVertices) {
+        throw new Error("Missing #polygonVertices input");
+    }
+    if (!polygonStarMode) {
+        throw new Error("Missing #polygonStarMode input");
     }
     if (!saveBtn) {
         throw new Error("Missing #save button");
@@ -166,7 +176,7 @@ export function initEditor() {
         try {
             const e = new Editor(c, colorPicker, lineWidth, fillMode, () => {
                 updateHistoryButtons();
-            }, fontFamily ?? undefined, fontSize ?? undefined);
+            }, fontFamily ?? undefined, fontSize ?? undefined, polygonVertices, polygonStarMode);
             editors.push(e);
         }
         catch {

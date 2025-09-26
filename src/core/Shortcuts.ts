@@ -7,6 +7,7 @@ import { TextTool } from "../tools/TextTool.js";
 import { EraserTool } from "../tools/EraserTool.js";
 import { BucketFillTool } from "../tools/BucketFillTool.js";
 import { EyedropperTool } from "../tools/EyedropperTool.js";
+import { PolygonTool } from "../tools/PolygonTool.js";
 
 
 /**
@@ -62,6 +63,10 @@ export class Shortcuts {
       case "c":
         e.preventDefault();
         this.editor.setTool(new CircleTool());
+        break;
+      case "o":
+        e.preventDefault();
+        this.editor.setTool(new PolygonTool());
         break;
       case "e":
         e.preventDefault();

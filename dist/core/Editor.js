@@ -39,9 +39,13 @@ export class Editor {
         this.canvas.addEventListener("pointerup", this.handlePointerUp);
     }
     setTool(tool) {
-        this.currentTool?.destroy?.();
+        if (this.currentTool === tool) {
+            return;
+        }
+        this.currentTool?.onDeactivate?.(this);
         this.currentTool = tool;
         this.canvas.style.cursor = tool.cursor || "crosshair";
+        this.currentTool.onActivate?.(this);
     }
     adjustForPixelRatio() {
         const dpr = window.devicePixelRatio || 1;
@@ -103,6 +107,7 @@ export class Editor {
      * Should be called before discarding the instance to prevent leaks.
      */
     destroy() {
+        this.currentTool?.onDeactivate?.(this);
         this.currentTool?.destroy?.();
         window.removeEventListener("resize", this.handleResize);
         this.canvas.removeEventListener("pointerdown", this.handlePointerDown);

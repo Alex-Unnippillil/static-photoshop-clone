@@ -1,4 +1,5 @@
 import { Tool } from "../tools/Tool.js";
+import type { VectorLayer } from "./VectorLayer.js";
 
 export class Editor {
   canvas: HTMLCanvasElement;
@@ -6,6 +7,7 @@ export class Editor {
   private undoStack: ImageData[] = [];
   private redoStack: ImageData[] = [];
   private currentTool: Tool | null = null;
+  private vectorLayer: VectorLayer | null = null;
   colorPicker: HTMLInputElement;
   lineWidth: HTMLInputElement;
   fillMode: HTMLInputElement;
@@ -141,6 +143,30 @@ export class Editor {
 
   get fontSizeValue() {
     return parseInt(this.fontSize?.value ?? "", 10) || 16;
+  }
+
+  setVectorLayer(layer: VectorLayer | null) {
+    this.vectorLayer = layer;
+  }
+
+  getVectorLayer(): VectorLayer | null {
+    return this.vectorLayer;
+  }
+
+  hasVectorLayer(): boolean {
+    return !!this.vectorLayer && !this.vectorLayer.isEmpty();
+  }
+
+  rasterizeVectorLayer(): boolean {
+    if (!this.vectorLayer || this.vectorLayer.isEmpty()) {
+      return false;
+    }
+    this.saveState();
+    const rect = this.canvas.getBoundingClientRect();
+    this.vectorLayer.render(this.ctx, rect.width, rect.height);
+    this.vectorLayer = null;
+    this.onChange?.();
+    return true;
   }
 
   /**

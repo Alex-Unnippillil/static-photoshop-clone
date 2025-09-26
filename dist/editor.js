@@ -22,6 +22,20 @@ function listen(el, type, handler, list) {
  */
 export function initEditor() {
     const canvases = Array.from(document.querySelectorAll("canvas"));
+    const layerEntries = canvases.map((canvas, index) => ({
+        canvas,
+        name: canvas.id || `Layer ${index + 1}`,
+    }));
+    const createElement = (tagName) => {
+        const element = document.createElement(tagName);
+        if (element instanceof HTMLElement) {
+            return element;
+        }
+        const namespace = document.body?.namespaceURI ??
+            document.documentElement?.namespaceURI ??
+            "http://www.w3.org/1999/xhtml";
+        return document.createElementNS(namespace, tagName);
+    };
     const toolConstructors = {
         pencil: PencilTool,
         eraser: EraserTool,
@@ -37,6 +51,7 @@ export function initEditor() {
     const editorToolConstructors = new Map();
     let activeToolCtor = PencilTool;
     let activeLayerIndex = 0;
+    const listeners = [];
     Object.entries(toolConstructors).forEach(([id, Ctor]) => {
         const btn = document.getElementById(id);
         if (!btn) {
@@ -62,8 +77,10 @@ export function initEditor() {
         return null;
     };
     const updateLayerInteractivity = () => {
-        canvases.forEach((canvas, index) => {
-            canvas.style.pointerEvents = index === activeLayerIndex ? "auto" : "none";
+        layerEntries.forEach((entry, index) => {
+            entry.canvas.style.pointerEvents =
+                index === activeLayerIndex ? "auto" : "none";
+            entry.canvas.style.zIndex = String(index);
         });
     };
     const colorPicker = document.getElementById("colorPicker");
@@ -91,24 +108,54 @@ export function initEditor() {
     if (!formatSelect) {
         throw new Error("Missing #formatSelect select");
     }
+    let layerPanel = document.getElementById("layerPanel");
+    if (!layerPanel) {
+        layerPanel = createElement("div");
+        layerPanel.id = "layerPanel";
+        layerPanel.className = "layer-panel";
+        toolbar.appendChild(layerPanel);
+    }
+    let layerPanelLabel = layerPanel.querySelector(".layer-panel-label");
+    if (!layerPanelLabel) {
+        layerPanelLabel = createElement("p");
+        layerPanelLabel.className = "layer-panel-label";
+        layerPanelLabel.textContent = "Layers";
+        layerPanel.appendChild(layerPanelLabel);
+    }
+    let layerListElement = layerPanel.querySelector("ul.layer-list");
+    if (!layerListElement) {
+        layerListElement = createElement("ul");
+        layerListElement.className = "layer-list";
+        layerPanel.appendChild(layerListElement);
+    }
+    const layerList = layerListElement;
+    const layerListListeners = [];
+    const clearLayerListListeners = () => {
+        while (layerListListeners.length) {
+            const remove = layerListListeners.pop();
+            remove?.();
+        }
+    };
+    const addLayerListListener = (element, type, handler) => {
+        const wrapped = handler;
+        element.addEventListener(type, wrapped);
+        const remove = () => element.removeEventListener(type, wrapped);
+        layerListListeners.push(remove);
+        listeners.push(remove);
+    };
+    let draggedLayerIndex = null;
     if (layerSelect) {
         layerSelect.innerHTML = "";
     }
-    canvases.forEach((c, i) => {
-        const canvasId = c.id || `layer${i + 1}`;
-        const name = c.id || `Layer ${i + 1}`;
-        if (layerSelect) {
-            const opt = document.createElement("option");
-            opt.value = String(i);
-            opt.textContent = name;
-            layerSelect.appendChild(opt);
-        }
+    layerEntries.forEach((entry, i) => {
+        const canvas = entry.canvas;
+        const canvasId = canvas.id || `layer${i + 1}`;
         if (!document.getElementById(`${canvasId}Opacity`) && i > 0) {
             const group = document.createElement("div");
             group.className = "group";
             const label = document.createElement("label");
             label.htmlFor = `${canvasId}Opacity`;
-            label.textContent = `${name} Opacity`;
+            label.textContent = `${entry.name} Opacity`;
             const input = document.createElement("input");
             input.id = `${canvasId}Opacity`;
             input.type = "number";
@@ -122,7 +169,6 @@ export function initEditor() {
     });
     const undoBtn = document.getElementById("undo");
     const redoBtn = document.getElementById("redo");
-    const listeners = [];
     const recentColors = [];
     const maxRecentColors = 10;
     const renderColorHistory = () => {
@@ -162,9 +208,152 @@ export function initEditor() {
             redoBtn.disabled = !editor?.canRedo;
     };
     const editors = [];
-    canvases.forEach((c) => {
+    function renderLayerSelect() {
+        if (!layerSelect)
+            return;
+        const previousSelection = layerSelect.value;
+        layerSelect.innerHTML = "";
+        layerEntries.forEach((entry, index) => {
+            const opt = createElement("option");
+            opt.value = String(index);
+            opt.textContent = entry.name;
+            layerSelect.appendChild(opt);
+        });
+        const hasLayers = layerEntries.length > 0;
+        const desiredIndex = hasLayers
+            ? Math.min(Math.max(activeLayerIndex, 0), layerEntries.length - 1)
+            : -1;
+        if (desiredIndex >= 0) {
+            layerSelect.value = String(desiredIndex);
+        }
+        else if (previousSelection) {
+            layerSelect.value = previousSelection;
+        }
+    }
+    function syncCanvasOrder() {
+        const parents = new Map();
+        layerEntries.forEach((entry) => {
+            const parent = entry.canvas.parentElement;
+            if (!parent)
+                return;
+            const group = parents.get(parent);
+            if (group) {
+                group.push(entry.canvas);
+            }
+            else {
+                parents.set(parent, [entry.canvas]);
+            }
+        });
+        parents.forEach((group, parent) => {
+            const onlyCanvas = Array.from(parent.children).every((child) => child instanceof HTMLCanvasElement);
+            if (!onlyCanvas)
+                return;
+            group.forEach((canvas) => parent.appendChild(canvas));
+        });
+    }
+    function reorderLayers(fromIndex, toIndex) {
+        if (fromIndex === toIndex)
+            return;
+        if (fromIndex < 0 || fromIndex >= layerEntries.length)
+            return;
+        let targetIndex = toIndex;
+        if (targetIndex < 0)
+            targetIndex = 0;
+        if (targetIndex > layerEntries.length)
+            targetIndex = layerEntries.length;
+        const [entry] = layerEntries.splice(fromIndex, 1);
+        const [editorEntry] = editors.splice(fromIndex, 1);
+        if (!entry || !editorEntry)
+            return;
+        if (targetIndex > layerEntries.length) {
+            targetIndex = layerEntries.length;
+        }
+        layerEntries.splice(targetIndex, 0, entry);
+        editors.splice(targetIndex, 0, editorEntry);
+        const currentEditor = editor;
+        const newActiveIndex = editors.indexOf(currentEditor);
+        activeLayerIndex = newActiveIndex === -1 ? 0 : newActiveIndex;
+        draggedLayerIndex = null;
+        syncCanvasOrder();
+        renderLayerSelect();
+        renderLayerList();
+        if (layerSelect) {
+            layerSelect.value = String(activeLayerIndex);
+        }
+        updateLayerInteractivity();
+        updateHistoryButtons();
+    }
+    function renderLayerList() {
+        clearLayerListListeners();
+        layerList.innerHTML = "";
+        draggedLayerIndex = null;
+        const enableDrag = layerEntries.length > 1;
+        layerEntries.forEach((entry, index) => {
+            const item = createElement("li");
+            item.className = "layer-item";
+            item.textContent = entry.name;
+            item.dataset.index = String(index);
+            item.draggable = enableDrag;
+            if (index === activeLayerIndex) {
+                item.classList.add("active");
+            }
+            layerList.appendChild(item);
+            addLayerListListener(item, "click", () => {
+                activateLayer(index);
+            });
+            if (!enableDrag) {
+                return;
+            }
+            addLayerListListener(item, "dragstart", (event) => {
+                draggedLayerIndex = index;
+                item.classList.add("dragging");
+                if (event.dataTransfer) {
+                    event.dataTransfer.effectAllowed = "move";
+                    event.dataTransfer.setData("text/plain", String(index));
+                }
+            });
+            addLayerListListener(item, "dragend", () => {
+                item.classList.remove("dragging");
+                draggedLayerIndex = null;
+            });
+            addLayerListListener(item, "dragover", (event) => {
+                event.preventDefault();
+                if (event.dataTransfer) {
+                    event.dataTransfer.dropEffect = "move";
+                }
+            });
+            addLayerListListener(item, "drop", (event) => {
+                event.preventDefault();
+                const rect = item.getBoundingClientRect();
+                const offset = event.clientY - rect.top;
+                const targetIndex = parseInt(item.dataset.index ?? "0", 10);
+                let insertIndex = targetIndex;
+                if (offset > rect.height / 2) {
+                    insertIndex = targetIndex + 1;
+                }
+                if (draggedLayerIndex !== null) {
+                    reorderLayers(draggedLayerIndex, insertIndex);
+                }
+            });
+        });
+        if (enableDrag) {
+            addLayerListListener(layerList, "dragover", (event) => {
+                event.preventDefault();
+                if (event.dataTransfer) {
+                    event.dataTransfer.dropEffect = "move";
+                }
+            });
+            addLayerListListener(layerList, "drop", (event) => {
+                event.preventDefault();
+                if (draggedLayerIndex !== null) {
+                    reorderLayers(draggedLayerIndex, layerEntries.length);
+                }
+            });
+        }
+    }
+    layerEntries.forEach(({ canvas }) => {
         try {
-            const e = new Editor(c, colorPicker, lineWidth, fillMode, () => {
+            const e = new Editor(canvas, colorPicker, lineWidth, fillMode, () => {
                 updateHistoryButtons();
             }, fontFamily ?? undefined, fontSize ?? undefined);
             editors.push(e);
@@ -192,6 +381,9 @@ export function initEditor() {
     editor.setTool(new PencilTool());
     editorToolConstructors.set(editor, PencilTool);
     updateLayerInteractivity();
+    renderLayerSelect();
+    renderLayerList();
+    syncCanvasOrder();
     // keyboard shortcuts
     const shortcuts = new Shortcuts(editor);
     // map button id to tool constructor
@@ -210,16 +402,16 @@ export function initEditor() {
         const mime = format === "jpeg" ? "image/jpeg" : "image/png";
         const quality = format === "jpeg" ? 0.9 : undefined;
         let exportCanvas;
-        if (canvases.length > 1) {
+        if (layerEntries.length > 1) {
             // composite all layers respecting their opacity
             exportCanvas = document.createElement("canvas");
-            exportCanvas.width = canvases[0].width;
-            exportCanvas.height = canvases[0].height;
+            exportCanvas.width = layerEntries[0].canvas.width;
+            exportCanvas.height = layerEntries[0].canvas.height;
             const tempCtx = exportCanvas.getContext("2d");
-            canvases.forEach((cv) => {
-                const opacity = parseFloat(cv.style.opacity) || 1;
+            layerEntries.forEach(({ canvas }) => {
+                const opacity = parseFloat(canvas.style.opacity) || 1;
                 tempCtx.globalAlpha = opacity;
-                tempCtx.drawImage(cv, 0, 0);
+                tempCtx.drawImage(canvas, 0, 0);
             });
             tempCtx.globalAlpha = 1;
         }
@@ -284,12 +476,15 @@ export function initEditor() {
         updateHistoryButtons();
         if (layerSelect)
             layerSelect.value = String(index);
+        renderLayerList();
     }
     const handle = {
         editor,
         editors,
         activateLayer,
+        reorderLayers,
         destroy() {
+            clearLayerListListeners();
             listeners.forEach((fn) => fn());
             shortcuts.destroy();
             editors.forEach((e) => e.destroy());

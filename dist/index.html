@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Photoshop Clone</title>
+    <script type="module" crossorigin src="/assets/index-CoqPDekG.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-0nKoLpdy.css">
+  </head>
+  <body>
+    <div id="toolbar">
+      <input type="color" id="colorPicker" />
+      <div id="colorHistory"></div>
+      <input type="number" id="lineWidth" min="1" value="1" />
+      <select id="fontFamily">
+        <option value="sans-serif">Sans-Serif</option>
+        <option value="serif">Serif</option>
+        <option value="monospace">Monospace</option>
+      </select>
+      <input type="number" id="fontSize" min="1" value="16" />
+      <label>
+        <input type="checkbox" id="fillMode" />
+        Fill
+      </label>
+      <button id="pencil" class="tool-button" title="Pencil">
+        <img src="data:image/svg+xml,%3c!--%20@license%20lucide-static%20v0.541.0%20-%20ISC%20--%3e%3csvg%20class='lucide%20lucide-pencil'%20xmlns='http://www.w3.org/2000/svg'%20width='24'%20height='24'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='currentColor'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%20%3e%3cpath%20d='M21.174%206.812a1%201%200%200%200-3.986-3.987L3.842%2016.174a2%202%200%200%200-.5.83l-1.321%204.352a.5.5%200%200%200%20.623.622l4.353-1.32a2%202%200%200%200%20.83-.497z'%20/%3e%3cpath%20d='m15%205%204%204'%20/%3e%3c/svg%3e" alt="Pencil" />
+      </button>
+      <button id="eraser" class="tool-button" title="Eraser">
+        <img src="data:image/svg+xml,%3c!--%20@license%20lucide-static%20v0.541.0%20-%20ISC%20--%3e%3csvg%20class='lucide%20lucide-eraser'%20xmlns='http://www.w3.org/2000/svg'%20width='24'%20height='24'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='currentColor'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%20%3e%3cpath%20d='M21%2021H8a2%202%200%200%201-1.42-.587l-3.994-3.999a2%202%200%200%201%200-2.828l10-10a2%202%200%200%201%202.829%200l5.999%206a2%202%200%200%201%200%202.828L12.834%2021'%20/%3e%3cpath%20d='m5.082%2011.09%208.828%208.828'%20/%3e%3c/svg%3e" alt="Eraser" />
+      </button>
+      <button id="rectangle" class="tool-button" title="Rectangle">
+        <img src="data:image/svg+xml,%3c!--%20@license%20lucide-static%20v0.541.0%20-%20ISC%20--%3e%3csvg%20class='lucide%20lucide-rectangle-horizontal'%20xmlns='http://www.w3.org/2000/svg'%20width='24'%20height='24'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='currentColor'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%20%3e%3crect%20width='20'%20height='12'%20x='2'%20y='6'%20rx='2'%20/%3e%3c/svg%3e" alt="Rectangle" />
+      </button>
+      <button id="line" class="tool-button" title="Line">
+        <img src="data:image/svg+xml,%3c!--%20@license%20lucide-static%20v0.541.0%20-%20ISC%20--%3e%3csvg%20class='lucide%20lucide-slash'%20xmlns='http://www.w3.org/2000/svg'%20width='24'%20height='24'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='currentColor'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%20%3e%3cpath%20d='M22%202%202%2022'%20/%3e%3c/svg%3e" alt="Line" />
+      </button>
+      <button id="circle" class="tool-button" title="Circle">
+        <img src="data:image/svg+xml,%3c!--%20@license%20lucide-static%20v0.541.0%20-%20ISC%20--%3e%3csvg%20class='lucide%20lucide-circle'%20xmlns='http://www.w3.org/2000/svg'%20width='24'%20height='24'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='currentColor'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%20%3e%3ccircle%20cx='12'%20cy='12'%20r='10'%20/%3e%3c/svg%3e" alt="Circle" />
+      </button>
+      <button id="text" class="tool-button" title="Text">
+        <img src="data:image/svg+xml,%3c!--%20@license%20lucide-static%20v0.541.0%20-%20ISC%20--%3e%3csvg%20class='lucide%20lucide-type'%20xmlns='http://www.w3.org/2000/svg'%20width='24'%20height='24'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='currentColor'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%20%3e%3cpath%20d='M12%204v16'%20/%3e%3cpath%20d='M4%207V5a1%201%200%200%201%201-1h14a1%201%200%200%201%201%201v2'%20/%3e%3cpath%20d='M9%2020h6'%20/%3e%3c/svg%3e" alt="Text" />
+      </button>
+      <button id="eyedropper" class="tool-button" title="Eyedropper">
+        <img src="data:image/svg+xml,%3c!--%20@license%20lucide-static%20v0.541.0%20-%20ISC%20--%3e%3csvg%20class='lucide%20lucide-pipette'%20xmlns='http://www.w3.org/2000/svg'%20width='24'%20height='24'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='currentColor'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%20%3e%3cpath%20d='m12%209-8.414%208.414A2%202%200%200%200%203%2018.828v1.344a2%202%200%200%201-.586%201.414A2%202%200%200%201%203.828%2021h1.344a2%202%200%200%200%201.414-.586L15%2012'%20/%3e%3cpath%20d='m18%209%20.4.4a1%201%200%201%201-3%203l-3.8-3.8a1%201%200%201%201%203-3l.4.4%203.4-3.4a1%201%200%201%201%203%203z'%20/%3e%3cpath%20d='m2%2022%20.414-.414'%20/%3e%3c/svg%3e" alt="Eyedropper" />
+      </button>
+      <button id="bucket" class="tool-button" title="Bucket">
+        <img src="data:image/svg+xml,%3c!--%20@license%20lucide-static%20v0.541.0%20-%20ISC%20--%3e%3csvg%20class='lucide%20lucide-paint-bucket'%20xmlns='http://www.w3.org/2000/svg'%20width='24'%20height='24'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='currentColor'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%20%3e%3cpath%20d='m19%2011-8-8-8.6%208.6a2%202%200%200%200%200%202.8l5.2%205.2c.8.8%202%20.8%202.8%200L19%2011Z'%20/%3e%3cpath%20d='m5%202%205%205'%20/%3e%3cpath%20d='M2%2013h15'%20/%3e%3cpath%20d='M22%2020a2%202%200%201%201-4%200c0-1.6%201.7-2.4%202-4%20.3%201.6%202%202.4%202%204Z'%20/%3e%3c/svg%3e" alt="Bucket" />
+      </button>
+      <input type="file" id="imageLoader" accept="image/*" />
+      <button id="undo" class="tool-button" title="Undo" disabled>
+        <img src="data:image/svg+xml,%3c!--%20@license%20lucide-static%20v0.541.0%20-%20ISC%20--%3e%3csvg%20class='lucide%20lucide-undo'%20xmlns='http://www.w3.org/2000/svg'%20width='24'%20height='24'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='currentColor'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%20%3e%3cpath%20d='M3%207v6h6'%20/%3e%3cpath%20d='M21%2017a9%209%200%200%200-9-9%209%209%200%200%200-6%202.3L3%2013'%20/%3e%3c/svg%3e" alt="Undo" />
+      </button>
+      <button id="redo" class="tool-button" title="Redo" disabled>
+        <img src="data:image/svg+xml,%3c!--%20@license%20lucide-static%20v0.541.0%20-%20ISC%20--%3e%3csvg%20class='lucide%20lucide-redo'%20xmlns='http://www.w3.org/2000/svg'%20width='24'%20height='24'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='currentColor'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%20%3e%3cpath%20d='M21%207v6h-6'%20/%3e%3cpath%20d='M3%2017a9%209%200%200%201%209-9%209%209%200%200%201%206%202.3l3%202.7'%20/%3e%3c/svg%3e" alt="Redo" />
+      </button>
+
+      <div class="group">
+        <label for="layerSelect">Layer</label>
+        <select id="layerSelect"></select>
+      </div>
+      <select id="formatSelect">
+        <option value="png">PNG</option>
+        <option value="jpeg">JPEG</option>
+      </select>
+      <button id="save" class="tool-button" title="Save">
+        <img src="data:image/svg+xml,%3c!--%20@license%20lucide-static%20v0.541.0%20-%20ISC%20--%3e%3csvg%20class='lucide%20lucide-save'%20xmlns='http://www.w3.org/2000/svg'%20width='24'%20height='24'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='currentColor'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%20%3e%3cpath%20d='M15.2%203a2%202%200%200%201%201.4.6l3.8%203.8a2%202%200%200%201%20.6%201.4V19a2%202%200%200%201-2%202H5a2%202%200%200%201-2-2V5a2%202%200%200%201%202-2z'%20/%3e%3cpath%20d='M17%2021v-7a1%201%200%200%200-1-1H8a1%201%200%200%200-1%201v7'%20/%3e%3cpath%20d='M7%203v4a1%201%200%200%200%201%201h7'%20/%3e%3c/svg%3e" alt="Save" />
+      </button>
+
+    </div>
+    <div id="canvasContainer">
+      <canvas id="canvas" width="800" height="600"></canvas>
+      <canvas id="layer2" width="800" height="600"></canvas>
+    </div>
+  </body>
+</html>

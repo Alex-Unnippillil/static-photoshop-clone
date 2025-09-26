@@ -69,11 +69,13 @@ body {
   background: #f0f0f0;
 }
 
-.tool-button.active {
+.tool-button.active,
+.tool-button[aria-pressed="true"] {
   background: #007bff;
 }
 
-.tool-button.active img {
+.tool-button.active img,
+.tool-button[aria-pressed="true"] img {
   filter: brightness(0) invert(1);
 }
 

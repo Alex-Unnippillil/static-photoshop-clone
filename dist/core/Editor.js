@@ -3,6 +3,7 @@ export class Editor {
         this.undoStack = [];
         this.redoStack = [];
         this.currentTool = null;
+        this._visible = true;
         this.handlePointerDown = (e) => {
             // Capture the pointer once before recording canvas state
             this.canvas.setPointerCapture(e.pointerId);
@@ -32,16 +33,40 @@ export class Editor {
         this.onChange = onChange;
         this.fontFamily = fontFamily ?? null;
         this.fontSize = fontSize ?? null;
+        this._visible = this.canvas.style.visibility !== "hidden";
+        this.applyVisibility();
         this.adjustForPixelRatio();
         window.addEventListener("resize", this.handleResize);
         this.canvas.addEventListener("pointerdown", this.handlePointerDown);
         this.canvas.addEventListener("pointermove", this.handlePointerMove);
         this.canvas.addEventListener("pointerup", this.handlePointerUp);
     }
+    snapshot() {
+        return {
+            imageData: this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height),
+            visible: this._visible,
+        };
+    }
     setTool(tool) {
         this.currentTool?.destroy?.();
         this.currentTool = tool;
         this.canvas.style.cursor = tool.cursor || "crosshair";
+    }
+    applyVisibility() {
+        this.canvas.style.visibility = this._visible ? "visible" : "hidden";
+    }
+    setVisible(visible, recordHistory = false) {
+        if (this._visible === visible)
+            return;
+        if (recordHistory) {
+            this.saveState();
+        }
+        this._visible = visible;
+        this.applyVisibility();
+        this.onChange?.();
+    }
+    get visible() {
+        return this._visible;
     }
     adjustForPixelRatio() {
         const dpr = window.devicePixelRatio || 1;
@@ -53,7 +78,7 @@ export class Editor {
         this.ctx.scale(1, 1);
     }
     saveState() {
-        this.undoStack.push(this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height));
+        this.undoStack.push(this.snapshot());
         if (this.undoStack.length > 50)
             this.undoStack.shift();
         this.redoStack.length = 0;
@@ -62,10 +87,12 @@ export class Editor {
     restoreState(stack, opposite) {
         if (!stack.length)
             return;
-        opposite.push(this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height));
-        const imageData = stack.pop();
+        opposite.push(this.snapshot());
+        const state = stack.pop();
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.putImageData(imageData, 0, 0);
+        this.ctx.putImageData(state.imageData, 0, 0);
+        this._visible = state.visible;
+        this.applyVisibility();
         this.onChange?.();
     }
     undo() {

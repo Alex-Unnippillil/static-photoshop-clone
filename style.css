@@ -47,6 +47,32 @@ body {
   gap: 8px;
 }
 
+.layer-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.layer-visibility-toggle {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+}
+
+.layer-visibility-toggle:hover {
+  background: #f0f0f0;
+}
+
+.layer-visibility-toggle.is-hidden {
+  opacity: 0.6;
+}
+
 .tool-button {
   width: 32px;
   height: 32px;

@@ -37,6 +37,9 @@ export function initEditor() {
     const editorToolConstructors = new Map();
     let activeToolCtor = PencilTool;
     let activeLayerIndex = 0;
+    const editors = [];
+    const layerNames = [];
+    const visibilityButtons = [];
     Object.entries(toolConstructors).forEach(([id, Ctor]) => {
         const btn = document.getElementById(id);
         if (!btn) {
@@ -63,8 +66,34 @@ export function initEditor() {
     };
     const updateLayerInteractivity = () => {
         canvases.forEach((canvas, index) => {
-            canvas.style.pointerEvents = index === activeLayerIndex ? "auto" : "none";
+            const editorForLayer = editors[index];
+            const visible = editorForLayer?.visible ?? true;
+            const isActive = index === activeLayerIndex && visible;
+            canvas.style.pointerEvents = isActive ? "auto" : "none";
         });
+    };
+    const updateVisibilityButton = (index) => {
+        const button = visibilityButtons[index];
+        const editorForLayer = editors[index];
+        if (!button)
+            return;
+        if (!editorForLayer) {
+            button.disabled = true;
+            button.textContent = "-";
+            button.title = "Layer unavailable";
+            button.removeAttribute("aria-label");
+            button.removeAttribute("aria-pressed");
+            button.classList.add("is-hidden");
+            return;
+        }
+        button.disabled = false;
+        const visible = editorForLayer.visible;
+        const layerName = layerNames[index] ?? `Layer ${index + 1}`;
+        button.textContent = visible ? "👁" : "🚫";
+        button.title = `${visible ? "Hide" : "Show"} ${layerName}`;
+        button.setAttribute("aria-label", `${visible ? "Hide" : "Show"} ${layerName}`);
+        button.setAttribute("aria-pressed", String(visible));
+        button.classList.toggle("is-hidden", !visible);
     };
     const colorPicker = document.getElementById("colorPicker");
     const lineWidth = document.getElementById("lineWidth");
@@ -97,26 +126,49 @@ export function initEditor() {
     canvases.forEach((c, i) => {
         const canvasId = c.id || `layer${i + 1}`;
         const name = c.id || `Layer ${i + 1}`;
+        layerNames[i] = name;
         if (layerSelect) {
             const opt = document.createElement("option");
             opt.value = String(i);
             opt.textContent = name;
             layerSelect.appendChild(opt);
         }
-        if (!document.getElementById(`${canvasId}Opacity`) && i > 0) {
+        if (!document.getElementById(`${canvasId}Controls`)) {
             const group = document.createElement("div");
-            group.className = "group";
+            if (!(group instanceof HTMLElement)) {
+                return;
+            }
+            group.className = "group layer-controls";
+            group.id = `${canvasId}Controls`;
             const label = document.createElement("label");
-            label.htmlFor = `${canvasId}Opacity`;
-            label.textContent = `${name} Opacity`;
-            const input = document.createElement("input");
-            input.id = `${canvasId}Opacity`;
-            input.type = "number";
-            input.min = "0";
-            input.max = "100";
-            input.value = "100";
+            if (!(label instanceof HTMLElement)) {
+                return;
+            }
+            label.textContent = name;
             group.appendChild(label);
-            group.appendChild(input);
+            const toggle = document.createElement("button");
+            if (!(toggle instanceof HTMLElement)) {
+                return;
+            }
+            toggle.type = "button";
+            toggle.className = "layer-visibility-toggle";
+            toggle.id = `${canvasId}Visibility`;
+            toggle.textContent = "👁";
+            group.appendChild(toggle);
+            visibilityButtons[i] = toggle;
+            if (i > 0) {
+                label.htmlFor = `${canvasId}Opacity`;
+                const input = document.createElement("input");
+                if (!(input instanceof HTMLElement)) {
+                    return;
+                }
+                input.id = `${canvasId}Opacity`;
+                input.type = "number";
+                input.min = "0";
+                input.max = "100";
+                input.value = "100";
+                group.appendChild(input);
+            }
             toolbar.appendChild(group);
         }
     });
@@ -161,19 +213,21 @@ export function initEditor() {
         if (redoBtn)
             redoBtn.disabled = !editor?.canRedo;
     };
-    const editors = [];
-    canvases.forEach((c) => {
+    canvases.forEach((c, canvasIndex) => {
         try {
             const e = new Editor(c, colorPicker, lineWidth, fillMode, () => {
                 updateHistoryButtons();
+                updateVisibilityButton(canvasIndex);
+                updateLayerInteractivity();
             }, fontFamily ?? undefined, fontSize ?? undefined);
-            editors.push(e);
+            editors[canvasIndex] = e;
         }
         catch {
             /* skip canvases without 2D context */
         }
     });
-    if (editors.length === 0) {
+    const firstEditorIndex = editors.findIndex((ed) => !!ed);
+    if (firstEditorIndex === -1) {
         throw new Error("initEditor() requires at least one <canvas> element with a 2D context");
     }
     editors.forEach((e) => {
@@ -187,11 +241,14 @@ export function initEditor() {
         };
     });
     // active editor defaults to the first successfully created editor
-    editor = editors[0];
+    editor = editors[firstEditorIndex];
+    activeLayerIndex = firstEditorIndex;
     // default tool
     editor.setTool(new PencilTool());
     editorToolConstructors.set(editor, PencilTool);
     updateLayerInteractivity();
+    if (layerSelect)
+        layerSelect.value = String(activeLayerIndex);
     // keyboard shortcuts
     const shortcuts = new Shortcuts(editor);
     // map button id to tool constructor
@@ -216,7 +273,10 @@ export function initEditor() {
             exportCanvas.width = canvases[0].width;
             exportCanvas.height = canvases[0].height;
             const tempCtx = exportCanvas.getContext("2d");
-            canvases.forEach((cv) => {
+            canvases.forEach((cv, idx) => {
+                const editorForLayer = editors[idx];
+                if (editorForLayer && !editorForLayer.visible)
+                    return;
                 const opacity = parseFloat(cv.style.opacity) || 1;
                 tempCtx.globalAlpha = opacity;
                 tempCtx.drawImage(cv, 0, 0);
@@ -274,17 +334,34 @@ export function initEditor() {
     function activateLayer(index) {
         if (index < 0 || index >= editors.length)
             return;
+        const targetEditor = editors[index];
+        if (!targetEditor)
+            return;
         activeLayerIndex = index;
-        editor = editors[index];
+        editor = targetEditor;
         handle.editor = editor;
         shortcuts.switchEditor(editor);
         updateLayerInteractivity();
         const ToolCtor = editorToolConstructors.get(editor) ?? activeToolCtor;
         editor.setTool(new ToolCtor());
         updateHistoryButtons();
+        updateVisibilityButton(index);
         if (layerSelect)
             layerSelect.value = String(index);
     }
+    visibilityButtons.forEach((button, index) => {
+        listen(button, "click", () => {
+            const editorForLayer = editors[index];
+            if (!editorForLayer)
+                return;
+            const nextVisible = !editorForLayer.visible;
+            editorForLayer.setVisible(nextVisible, true);
+            updateVisibilityButton(index);
+            updateLayerInteractivity();
+            updateHistoryButtons();
+        }, listeners);
+        updateVisibilityButton(index);
+    });
     const handle = {
         editor,
         editors,

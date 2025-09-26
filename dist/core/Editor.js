@@ -3,6 +3,7 @@ export class Editor {
         this.undoStack = [];
         this.redoStack = [];
         this.currentTool = null;
+        this.vectorLayer = null;
         this.handlePointerDown = (e) => {
             // Capture the pointer once before recording canvas state
             this.canvas.setPointerCapture(e.pointerId);
@@ -97,6 +98,26 @@ export class Editor {
     }
     get fontSizeValue() {
         return parseInt(this.fontSize?.value ?? "", 10) || 16;
+    }
+    setVectorLayer(layer) {
+        this.vectorLayer = layer;
+    }
+    getVectorLayer() {
+        return this.vectorLayer;
+    }
+    hasVectorLayer() {
+        return !!this.vectorLayer && !this.vectorLayer.isEmpty();
+    }
+    rasterizeVectorLayer() {
+        if (!this.vectorLayer || this.vectorLayer.isEmpty()) {
+            return false;
+        }
+        this.saveState();
+        const rect = this.canvas.getBoundingClientRect();
+        this.vectorLayer.render(this.ctx, rect.width, rect.height);
+        this.vectorLayer = null;
+        this.onChange?.();
+        return true;
     }
     /**
      * Remove all event listeners registered by the editor.

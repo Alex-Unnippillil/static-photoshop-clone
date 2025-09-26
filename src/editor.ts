@@ -1,5 +1,6 @@
 import { Editor } from "./core/Editor.js";
 import { Shortcuts } from "./core/Shortcuts.js";
+import { parseSvgToVectorLayer } from "./core/svgParser.js";
 import { PencilTool } from "./tools/PencilTool.js";
 import { EraserTool } from "./tools/EraserTool.js";
 import { RectangleTool } from "./tools/RectangleTool.js";
@@ -39,6 +40,30 @@ export function initEditor(): EditorHandle {
     document.querySelectorAll<HTMLCanvasElement>("canvas"),
   );
 
+  const canvasContainer = document.getElementById(
+    "canvasContainer",
+  ) as HTMLDivElement | null;
+  const commitVectorBtn = document.getElementById(
+    "commitVector",
+  ) as HTMLButtonElement | null;
+
+  let vectorOverlay: HTMLCanvasElement | null = null;
+  let vectorOverlayCtx: CanvasRenderingContext2D | null = null;
+  if (canvasContainer) {
+    vectorOverlay = canvasContainer.querySelector<HTMLCanvasElement>(
+      "#vectorOverlay",
+    );
+    if (!vectorOverlay) {
+      vectorOverlay = document.createElement("canvas");
+      vectorOverlay.id = "vectorOverlay";
+      canvasContainer.appendChild(vectorOverlay);
+    }
+    vectorOverlay.style.pointerEvents = "none";
+    vectorOverlay.style.display = "none";
+    vectorOverlay.style.zIndex = "10";
+    vectorOverlayCtx = vectorOverlay.getContext("2d");
+  }
+
   const toolConstructors: Record<string, new () => Tool> = {
     pencil: PencilTool,
     eraser: EraserTool,
@@ -55,6 +80,53 @@ export function initEditor(): EditorHandle {
   const editorToolConstructors = new Map<Editor, new () => Tool>();
   let activeToolCtor: new () => Tool = PencilTool;
   let activeLayerIndex = 0;
+
+  let editor: Editor; // set after editors created
+
+  const ensureOverlaySize = () => {
+    if (!vectorOverlay || !editor) return;
+    const rect = editor.canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const width = Math.max(1, Math.round(rect.width * dpr));
+    const height = Math.max(1, Math.round(rect.height * dpr));
+    if (vectorOverlay.width !== width) {
+      vectorOverlay.width = width;
+    }
+    if (vectorOverlay.height !== height) {
+      vectorOverlay.height = height;
+    }
+    vectorOverlay.style.width = `${rect.width}px`;
+    vectorOverlay.style.height = `${rect.height}px`;
+  };
+
+  const clearOverlay = () => {
+    if (!vectorOverlay || !vectorOverlayCtx) return;
+    vectorOverlayCtx.save();
+    vectorOverlayCtx.setTransform(1, 0, 0, 1, 0, 0);
+    vectorOverlayCtx.clearRect(0, 0, vectorOverlay.width, vectorOverlay.height);
+    vectorOverlayCtx.restore();
+  };
+
+  const renderVectorOverlay = () => {
+    if (!vectorOverlay || !vectorOverlayCtx || !editor) {
+      if (commitVectorBtn) commitVectorBtn.disabled = true;
+      return;
+    }
+    ensureOverlaySize();
+    clearOverlay();
+    const layer = editor.getVectorLayer();
+    if (!layer || layer.isEmpty()) {
+      vectorOverlay.style.display = "none";
+      if (commitVectorBtn) commitVectorBtn.disabled = true;
+      return;
+    }
+    vectorOverlay.style.display = "block";
+    const dpr = window.devicePixelRatio || 1;
+    vectorOverlayCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const rect = editor.canvas.getBoundingClientRect();
+    layer.render(vectorOverlayCtx, rect.width, rect.height);
+    if (commitVectorBtn) commitVectorBtn.disabled = false;
+  };
   Object.entries(toolConstructors).forEach(([id, Ctor]) => {
     const btn = document.getElementById(id) as HTMLButtonElement | null;
     if (!btn) {
@@ -156,6 +228,18 @@ export function initEditor(): EditorHandle {
   const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
   const listeners: Array<() => void> = [];
 
+  if (commitVectorBtn) {
+    commitVectorBtn.disabled = true;
+  }
+
+  const handleOverlayResize = () => {
+    renderVectorOverlay();
+  };
+  window.addEventListener("resize", handleOverlayResize);
+  listeners.push(() =>
+    window.removeEventListener("resize", handleOverlayResize),
+  );
+
   const recentColors: string[] = [];
   const maxRecentColors = 10;
   const renderColorHistory = () => {
@@ -191,8 +275,6 @@ export function initEditor(): EditorHandle {
     },
     listeners,
   );
-
-  let editor: Editor; // set after editors created
 
   const updateHistoryButtons = () => {
     if (undoBtn) undoBtn.disabled = !editor?.canUndo;
@@ -239,6 +321,8 @@ export function initEditor(): EditorHandle {
   // active editor defaults to the first successfully created editor
   editor = editors[0];
 
+  renderVectorOverlay();
+
   // default tool
   editor.setTool(new PencilTool());
   editorToolConstructors.set(editor, PencilTool);
@@ -268,6 +352,18 @@ export function initEditor(): EditorHandle {
     () => {
       editor.redo();
       updateHistoryButtons();
+    },
+    listeners,
+  );
+
+  listen(
+    commitVectorBtn,
+    "click",
+    () => {
+      if (editor.rasterizeVectorLayer()) {
+        renderVectorOverlay();
+        updateHistoryButtons();
+      }
     },
     listeners,
   );
@@ -319,6 +415,36 @@ export function initEditor(): EditorHandle {
     (e: Event) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
+      const resetInput = () => {
+        if (imageLoader) imageLoader.value = "";
+      };
+
+      const isSvg =
+        file.type === "image/svg+xml" || file.name.toLowerCase().endsWith(".svg");
+
+      if (isSvg) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const text = String(reader.result ?? "");
+          const { layer, warnings } = parseSvgToVectorLayer(text);
+          editor.setVectorLayer(layer.isEmpty() ? null : layer);
+          renderVectorOverlay();
+          if (warnings.length) {
+            const message = `SVG import warnings:\n- ${warnings.join("\n- ")}`;
+            console.warn(message);
+            window.alert(message);
+          }
+          resetInput();
+        };
+        reader.onerror = () => {
+          console.error("Failed to read SVG file.");
+          window.alert("Failed to load the SVG file.");
+          resetInput();
+        };
+        reader.readAsText(file);
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = () => {
         const img = new Image();
@@ -331,8 +457,10 @@ export function initEditor(): EditorHandle {
             editor.canvas.width,
             editor.canvas.height,
           );
+          editor.setVectorLayer(null);
+          renderVectorOverlay();
           updateHistoryButtons();
-          if (imageLoader) imageLoader.value = "";
+          resetInput();
         };
         img.src = reader.result as string;
       };
@@ -380,6 +508,7 @@ export function initEditor(): EditorHandle {
     editor.setTool(new ToolCtor());
     updateHistoryButtons();
     if (layerSelect) layerSelect.value = String(index);
+    renderVectorOverlay();
   }
 
   const handle: EditorHandle = {

@@ -34,6 +34,42 @@ export interface EditorHandle {
  * Initialize the editor by wiring up DOM controls and returning an
  * {@link EditorHandle} that allows tests or callers to tear down the editor.
  */
+const isJsDomEnvironment =
+  typeof navigator !== "undefined" && /jsdom/i.test(navigator.userAgent ?? "");
+
+const domUpdateQueue: Array<() => void> = [];
+let scheduledFrame: number | null = null;
+
+const runDomUpdateQueue = () => {
+  scheduledFrame = null;
+  const queue = domUpdateQueue.splice(0);
+  queue.forEach((task) => task());
+};
+
+const enqueueDomUpdate = (fn: () => void) => {
+  if (typeof requestAnimationFrame !== "function" || isJsDomEnvironment) {
+    fn();
+    return;
+  }
+  domUpdateQueue.push(fn);
+  if (scheduledFrame !== null) {
+    return;
+  }
+  scheduledFrame = requestAnimationFrame(runDomUpdateQueue);
+};
+
+const flushDomUpdates = () => {
+  if (scheduledFrame !== null && typeof cancelAnimationFrame === "function") {
+    cancelAnimationFrame(scheduledFrame);
+    scheduledFrame = null;
+  }
+  if (domUpdateQueue.length === 0) {
+    return;
+  }
+  const queue = domUpdateQueue.splice(0);
+  queue.forEach((task) => task());
+};
+
 export function initEditor(): EditorHandle {
   const canvases = Array.from(
     document.querySelectorAll<HTMLCanvasElement>("canvas"),
@@ -116,19 +152,21 @@ export function initEditor(): EditorHandle {
     throw new Error("Missing #formatSelect select");
   }
 
-  if (layerSelect) {
-    layerSelect.innerHTML = "";
-  }
+  const layerOptionFragment = layerSelect
+    ? document.createDocumentFragment()
+    : null;
+  const opacityFragment = document.createDocumentFragment();
+  let hasOpacityUpdates = false;
 
   canvases.forEach((c, i) => {
     const canvasId = c.id || `layer${i + 1}`;
     const name = c.id || `Layer ${i + 1}`;
 
-    if (layerSelect) {
+    if (layerOptionFragment) {
       const opt = document.createElement("option");
       opt.value = String(i);
       opt.textContent = name;
-      layerSelect.appendChild(opt);
+      layerOptionFragment.appendChild(opt);
     }
 
     if (!document.getElementById(`${canvasId}Opacity`) && i > 0) {
@@ -146,11 +184,25 @@ export function initEditor(): EditorHandle {
       input.max = "100";
       input.value = "100";
 
-      group.appendChild(label);
-      group.appendChild(input);
-      toolbar.appendChild(group);
+      group.append(label, input);
+      opacityFragment.appendChild(group);
+      hasOpacityUpdates = true;
     }
   });
+
+  if (layerSelect && layerOptionFragment) {
+    const fragment = layerOptionFragment;
+    enqueueDomUpdate(() => {
+      layerSelect.replaceChildren(fragment);
+    });
+  }
+
+  if (hasOpacityUpdates) {
+    const fragment = opacityFragment;
+    enqueueDomUpdate(() => {
+      toolbar.appendChild(fragment);
+    });
+  }
 
   const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
   const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
@@ -160,7 +212,7 @@ export function initEditor(): EditorHandle {
   const maxRecentColors = 10;
   const renderColorHistory = () => {
     if (!colorHistory) return;
-    colorHistory.innerHTML = "";
+    const fragment = document.createDocumentFragment();
     recentColors.forEach((color) => {
       const btn = document.createElement("button");
       btn.type = "button";
@@ -171,7 +223,10 @@ export function initEditor(): EditorHandle {
         colorPicker.value = color;
         colorPicker.dispatchEvent(new Event("input"));
       });
-      colorHistory.appendChild(btn);
+      fragment.appendChild(btn);
+    });
+    enqueueDomUpdate(() => {
+      colorHistory.replaceChildren(fragment);
     });
   };
 
@@ -394,5 +449,8 @@ export function initEditor(): EditorHandle {
   };
   recordColor(colorPicker.value);
   updateHistoryButtons();
+  if (isJsDomEnvironment) {
+    flushDomUpdates();
+  }
   return handle;
 }

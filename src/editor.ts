@@ -27,7 +27,27 @@ export interface EditorHandle {
   editor: Editor;
   editors: Editor[];
   activateLayer(index: number): void;
+  serializeState(): Promise<SerializedEditorState>;
+  restoreState(state: SerializedEditorState): Promise<void>;
   destroy(): void;
+}
+
+export interface SerializedLayerState {
+  id: string;
+  dataUrl: string;
+  opacity: number;
+}
+
+export interface SerializedEditorState {
+  layers: SerializedLayerState[];
+  activeLayerIndex: number;
+  colorPicker: string;
+  lineWidth: string;
+  fillMode: boolean;
+  fontFamily: string | null;
+  fontSize: string | null;
+  recentColors: string[];
+  timestamp: number;
 }
 
 /**
@@ -158,6 +178,15 @@ export function initEditor(): EditorHandle {
 
   const recentColors: string[] = [];
   const maxRecentColors = 10;
+  const setRecentColors = (colors: string[]) => {
+    recentColors.length = 0;
+    colors.forEach((color) => {
+      if (typeof color === "string" && color.trim()) {
+        recentColors.push(color);
+      }
+    });
+    renderColorHistory();
+  };
   const renderColorHistory = () => {
     if (!colorHistory) return;
     colorHistory.innerHTML = "";
@@ -386,6 +415,75 @@ export function initEditor(): EditorHandle {
     editor,
     editors,
     activateLayer,
+    async serializeState(): Promise<SerializedEditorState> {
+      const layers: SerializedLayerState[] = await Promise.all(
+        editors.map(async (e) => ({
+          id: e.canvas.id,
+          dataUrl: e.canvas.toDataURL("image/png"),
+          opacity: parseFloat(e.canvas.style.opacity || "1") || 1,
+        })),
+      );
+      return {
+        layers,
+        activeLayerIndex,
+        colorPicker: colorPicker.value,
+        lineWidth: lineWidth.value,
+        fillMode: fillMode.checked,
+        fontFamily: fontFamily?.value ?? null,
+        fontSize: fontSize?.value ?? null,
+        recentColors: [...recentColors],
+        timestamp: Date.now(),
+      };
+    },
+    async restoreState(state: SerializedEditorState): Promise<void> {
+      if (!state) return;
+      if (!Array.isArray(state.layers)) return;
+      if (typeof state.colorPicker === "string") {
+        colorPicker.value = state.colorPicker;
+        colorPicker.dispatchEvent(new Event("input"));
+      }
+      if (typeof state.lineWidth === "string") {
+        lineWidth.value = state.lineWidth;
+      }
+      if (typeof state.fillMode === "boolean") {
+        fillMode.checked = state.fillMode;
+      }
+      if (fontFamily && typeof state.fontFamily === "string") {
+        fontFamily.value = state.fontFamily;
+      }
+      if (fontSize && typeof state.fontSize === "string") {
+        fontSize.value = state.fontSize;
+      }
+      if (Array.isArray(state.recentColors)) {
+        setRecentColors(state.recentColors);
+      }
+
+      const loadPromises = state.layers.map((layerState, index) => {
+        const targetCanvas = canvases[index];
+        if (!targetCanvas) return Promise.resolve();
+        return new Promise<void>((resolve) => {
+          const img = new Image();
+          img.onload = () => {
+            const ctx = targetCanvas.getContext("2d");
+            if (ctx) {
+              ctx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+              ctx.drawImage(img, 0, 0, targetCanvas.width, targetCanvas.height);
+            }
+            targetCanvas.style.opacity = String(layerState.opacity ?? 1);
+            resolve();
+          };
+          img.onerror = () => resolve();
+          img.src = layerState.dataUrl;
+        });
+      });
+
+      await Promise.all(loadPromises);
+
+      if (typeof state.activeLayerIndex === "number") {
+        activateLayer(state.activeLayerIndex);
+      }
+      updateHistoryButtons();
+    },
     destroy() {
       listeners.forEach((fn) => fn());
       shortcuts.destroy();

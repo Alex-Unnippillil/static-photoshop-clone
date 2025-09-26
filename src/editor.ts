@@ -1,4 +1,4 @@
-import { Editor } from "./core/Editor.js";
+import { Editor, type EditorOptions } from "./core/Editor.js";
 import { Shortcuts } from "./core/Shortcuts.js";
 import { PencilTool } from "./tools/PencilTool.js";
 import { EraserTool } from "./tools/EraserTool.js";
@@ -30,11 +30,13 @@ export interface EditorHandle {
   destroy(): void;
 }
 
+export type EditorSettings = EditorOptions;
+
 /**
  * Initialize the editor by wiring up DOM controls and returning an
  * {@link EditorHandle} that allows tests or callers to tear down the editor.
  */
-export function initEditor(): EditorHandle {
+export function initEditor(settings: EditorSettings = {}): EditorHandle {
   const canvases = Array.from(
     document.querySelectorAll<HTMLCanvasElement>("canvas"),
   );
@@ -212,6 +214,7 @@ export function initEditor(): EditorHandle {
         },
         fontFamily ?? undefined,
         fontSize ?? undefined,
+        settings,
       );
       editors.push(e);
     } catch {

@@ -1,10 +1,20 @@
 import { Tool } from "../tools/Tool.js";
 
+interface Snapshot {
+  image: ImageData;
+  bytes: number;
+}
+
+export interface EditorOptions {
+  /** Maximum estimated bytes to retain across undo and redo history. */
+  historyMemoryCapBytes?: number;
+}
+
 export class Editor {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
-  private undoStack: ImageData[] = [];
-  private redoStack: ImageData[] = [];
+  private undoStack: Snapshot[] = [];
+  private redoStack: Snapshot[] = [];
   private currentTool: Tool | null = null;
   colorPicker: HTMLInputElement;
   lineWidth: HTMLInputElement;
@@ -12,6 +22,10 @@ export class Editor {
   fontFamily: HTMLSelectElement | null;
   fontSize: HTMLInputElement | null;
   private onChange?: () => void;
+  private historyByteUsage = 0;
+  private historyMemoryCapBytes: number;
+
+  static readonly DEFAULT_HISTORY_MEMORY_CAP_BYTES = 64 * 1024 * 1024;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -21,6 +35,7 @@ export class Editor {
     onChange?: () => void,
     fontFamily?: HTMLSelectElement | null,
     fontSize?: HTMLInputElement | null,
+    options: EditorOptions = {},
   ) {
     this.canvas = canvas;
     const ctx = canvas.getContext("2d");
@@ -32,6 +47,14 @@ export class Editor {
     this.onChange = onChange;
     this.fontFamily = fontFamily ?? null;
     this.fontSize = fontSize ?? null;
+    const cap = options.historyMemoryCapBytes;
+    if (cap === undefined || Number.isNaN(cap)) {
+      this.historyMemoryCapBytes = Editor.DEFAULT_HISTORY_MEMORY_CAP_BYTES;
+    } else if (!Number.isFinite(cap)) {
+      this.historyMemoryCapBytes = Number.POSITIVE_INFINITY;
+    } else {
+      this.historyMemoryCapBytes = Math.max(0, cap);
+    }
     this.adjustForPixelRatio();
     window.addEventListener("resize", this.handleResize);
 
@@ -84,22 +107,26 @@ export class Editor {
   };
 
   saveState() {
-    this.undoStack.push(
+    this.clearStack(this.redoStack);
+    this.pushSnapshot(
+      this.undoStack,
       this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height),
     );
-    if (this.undoStack.length > 50) this.undoStack.shift();
-    this.redoStack.length = 0;
+    this.enforceHistoryCap();
     this.onChange?.();
   }
 
-  private restoreState(stack: ImageData[], opposite: ImageData[]) {
+  private restoreState(stack: Snapshot[], opposite: Snapshot[]) {
     if (!stack.length) return;
-    opposite.push(
+    this.pushSnapshot(
+      opposite,
       this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height),
     );
-    const imageData = stack.pop()!;
+    const snapshot = this.popSnapshot(stack);
+    if (!snapshot) return;
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.ctx.putImageData(imageData, 0, 0);
+    this.ctx.putImageData(snapshot.image, 0, 0);
+    this.enforceHistoryCap();
     this.onChange?.();
   }
 
@@ -146,12 +173,65 @@ export class Editor {
   /**
    * Remove all event listeners registered by the editor.
    * Should be called before discarding the instance to prevent leaks.
-   */
+  */
   destroy(): void {
     this.currentTool?.destroy?.();
     window.removeEventListener("resize", this.handleResize);
     this.canvas.removeEventListener("pointerdown", this.handlePointerDown);
     this.canvas.removeEventListener("pointermove", this.handlePointerMove);
     this.canvas.removeEventListener("pointerup", this.handlePointerUp);
+  }
+
+  private pushSnapshot(stack: Snapshot[], imageData: ImageData) {
+    const snapshot: Snapshot = {
+      image: imageData,
+      bytes: imageData.width * imageData.height * 4,
+    };
+    stack.push(snapshot);
+    this.historyByteUsage += snapshot.bytes;
+  }
+
+  private popSnapshot(stack: Snapshot[]) {
+    const snapshot = stack.pop();
+    if (snapshot) this.historyByteUsage -= snapshot.bytes;
+    return snapshot;
+  }
+
+  private shiftSnapshot(stack: Snapshot[]) {
+    const snapshot = stack.shift();
+    if (snapshot) this.historyByteUsage -= snapshot.bytes;
+    return snapshot;
+  }
+
+  private clearStack(stack: Snapshot[]) {
+    if (!stack.length) return;
+    for (const snapshot of stack) {
+      this.historyByteUsage -= snapshot.bytes;
+    }
+    stack.length = 0;
+  }
+
+  private enforceHistoryCap() {
+    if (this.historyMemoryCapBytes <= 0) {
+      if (this.historyByteUsage > 0) {
+        this.clearStack(this.undoStack);
+        this.clearStack(this.redoStack);
+      }
+      return;
+    }
+    if (!Number.isFinite(this.historyMemoryCapBytes)) {
+      return;
+    }
+    while (this.historyByteUsage > this.historyMemoryCapBytes) {
+      if (this.undoStack.length) {
+        this.shiftSnapshot(this.undoStack);
+        continue;
+      }
+      if (this.redoStack.length) {
+        this.shiftSnapshot(this.redoStack);
+        continue;
+      }
+      break;
+    }
   }
 }

@@ -59,12 +59,11 @@ describe("layer opacity", () => {
     jest.restoreAllMocks();
   });
 
-  it("updates layer opacity style", () => {
+  it("updates layer opacity state", () => {
     const slider = document.getElementById("layer2Opacity") as HTMLInputElement;
-    const layer = document.getElementById("layer2") as HTMLCanvasElement;
     slider.value = "30";
     slider.dispatchEvent(new Event("input"));
-    expect(layer.style.opacity).toBe("0.3");
+    expect(handle.layers[1].opacity).toBeCloseTo(0.3);
   });
 
   it("uses layer opacity when saving", () => {
@@ -72,12 +71,22 @@ describe("layer opacity", () => {
     slider.value = "50";
     slider.dispatchEvent(new Event("input"));
 
+    const blend = document.getElementById(
+      "layer2BlendMode",
+    ) as HTMLSelectElement;
+    blend.value = "multiply";
+    blend.dispatchEvent(new Event("change"));
+
     const tempCtxAlpha: number[] = [];
+    const tempCtxOperations: string[] = [];
     const tempCtx = {
       drawImage: jest.fn().mockImplementation(() => {
         tempCtxAlpha.push(tempCtx.globalAlpha);
+        tempCtxOperations.push(tempCtx.globalCompositeOperation);
       }),
       globalAlpha: 1,
+      globalCompositeOperation: "source-over" as GlobalCompositeOperation,
+      clearRect: jest.fn(),
     } as any;
     const tempCanvas = {
       width: 0,
@@ -98,6 +107,7 @@ describe("layer opacity", () => {
 
     expect(tempCtx.drawImage).toHaveBeenCalledTimes(2);
     expect(tempCtxAlpha).toEqual([1, 0.5]);
+    expect(tempCtxOperations).toEqual(["source-over", "multiply"]);
     expect(tempCanvas.toDataURL).toHaveBeenCalledWith("image/png");
 
     createSpy.mockRestore();

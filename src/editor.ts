@@ -23,9 +23,29 @@ function listen<T extends Event>(
   list.push(() => el.removeEventListener(type, wrapped));
 }
 
+export interface LayerState {
+  editor: Editor;
+  canvas: HTMLCanvasElement;
+  opacity: number;
+  blendMode: GlobalCompositeOperation;
+}
+
+const BLEND_MODE_OPTIONS: Array<{
+  value: GlobalCompositeOperation;
+  label: string;
+}> = [
+  { value: "source-over", label: "Normal" },
+  { value: "multiply", label: "Multiply" },
+  { value: "screen", label: "Screen" },
+  { value: "overlay", label: "Overlay" },
+  { value: "darken", label: "Darken" },
+  { value: "lighten", label: "Lighten" },
+];
+
 export interface EditorHandle {
   editor: Editor;
   editors: Editor[];
+  layers: LayerState[];
   activateLayer(index: number): void;
   destroy(): void;
 }
@@ -99,6 +119,70 @@ export function initEditor(): EditorHandle {
   const colorHistory = document.getElementById(
     "colorHistory",
   ) as HTMLDivElement | null;
+  const container = document.getElementById("canvasContainer");
+  let previewCanvas: HTMLCanvasElement | null = null;
+  let previewCtx: CanvasRenderingContext2D | null = null;
+  if (container) {
+    previewCanvas = container.querySelector(
+      "canvas[data-role=preview]",
+    ) as HTMLCanvasElement | null;
+    if (!previewCanvas) {
+      previewCanvas = document.createElement("canvas");
+      previewCanvas.dataset.role = "preview";
+      previewCanvas.style.position = "absolute";
+      previewCanvas.style.top = "0";
+      previewCanvas.style.left = "0";
+      previewCanvas.style.width = "100%";
+      previewCanvas.style.height = "100%";
+      previewCanvas.style.pointerEvents = "none";
+      container.insertBefore(previewCanvas, container.firstChild);
+    }
+    previewCtx = previewCanvas.getContext("2d");
+  }
+
+  const layers: LayerState[] = canvases.map((canvas) => ({
+    editor: null as unknown as Editor,
+    canvas,
+    opacity: 1,
+    blendMode: "source-over",
+  }));
+
+  const renderPreview = () => {
+    if (!previewCanvas || !previewCtx || layers.length === 0) return;
+    const width = canvases[0].width;
+    const height = canvases[0].height;
+    if (!width || !height) return;
+    if (previewCanvas.width !== width) previewCanvas.width = width;
+    if (previewCanvas.height !== height) previewCanvas.height = height;
+    compositeLayers(previewCtx, width, height, layers);
+  };
+
+  const requestFrame: (callback: FrameRequestCallback) => number =
+    typeof window.requestAnimationFrame === "function"
+      ? window.requestAnimationFrame.bind(window)
+      : (cb: FrameRequestCallback) =>
+          window.setTimeout(
+            () => cb(typeof performance !== "undefined" ? performance.now() : Date.now()),
+            16,
+          );
+
+  const schedulePreview = (() => {
+    let raf = 0;
+    return () => {
+      if (!previewCtx) return;
+      if (raf) return;
+      raf = requestFrame(() => {
+        raf = 0;
+        renderPreview();
+      });
+    };
+  })();
+
+  if (previewCtx) {
+    canvases.forEach((canvas) => {
+      canvas.style.opacity = "0";
+    });
+  }
 
   if (!colorPicker) {
     throw new Error("Missing #colorPicker input");
@@ -116,13 +200,16 @@ export function initEditor(): EditorHandle {
     throw new Error("Missing #formatSelect select");
   }
 
+  const listeners: Array<() => void> = [];
+
   if (layerSelect) {
     layerSelect.innerHTML = "";
   }
 
-  canvases.forEach((c, i) => {
-    const canvasId = c.id || `layer${i + 1}`;
-    const name = c.id || `Layer ${i + 1}`;
+  canvases.forEach((canvas, i) => {
+    const canvasId = canvas.id || `layer${i + 1}`;
+    const name = canvas.id || `Layer ${i + 1}`;
+    const layer = layers[i];
 
     if (layerSelect) {
       const opt = document.createElement("option");
@@ -131,30 +218,82 @@ export function initEditor(): EditorHandle {
       layerSelect.appendChild(opt);
     }
 
-    if (!document.getElementById(`${canvasId}Opacity`) && i > 0) {
+    const opacityId = `${canvasId}Opacity`;
+    let opacityInput = document.getElementById(opacityId) as
+      | HTMLInputElement
+      | null;
+    if (!opacityInput) {
       const group = document.createElement("div");
       group.className = "group";
 
       const label = document.createElement("label");
-      label.htmlFor = `${canvasId}Opacity`;
+      label.htmlFor = opacityId;
       label.textContent = `${name} Opacity`;
 
-      const input = document.createElement("input");
-      input.id = `${canvasId}Opacity`;
-      input.type = "number";
-      input.min = "0";
-      input.max = "100";
-      input.value = "100";
+      opacityInput = document.createElement("input");
+      opacityInput.id = opacityId;
+      opacityInput.type = "number";
+      opacityInput.min = "0";
+      opacityInput.max = "100";
+      opacityInput.value = "100";
 
       group.appendChild(label);
-      group.appendChild(input);
+      group.appendChild(opacityInput);
       toolbar.appendChild(group);
+    }
+
+    if (opacityInput) {
+      const applyOpacity = () => {
+        const value = parseFloat(opacityInput!.value);
+        const normalized = isNaN(value) ? 1 : Math.max(0, Math.min(1, value / 100));
+        layer.opacity = normalized;
+        schedulePreview();
+      };
+      applyOpacity();
+      listen(opacityInput, "input", applyOpacity, listeners);
+    }
+
+    const blendId = `${canvasId}BlendMode`;
+    let blendSelect = document.getElementById(blendId) as
+      | HTMLSelectElement
+      | null;
+    if (!blendSelect) {
+      const group = document.createElement("div");
+      group.className = "group";
+
+      const label = document.createElement("label");
+      label.htmlFor = blendId;
+      label.textContent = `${name} Blend`;
+
+      blendSelect = document.createElement("select");
+      blendSelect.id = blendId;
+      BLEND_MODE_OPTIONS.forEach(({ value, label: text }) => {
+        const opt = document.createElement("option");
+        opt.value = value;
+        opt.textContent = text;
+        blendSelect!.appendChild(opt);
+      });
+
+      group.appendChild(label);
+      group.appendChild(blendSelect);
+      toolbar.appendChild(group);
+    }
+
+    if (blendSelect) {
+      if (!blendSelect.value) {
+        blendSelect.value = "source-over";
+      }
+      const applyBlend = () => {
+        layer.blendMode = (blendSelect!.value as GlobalCompositeOperation) || "source-over";
+        schedulePreview();
+      };
+      applyBlend();
+      listen(blendSelect, "change", applyBlend, listeners);
     }
   });
 
   const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
   const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
-  const listeners: Array<() => void> = [];
 
   const recentColors: string[] = [];
   const maxRecentColors = 10;
@@ -200,7 +339,7 @@ export function initEditor(): EditorHandle {
   };
 
   const editors: Editor[] = [];
-  canvases.forEach((c) => {
+  canvases.forEach((c, index) => {
     try {
       const e = new Editor(
         c,
@@ -209,11 +348,13 @@ export function initEditor(): EditorHandle {
         fillMode,
         () => {
           updateHistoryButtons();
+          schedulePreview();
         },
         fontFamily ?? undefined,
         fontSize ?? undefined,
       );
       editors.push(e);
+      layers[index].editor = e;
     } catch {
       /* skip canvases without 2D context */
     }
@@ -283,18 +424,23 @@ export function initEditor(): EditorHandle {
       const quality = format === "jpeg" ? 0.9 : undefined;
 
       let exportCanvas: HTMLCanvasElement;
-      if (canvases.length > 1) {
-        // composite all layers respecting their opacity
-        exportCanvas = document.createElement("canvas");
-        exportCanvas.width = canvases[0].width;
-        exportCanvas.height = canvases[0].height;
-        const tempCtx = exportCanvas.getContext("2d")!;
-        canvases.forEach((cv) => {
-          const opacity = parseFloat(cv.style.opacity) || 1;
-          tempCtx.globalAlpha = opacity;
-          tempCtx.drawImage(cv, 0, 0);
-        });
-        tempCtx.globalAlpha = 1;
+      const baseLayer = layers[0];
+      const needsComposite =
+        layers.length > 1 ||
+        !baseLayer ||
+        baseLayer.opacity !== 1 ||
+        baseLayer.blendMode !== "source-over";
+      if (needsComposite) {
+        const tempCanvas = document.createElement("canvas");
+        tempCanvas.width = canvases[0].width;
+        tempCanvas.height = canvases[0].height;
+        const tempCtx = tempCanvas.getContext("2d");
+        if (tempCtx) {
+          compositeLayers(tempCtx, tempCanvas.width, tempCanvas.height, layers);
+          exportCanvas = tempCanvas;
+        } else {
+          exportCanvas = editor.canvas;
+        }
       } else {
         exportCanvas = editor.canvas;
       }
@@ -341,23 +487,6 @@ export function initEditor(): EditorHandle {
     listeners,
   );
 
-  document
-    .querySelectorAll<HTMLInputElement>('input[id$="Opacity"]')
-    .forEach((input) => {
-      const targetId = input.id.replace(/Opacity$/, "");
-      const layer = document.getElementById(targetId) as HTMLCanvasElement | null;
-      if (!layer) return;
-      listen(
-        input,
-        "input",
-        () => {
-          const value = parseFloat(input.value);
-          layer.style.opacity = isNaN(value) ? "1" : String(value / 100);
-        },
-        listeners,
-      );
-    });
-
   // layer selection
   listen(
     layerSelect,
@@ -380,11 +509,13 @@ export function initEditor(): EditorHandle {
     editor.setTool(new ToolCtor());
     updateHistoryButtons();
     if (layerSelect) layerSelect.value = String(index);
+    schedulePreview();
   }
 
   const handle: EditorHandle = {
     editor,
     editors,
+    layers,
     activateLayer,
     destroy() {
       listeners.forEach((fn) => fn());
@@ -394,5 +525,130 @@ export function initEditor(): EditorHandle {
   };
   recordColor(colorPicker.value);
   updateHistoryButtons();
+  schedulePreview();
   return handle;
+}
+
+function compositeLayers(
+  targetCtx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  layers: LayerState[],
+) {
+  const canComposite = typeof targetCtx.globalCompositeOperation === "string";
+
+  if (canComposite) {
+    const originalOp = targetCtx.globalCompositeOperation;
+    const originalAlpha = targetCtx.globalAlpha ?? 1;
+    if (typeof targetCtx.clearRect === "function") {
+      targetCtx.clearRect(0, 0, width, height);
+    }
+    targetCtx.globalCompositeOperation = "source-over";
+    targetCtx.globalAlpha = 1;
+    layers.forEach((layer) => {
+      targetCtx.globalAlpha = layer.opacity;
+      targetCtx.globalCompositeOperation = layer.blendMode;
+      targetCtx.drawImage(layer.canvas, 0, 0);
+    });
+    targetCtx.globalCompositeOperation = originalOp;
+    targetCtx.globalAlpha = originalAlpha;
+    return;
+  }
+
+  if (typeof targetCtx.putImageData !== "function") {
+    layers.forEach((layer) => {
+      targetCtx.drawImage(layer.canvas, 0, 0);
+    });
+    return;
+  }
+
+  const output = new Uint8ClampedArray(width * height * 4);
+  layers.forEach((layer) => {
+    if (!layer.opacity) return;
+    const ctx = layer.editor?.ctx ?? layer.canvas.getContext("2d");
+    if (!ctx?.getImageData) return;
+    const source = ctx.getImageData(0, 0, width, height);
+    cpuComposite(output, source.data, layer.opacity, layer.blendMode);
+  });
+
+  const imageData = new ImageData(output, width, height);
+  targetCtx.putImageData(imageData, 0, 0);
+}
+
+function cpuComposite(
+  dest: Uint8ClampedArray,
+  src: Uint8ClampedArray,
+  opacity: number,
+  mode: GlobalCompositeOperation,
+) {
+  if (opacity <= 0) return;
+  const blend = getBlendFunction(mode);
+  for (let i = 0; i < dest.length; i += 4) {
+    const srcAlpha = (src[i + 3] / 255) * opacity;
+    if (srcAlpha <= 0) continue;
+    const dstAlpha = dest[i + 3] / 255;
+    const outAlpha = srcAlpha + dstAlpha * (1 - srcAlpha);
+
+    const srcR = src[i] / 255;
+    const srcG = src[i + 1] / 255;
+    const srcB = src[i + 2] / 255;
+    const dstR = dest[i] / 255;
+    const dstG = dest[i + 1] / 255;
+    const dstB = dest[i + 2] / 255;
+
+    const blendedR = blend(srcR, dstR);
+    const blendedG = blend(srcG, dstG);
+    const blendedB = blend(srcB, dstB);
+
+    if (outAlpha <= 0) {
+      dest[i] = 0;
+      dest[i + 1] = 0;
+      dest[i + 2] = 0;
+      dest[i + 3] = 0;
+      continue;
+    }
+
+    dest[i] = Math.round(
+      clamp01(
+        (blendedR * srcAlpha + dstR * dstAlpha * (1 - srcAlpha)) / outAlpha,
+      ) * 255,
+    );
+    dest[i + 1] = Math.round(
+      clamp01(
+        (blendedG * srcAlpha + dstG * dstAlpha * (1 - srcAlpha)) / outAlpha,
+      ) * 255,
+    );
+    dest[i + 2] = Math.round(
+      clamp01(
+        (blendedB * srcAlpha + dstB * dstAlpha * (1 - srcAlpha)) / outAlpha,
+      ) * 255,
+    );
+    dest[i + 3] = Math.round(clamp01(outAlpha) * 255);
+  }
+}
+
+type BlendFn = (src: number, dst: number) => number;
+
+function getBlendFunction(mode: GlobalCompositeOperation): BlendFn {
+  switch (mode) {
+    case "multiply":
+      return (src, dst) => src * dst;
+    case "screen":
+      return (src, dst) => 1 - (1 - src) * (1 - dst);
+    case "overlay":
+      return (src, dst) =>
+        dst <= 0.5 ? 2 * src * dst : 1 - 2 * (1 - src) * (1 - dst);
+    case "darken":
+      return (src, dst) => Math.min(src, dst);
+    case "lighten":
+      return (src, dst) => Math.max(src, dst);
+    default:
+      return (src) => src;
+  }
+}
+
+function clamp01(value: number) {
+  if (value <= 0) return 0;
+  if (value >= 1) return 1;
+  return value;
 }

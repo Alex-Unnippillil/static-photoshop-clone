@@ -51,15 +51,20 @@ export class Editor {
     this.canvas.setPointerCapture(e.pointerId);
     this.saveState();
     this.currentTool?.onPointerDown(e, this);
+    this.onChange?.();
   };
 
   private handlePointerMove = (e: PointerEvent) => {
     this.currentTool?.onPointerMove(e, this);
+    if (e.buttons) {
+      this.onChange?.();
+    }
   };
 
   private handlePointerUp = (e: PointerEvent) => {
     this.currentTool?.onPointerUp(e, this);
     this.canvas.releasePointerCapture(e.pointerId);
+    this.onChange?.();
   };
 
   private adjustForPixelRatio() {
@@ -81,6 +86,7 @@ export class Editor {
     );
     this.adjustForPixelRatio();
     this.ctx.putImageData(data, 0, 0);
+    this.onChange?.();
   };
 
   saveState() {

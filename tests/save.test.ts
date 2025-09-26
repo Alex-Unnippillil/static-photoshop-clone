@@ -38,7 +38,13 @@ describe("save button", () => {
     const click = jest.fn();
     const anchor = { href: "", download: "", click } as any;
 
-    jest.spyOn(document, "createElement").mockReturnValue(anchor);
+    const originalCreate = document.createElement.bind(document);
+    const createSpy = jest
+      .spyOn(document, "createElement")
+      .mockImplementation((tag: string) => {
+        if (tag === "a") return anchor;
+        return originalCreate(tag);
+      });
 
     const handle = initEditor();
 
@@ -47,6 +53,7 @@ describe("save button", () => {
     expect(click).toHaveBeenCalled();
 
     handle.destroy();
+    createSpy.mockRestore();
   });
 
   it("supports selecting jpeg format", () => {
@@ -85,7 +92,13 @@ describe("save button", () => {
 
     const click = jest.fn();
     const anchor = { href: "", download: "", click } as any;
-    jest.spyOn(document, "createElement").mockReturnValue(anchor);
+    const originalCreate = document.createElement.bind(document);
+    const createSpy = jest
+      .spyOn(document, "createElement")
+      .mockImplementation((tag: string) => {
+        if (tag === "a") return anchor;
+        return originalCreate(tag);
+      });
 
     const handle = initEditor();
 
@@ -95,5 +108,6 @@ describe("save button", () => {
     expect(click).toHaveBeenCalled();
 
     handle.destroy();
+    createSpy.mockRestore();
   });
 });

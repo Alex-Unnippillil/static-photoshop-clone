@@ -12,9 +12,15 @@ import { EyedropperTool } from "./tools/EyedropperTool.js";
 function listen(el, type, handler, list) {
     if (!el)
         return;
+    if (typeof el.addEventListener !== "function")
+        return;
     const wrapped = handler;
     el.addEventListener(type, wrapped);
-    list.push(() => el.removeEventListener(type, wrapped));
+    list.push(() => {
+        if (typeof el.removeEventListener === "function") {
+            el.removeEventListener(type, wrapped);
+        }
+    });
 }
 /**
  * Initialize the editor by wiring up DOM controls and returning an
@@ -91,6 +97,111 @@ export function initEditor() {
     if (!formatSelect) {
         throw new Error("Missing #formatSelect select");
     }
+    const createPassiveRange = (id, value, min, max, step) => {
+        const fallback = {
+            id,
+            type: "range",
+            value,
+            min,
+            max,
+            step,
+            addEventListener: () => { },
+            removeEventListener: () => { },
+        };
+        return fallback;
+    };
+    const createPassiveSelect = (id, value) => {
+        const fallback = {
+            id,
+            value,
+            options: [],
+            addEventListener: () => { },
+            removeEventListener: () => { },
+        };
+        return fallback;
+    };
+    const ensureRangeControl = (id, labelText, options) => {
+        let input = document.getElementById(id);
+        if (!input) {
+            input = document.createElement("input");
+            input.type = "range";
+            input.id = id;
+            input.min = options.min;
+            input.max = options.max;
+            input.value = options.value;
+            if (options.step)
+                input.step = options.step;
+            if (typeof input.addEventListener !== "function") {
+                input = createPassiveRange(id, options.value, options.min, options.max, options.step);
+            }
+            if (toolbar && typeof toolbar.appendChild === "function") {
+                const group = document.createElement("div");
+                if (group && typeof group.appendChild === "function") {
+                    group.className = "group";
+                    const label = document.createElement("label");
+                    if (label) {
+                        label.htmlFor = id;
+                        label.textContent = labelText;
+                        group.appendChild(label);
+                    }
+                    group.appendChild(input);
+                    toolbar.appendChild(group);
+                }
+            }
+        }
+        return input;
+    };
+    const ensureSelectControl = (id, labelText, buildOptions) => {
+        let select = document.getElementById(id);
+        if (!select) {
+            select = document.createElement("select");
+            select.id = id;
+            const canAppendOptions = typeof select.appendChild === "function";
+            if (canAppendOptions) {
+                buildOptions(select);
+            }
+            else {
+                select = createPassiveSelect(id, "round");
+            }
+            if (toolbar && typeof toolbar.appendChild === "function") {
+                const group = document.createElement("div");
+                if (group && typeof group.appendChild === "function") {
+                    group.className = "group";
+                    const label = document.createElement("label");
+                    if (label) {
+                        label.htmlFor = id;
+                        label.textContent = labelText;
+                        group.appendChild(label);
+                    }
+                    group.appendChild(select);
+                    toolbar.appendChild(group);
+                }
+            }
+        }
+        return select;
+    };
+    const brushSpacing = ensureRangeControl("brushSpacing", "Spacing", {
+        min: "5",
+        max: "200",
+        value: "25",
+    });
+    const brushHardness = ensureRangeControl("brushHardness", "Hardness", {
+        min: "0",
+        max: "100",
+        value: "100",
+    });
+    const brushShape = ensureSelectControl("brushShape", "Tip", (select) => {
+        if (!select.options || select.options.length === 0) {
+            const round = document.createElement("option");
+            round.value = "round";
+            round.textContent = "Round";
+            select.appendChild(round);
+            const square = document.createElement("option");
+            square.value = "square";
+            square.textContent = "Square";
+            select.appendChild(square);
+        }
+    });
     if (layerSelect) {
         layerSelect.innerHTML = "";
     }
@@ -151,8 +262,22 @@ export function initEditor() {
             recentColors.pop();
         renderColorHistory();
     };
+    const editors = [];
     listen(colorPicker, "input", () => {
         recordColor(colorPicker.value);
+        editors.forEach((e) => e.handleBrushSettingsChange());
+    }, listeners);
+    listen(lineWidth, "input", () => {
+        editors.forEach((e) => e.handleBrushSettingsChange());
+    }, listeners);
+    listen(brushSpacing, "input", () => {
+        editors.forEach((e) => e.handleBrushSettingsChange());
+    }, listeners);
+    listen(brushHardness, "input", () => {
+        editors.forEach((e) => e.handleBrushSettingsChange());
+    }, listeners);
+    listen(brushShape, "change", () => {
+        editors.forEach((e) => e.handleBrushSettingsChange());
     }, listeners);
     let editor; // set after editors created
     const updateHistoryButtons = () => {
@@ -161,10 +286,9 @@ export function initEditor() {
         if (redoBtn)
             redoBtn.disabled = !editor?.canRedo;
     };
-    const editors = [];
     canvases.forEach((c) => {
         try {
-            const e = new Editor(c, colorPicker, lineWidth, fillMode, () => {
+            const e = new Editor(c, colorPicker, lineWidth, fillMode, brushSpacing, brushHardness, brushShape, () => {
                 updateHistoryButtons();
             }, fontFamily ?? undefined, fontSize ?? undefined);
             editors.push(e);

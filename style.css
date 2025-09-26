@@ -99,4 +99,18 @@ body {
   box-sizing: border-box;
 }
 
+#toolbar .group input[type="range"] {
+  width: 120px;
+}
+
+.brush-preview {
+  position: absolute;
+  pointer-events: none;
+  display: none;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.6));
+  image-rendering: pixelated;
+  z-index: 10;
+}
+
 

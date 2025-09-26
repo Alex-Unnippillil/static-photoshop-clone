@@ -6,4 +6,5 @@ export interface Tool {
   onPointerMove(e: PointerEvent, editor: Editor): void;
   onPointerUp(e: PointerEvent, editor: Editor): void;
   destroy?(): void;
+  onBrushSettingsChange?(editor: Editor): void;
 }

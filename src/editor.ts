@@ -18,9 +18,14 @@ function listen<T extends Event>(
   list: Array<() => void>,
 ) {
   if (!el) return;
+  if (typeof el.addEventListener !== "function") return;
   const wrapped = handler as EventListener;
   el.addEventListener(type, wrapped);
-  list.push(() => el.removeEventListener(type, wrapped));
+  list.push(() => {
+    if (typeof el.removeEventListener === "function") {
+      el.removeEventListener(type, wrapped);
+    }
+  });
 }
 
 export interface EditorHandle {
@@ -116,6 +121,138 @@ export function initEditor(): EditorHandle {
     throw new Error("Missing #formatSelect select");
   }
 
+  const createPassiveRange = (
+    id: string,
+    value: string,
+    min: string,
+    max: string,
+    step?: string,
+  ): HTMLInputElement => {
+    const fallback: Partial<HTMLInputElement> & {
+      addEventListener: HTMLInputElement["addEventListener"];
+      removeEventListener: HTMLInputElement["removeEventListener"];
+    } = {
+      id,
+      type: "range",
+      value,
+      min,
+      max,
+      step,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    };
+    return fallback as HTMLInputElement;
+  };
+
+  const createPassiveSelect = (id: string, value: string): HTMLSelectElement => {
+    const fallback: Partial<HTMLSelectElement> & {
+      addEventListener: HTMLSelectElement["addEventListener"];
+      removeEventListener: HTMLSelectElement["removeEventListener"];
+      options: HTMLOptionsCollection;
+    } = {
+      id,
+      value,
+      options: [] as unknown as HTMLOptionsCollection,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    };
+    return fallback as HTMLSelectElement;
+  };
+
+  const ensureRangeControl = (
+    id: string,
+    labelText: string,
+    options: { min: string; max: string; value: string; step?: string },
+  ): HTMLInputElement => {
+    let input = document.getElementById(id) as HTMLInputElement | null;
+    if (!input) {
+      input = document.createElement("input");
+      input.type = "range";
+      input.id = id;
+      input.min = options.min;
+      input.max = options.max;
+      input.value = options.value;
+      if (options.step) input.step = options.step;
+
+      if (typeof input.addEventListener !== "function") {
+        input = createPassiveRange(id, options.value, options.min, options.max, options.step);
+      }
+
+      if (toolbar && typeof (toolbar as HTMLElement).appendChild === "function") {
+        const group = document.createElement("div");
+        if (group && typeof (group as HTMLElement).appendChild === "function") {
+          group.className = "group";
+          const label = document.createElement("label");
+          if (label) {
+            label.htmlFor = id;
+            label.textContent = labelText;
+            group.appendChild(label);
+          }
+          group.appendChild(input);
+          (toolbar as HTMLElement).appendChild(group);
+        }
+      }
+    }
+    return input;
+  };
+
+  const ensureSelectControl = (
+    id: string,
+    labelText: string,
+    buildOptions: (select: HTMLSelectElement) => void,
+  ): HTMLSelectElement => {
+    let select = document.getElementById(id) as HTMLSelectElement | null;
+    if (!select) {
+      select = document.createElement("select");
+      select.id = id;
+      const canAppendOptions = typeof select.appendChild === "function";
+      if (canAppendOptions) {
+        buildOptions(select);
+      } else {
+        select = createPassiveSelect(id, "round");
+      }
+
+      if (toolbar && typeof (toolbar as HTMLElement).appendChild === "function") {
+        const group = document.createElement("div");
+        if (group && typeof (group as HTMLElement).appendChild === "function") {
+          group.className = "group";
+          const label = document.createElement("label");
+          if (label) {
+            label.htmlFor = id;
+            label.textContent = labelText;
+            group.appendChild(label);
+          }
+          group.appendChild(select);
+          (toolbar as HTMLElement).appendChild(group);
+        }
+      }
+    }
+    return select;
+  };
+
+  const brushSpacing = ensureRangeControl("brushSpacing", "Spacing", {
+    min: "5",
+    max: "200",
+    value: "25",
+  });
+  const brushHardness = ensureRangeControl("brushHardness", "Hardness", {
+    min: "0",
+    max: "100",
+    value: "100",
+  });
+  const brushShape = ensureSelectControl("brushShape", "Tip", (select) => {
+    if (!select.options || select.options.length === 0) {
+      const round = document.createElement("option");
+      round.value = "round";
+      round.textContent = "Round";
+      select.appendChild(round);
+      const square = document.createElement("option");
+      square.value = "square";
+      square.textContent = "Square";
+      select.appendChild(square);
+    }
+  });
+
   if (layerSelect) {
     layerSelect.innerHTML = "";
   }
@@ -183,11 +320,50 @@ export function initEditor(): EditorHandle {
     renderColorHistory();
   };
 
+  const editors: Editor[] = [];
+
   listen(
     colorPicker,
     "input",
     () => {
       recordColor(colorPicker.value);
+      editors.forEach((e) => e.handleBrushSettingsChange());
+    },
+    listeners,
+  );
+
+  listen(
+    lineWidth,
+    "input",
+    () => {
+      editors.forEach((e) => e.handleBrushSettingsChange());
+    },
+    listeners,
+  );
+
+  listen(
+    brushSpacing,
+    "input",
+    () => {
+      editors.forEach((e) => e.handleBrushSettingsChange());
+    },
+    listeners,
+  );
+
+  listen(
+    brushHardness,
+    "input",
+    () => {
+      editors.forEach((e) => e.handleBrushSettingsChange());
+    },
+    listeners,
+  );
+
+  listen(
+    brushShape,
+    "change",
+    () => {
+      editors.forEach((e) => e.handleBrushSettingsChange());
     },
     listeners,
   );
@@ -199,7 +375,6 @@ export function initEditor(): EditorHandle {
     if (redoBtn) redoBtn.disabled = !editor?.canRedo;
   };
 
-  const editors: Editor[] = [];
   canvases.forEach((c) => {
     try {
       const e = new Editor(
@@ -207,6 +382,9 @@ export function initEditor(): EditorHandle {
         colorPicker,
         lineWidth,
         fillMode,
+        brushSpacing,
+        brushHardness,
+        brushShape,
         () => {
           updateHistoryButtons();
         },

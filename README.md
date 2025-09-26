@@ -1,6 +1,8 @@
 # Photoshop Clone
 
 [![CI](https://github.com/openai/photoshop-clone/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/openai/photoshop-clone/actions/workflows/ci.yml)
+[![Coveralls coverage](https://coveralls.io/repos/github/openai/photoshop-clone/badge.svg?branch=main)](https://coveralls.io/github/openai/photoshop-clone?branch=main)
+[![Codecov](https://codecov.io/gh/openai/photoshop-clone/branch/main/graph/badge.svg)](https://codecov.io/gh/openai/photoshop-clone)
 
 A simple Photoshop-like web application built with HTML5 Canvas, CSS, and JavaScript.
 
@@ -107,7 +109,7 @@ npm run lint
 
 ## Running Tests
 
-Execute the test suite:
+Execute the test suite (coverage thresholds require at least 90% statements/lines/functions and 70% branches):
 
 ```bash
 npm test

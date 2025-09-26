@@ -26,6 +26,20 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "jsdom",
+    "collectCoverage": true,
+    "coverageDirectory": "coverage",
+    "coverageReporters": [
+      "text",
+      "lcov"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 70,
+        "functions": 90,
+        "lines": 90,
+        "statements": 90
+      }
+    },
     "globals": {
       "ts-jest": {
         "useESM": true,

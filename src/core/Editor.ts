@@ -1,5 +1,19 @@
 import { Tool } from "../tools/Tool.js";
 
+export interface EditorOptions {
+  /** Maximum number of undo or redo snapshots to retain. */
+  historyLimit?: number;
+}
+
+export const DEFAULT_HISTORY_LIMIT = 50;
+
+const normalizeHistoryLimit = (limit: number | undefined): number => {
+  if (limit === undefined) return DEFAULT_HISTORY_LIMIT;
+  const parsed = Number(limit);
+  if (!Number.isFinite(parsed)) return DEFAULT_HISTORY_LIMIT;
+  return Math.max(1, Math.floor(parsed));
+};
+
 export class Editor {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
@@ -12,6 +26,7 @@ export class Editor {
   fontFamily: HTMLSelectElement | null;
   fontSize: HTMLInputElement | null;
   private onChange?: () => void;
+  private historyLimit: number;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -21,6 +36,7 @@ export class Editor {
     onChange?: () => void,
     fontFamily?: HTMLSelectElement | null,
     fontSize?: HTMLInputElement | null,
+    options: EditorOptions = {},
   ) {
     this.canvas = canvas;
     const ctx = canvas.getContext("2d");
@@ -32,6 +48,7 @@ export class Editor {
     this.onChange = onChange;
     this.fontFamily = fontFamily ?? null;
     this.fontSize = fontSize ?? null;
+    this.historyLimit = normalizeHistoryLimit(options.historyLimit);
     this.adjustForPixelRatio();
     window.addEventListener("resize", this.handleResize);
 
@@ -87,7 +104,7 @@ export class Editor {
     this.undoStack.push(
       this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height),
     );
-    if (this.undoStack.length > 50) this.undoStack.shift();
+    this.trimStack(this.undoStack);
     this.redoStack.length = 0;
     this.onChange?.();
   }
@@ -97,10 +114,16 @@ export class Editor {
     opposite.push(
       this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height),
     );
+    this.trimStack(opposite);
     const imageData = stack.pop()!;
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.putImageData(imageData, 0, 0);
     this.onChange?.();
+  }
+
+  private trimStack(stack: ImageData[]) {
+    if (stack.length <= this.historyLimit) return;
+    stack.splice(0, stack.length - this.historyLimit);
   }
 
   undo() {

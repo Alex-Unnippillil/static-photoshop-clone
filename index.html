@@ -21,6 +21,10 @@
         <input type="checkbox" id="fillMode" />
         Fill
       </label>
+      <label class="toggle">
+        <input type="checkbox" id="showGrid" />
+        Show Grid
+      </label>
       <button id="pencil" class="tool-button" title="Pencil">
         <img src="icons/pencil.svg" alt="Pencil" />
       </button>
@@ -66,9 +70,37 @@
       </button>
 
     </div>
-    <div id="canvasContainer">
-      <canvas id="canvas" width="800" height="600"></canvas>
-      <canvas id="layer2" width="800" height="600"></canvas>
+    <div id="workspace">
+      <div id="rulerCorner" aria-hidden="true"></div>
+      <canvas
+        id="horizontalRuler"
+        class="ruler"
+        aria-hidden="true"
+      ></canvas>
+      <canvas
+        id="verticalRuler"
+        class="ruler"
+        aria-hidden="true"
+      ></canvas>
+      <div id="canvasContainer">
+        <canvas
+          id="canvas"
+          class="drawing-layer"
+          width="800"
+          height="600"
+        ></canvas>
+        <canvas
+          id="layer2"
+          class="drawing-layer"
+          width="800"
+          height="600"
+        ></canvas>
+        <canvas
+          id="gridOverlay"
+          class="grid-overlay"
+          aria-hidden="true"
+        ></canvas>
+      </div>
     </div>
     <script type="module" src="dist/index.js"></script>
   </body>

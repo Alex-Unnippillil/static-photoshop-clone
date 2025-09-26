@@ -10,11 +10,14 @@ export class TextTool implements Tool {
 
   onPointerDown(e: PointerEvent, editor: Editor): void {
     this.cleanup();
+    const snapped = editor.snapPoint(e.offsetX, e.offsetY);
+    const x = snapped.x;
+    const y = snapped.y;
     const textarea = document.createElement("textarea");
     textarea.style.position = "absolute";
     const parent = editor.canvas.parentElement || document.body;
-    textarea.style.left = `${e.offsetX}px`;
-    textarea.style.top = `${e.offsetY}px`;
+    textarea.style.left = `${x}px`;
+    textarea.style.top = `${y}px`;
     textarea.style.color = editor.strokeStyle;
     textarea.style.fontSize = `${editor.fontSizeValue}px`;
     textarea.style.fontFamily = editor.fontFamilyValue;
@@ -23,6 +26,11 @@ export class TextTool implements Tool {
     textarea.style.outline = "none";
     parent.appendChild(textarea);
     textarea.focus();
+    if (snapped.snapped) {
+      editor.showSnapGuides({ point: { x, y } });
+    } else {
+      editor.clearSnapGuides();
+    }
 
     const commit = () => {
       const text = textarea.value;
@@ -30,12 +38,14 @@ export class TextTool implements Tool {
       if (text) {
         editor.ctx.fillStyle = editor.strokeStyle;
         editor.ctx.font = `${editor.fontSizeValue}px ${editor.fontFamilyValue}`;
-        editor.ctx.fillText(text, e.offsetX, e.offsetY);
+        editor.ctx.fillText(text, x, y);
       }
+      editor.clearSnapGuides();
     };
 
     const cancel = () => {
       this.cleanup();
+      editor.clearSnapGuides();
     };
 
     this.blurListener = cancel;

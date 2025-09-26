@@ -96,6 +96,11 @@ export function initEditor(): EditorHandle {
   const saveBtn = document.getElementById("save") as HTMLButtonElement | null;
   const formatSelect =
     document.getElementById("formatSelect") as HTMLSelectElement | null;
+  const snapGridToggle = document.getElementById("snapGrid") as HTMLInputElement | null;
+  const snapGuideToggle =
+    document.getElementById("snapGuides") as HTMLInputElement | null;
+  const snapAngleToggle =
+    document.getElementById("snapAngle") as HTMLInputElement | null;
   const colorHistory = document.getElementById(
     "colorHistory",
   ) as HTMLDivElement | null;
@@ -155,6 +160,7 @@ export function initEditor(): EditorHandle {
   const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
   const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
   const listeners: Array<() => void> = [];
+  const editors: Editor[] = [];
 
   const recentColors: string[] = [];
   const maxRecentColors = 10;
@@ -199,7 +205,17 @@ export function initEditor(): EditorHandle {
     if (redoBtn) redoBtn.disabled = !editor?.canRedo;
   };
 
-  const editors: Editor[] = [];
+  const snapState = () => ({
+    grid: Boolean(snapGridToggle?.checked),
+    guides: Boolean(snapGuideToggle?.checked),
+    angle: Boolean(snapAngleToggle?.checked),
+  });
+
+  const applySnapState = () => {
+    const state = snapState();
+    editors.forEach((instance) => instance.setSnapping(state));
+  };
+
   canvases.forEach((c) => {
     try {
       const e = new Editor(
@@ -218,6 +234,8 @@ export function initEditor(): EditorHandle {
       /* skip canvases without 2D context */
     }
   });
+
+  applySnapState();
 
   if (editors.length === 0) {
     throw new Error(
@@ -271,6 +289,10 @@ export function initEditor(): EditorHandle {
     },
     listeners,
   );
+
+  listen(snapGridToggle, "change", applySnapState, listeners);
+  listen(snapGuideToggle, "change", applySnapState, listeners);
+  listen(snapAngleToggle, "change", applySnapState, listeners);
 
   // saving
   listen(
@@ -371,6 +393,7 @@ export function initEditor(): EditorHandle {
 
   function activateLayer(index: number) {
     if (index < 0 || index >= editors.length) return;
+    editors.forEach((instance) => instance.clearSnapGuides());
     activeLayerIndex = index;
     editor = editors[index];
     handle.editor = editor;

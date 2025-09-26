@@ -91,5 +91,13 @@ describe("RectangleTool", () => {
     } as PointerEvent, editor);
     expect(ctx.strokeRect).toHaveBeenLastCalledWith(10, 15, 10, 10);
   });
+
+  it("snaps rectangle bounds to the grid", () => {
+    const tool = new RectangleTool();
+    editor.setSnapping({ grid: true });
+    tool.onPointerDown({ offsetX: 13, offsetY: 18 } as PointerEvent, editor);
+    tool.onPointerUp({ offsetX: 34, offsetY: 42 } as PointerEvent, editor);
+    expect(ctx.strokeRect).toHaveBeenLastCalledWith(10, 20, 20, 20);
+  });
 });
 

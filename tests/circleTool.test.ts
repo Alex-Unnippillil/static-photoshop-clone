@@ -77,4 +77,12 @@ describe("CircleTool", () => {
     const radius = Math.max(Math.abs(dx), Math.abs(dy));
     expect(ctx.ellipse).toHaveBeenLastCalledWith(2, 3, radius, radius, 0, 0, Math.PI * 2);
   });
+
+  it("snaps circle geometry to the grid when enabled", () => {
+    const tool = new CircleTool();
+    editor.setSnapping({ grid: true });
+    tool.onPointerDown({ offsetX: 12, offsetY: 18 } as PointerEvent, editor);
+    tool.onPointerUp({ offsetX: 26, offsetY: 33 } as PointerEvent, editor);
+    expect(ctx.ellipse).toHaveBeenLastCalledWith(10, 20, 20, 10, 0, 0, Math.PI * 2);
+  });
 });

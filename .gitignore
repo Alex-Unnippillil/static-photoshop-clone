@@ -1,1 +1,4 @@
 node_modules/
+dist/bundle/
+dist/bundle-report.html
+dist/bundle-report.json

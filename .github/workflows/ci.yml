@@ -21,6 +21,7 @@ jobs:
           cache-dependency-path: package-lock.json
       - run: npm ci
       - run: npm run build
+      - run: npm run check:size
       - run: npm run lint
       - run: npm run format:check
       - run: npm test
@@ -29,3 +30,11 @@ jobs:
         with:
           name: coverage-report
           path: coverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bundle-report
+          path: |
+            dist/bundle-report.html
+            dist/bundle-report.json
+          if-no-files-found: warn

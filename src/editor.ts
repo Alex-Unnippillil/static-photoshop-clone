@@ -1,5 +1,6 @@
 import { Editor } from "./core/Editor.js";
 import { Shortcuts } from "./core/Shortcuts.js";
+import { LayerManager } from "./core/LayerManager.js";
 import { PencilTool } from "./tools/PencilTool.js";
 import { EraserTool } from "./tools/EraserTool.js";
 import { RectangleTool } from "./tools/RectangleTool.js";
@@ -27,6 +28,10 @@ export interface EditorHandle {
   editor: Editor;
   editors: Editor[];
   activateLayer(index: number): void;
+  addLayer(name?: string): number;
+  removeLayer(index?: number): boolean;
+  renameLayer(index: number, name: string): void;
+  getLayerNames(): string[];
   destroy(): void;
 }
 
@@ -54,7 +59,6 @@ export function initEditor(): EditorHandle {
   const constructorToId = new Map<new () => Tool, string>();
   const editorToolConstructors = new Map<Editor, new () => Tool>();
   let activeToolCtor: new () => Tool = PencilTool;
-  let activeLayerIndex = 0;
   Object.entries(toolConstructors).forEach(([id, Ctor]) => {
     const btn = document.getElementById(id) as HTMLButtonElement | null;
     if (!btn) {
@@ -79,12 +83,6 @@ export function initEditor(): EditorHandle {
     return null;
   };
 
-  const updateLayerInteractivity = () => {
-    canvases.forEach((canvas, index) => {
-      canvas.style.pointerEvents = index === activeLayerIndex ? "auto" : "none";
-    });
-  };
-
   const colorPicker =
     document.getElementById("colorPicker") as HTMLInputElement | null;
   const lineWidth = document.getElementById("lineWidth") as HTMLInputElement | null;
@@ -92,6 +90,9 @@ export function initEditor(): EditorHandle {
   const fontFamily = document.getElementById("fontFamily") as HTMLSelectElement | null;
   const fontSize = document.getElementById("fontSize") as HTMLInputElement | null;
   const layerSelect = document.getElementById("layerSelect") as HTMLSelectElement | null;
+  const addLayerBtn = document.getElementById("addLayer") as HTMLButtonElement | null;
+  const removeLayerBtn = document.getElementById("removeLayer") as HTMLButtonElement | null;
+  const renameLayerBtn = document.getElementById("renameLayer") as HTMLButtonElement | null;
   const toolbar = document.getElementById("toolbar") || document.body;
   const saveBtn = document.getElementById("save") as HTMLButtonElement | null;
   const formatSelect =
@@ -115,42 +116,6 @@ export function initEditor(): EditorHandle {
   if (!formatSelect) {
     throw new Error("Missing #formatSelect select");
   }
-
-  if (layerSelect) {
-    layerSelect.innerHTML = "";
-  }
-
-  canvases.forEach((c, i) => {
-    const canvasId = c.id || `layer${i + 1}`;
-    const name = c.id || `Layer ${i + 1}`;
-
-    if (layerSelect) {
-      const opt = document.createElement("option");
-      opt.value = String(i);
-      opt.textContent = name;
-      layerSelect.appendChild(opt);
-    }
-
-    if (!document.getElementById(`${canvasId}Opacity`) && i > 0) {
-      const group = document.createElement("div");
-      group.className = "group";
-
-      const label = document.createElement("label");
-      label.htmlFor = `${canvasId}Opacity`;
-      label.textContent = `${name} Opacity`;
-
-      const input = document.createElement("input");
-      input.id = `${canvasId}Opacity`;
-      input.type = "number";
-      input.min = "0";
-      input.max = "100";
-      input.value = "100";
-
-      group.appendChild(label);
-      group.appendChild(input);
-      toolbar.appendChild(group);
-    }
-  });
 
   const undoBtn = document.getElementById("undo") as HTMLButtonElement | null;
   const redoBtn = document.getElementById("redo") as HTMLButtonElement | null;
@@ -192,38 +157,38 @@ export function initEditor(): EditorHandle {
     listeners,
   );
 
-  let editor: Editor; // set after editors created
-
   const updateHistoryButtons = () => {
     if (undoBtn) undoBtn.disabled = !editor?.canUndo;
     if (redoBtn) redoBtn.disabled = !editor?.canRedo;
   };
 
-  const editors: Editor[] = [];
-  canvases.forEach((c) => {
-    try {
-      const e = new Editor(
-        c,
-        colorPicker,
-        lineWidth,
-        fillMode,
-        () => {
-          updateHistoryButtons();
-        },
-        fontFamily ?? undefined,
-        fontSize ?? undefined,
-      );
-      editors.push(e);
-    } catch {
-      /* skip canvases without 2D context */
-    }
+  const canvasContainer =
+    document.getElementById("canvasContainer") || canvases[0]?.parentElement;
+  if (!canvasContainer) {
+    throw new Error("Missing canvas container element");
+  }
+
+  const layerManager = new LayerManager({
+    canvases,
+    canvasContainer,
+    toolbar,
+    layerSelect,
+    colorPicker,
+    lineWidth,
+    fillMode,
+    onHistoryChange: () => updateHistoryButtons(),
+    fontFamily: fontFamily ?? undefined,
+    fontSize: fontSize ?? undefined,
   });
 
-  if (editors.length === 0) {
+  if (layerManager.length === 0) {
     throw new Error(
       "initEditor() requires at least one <canvas> element with a 2D context",
     );
   }
+
+  const editors = layerManager.editors;
+  let editor: Editor = layerManager.activeEditor;
 
   editors.forEach((e) => {
     const original = e.setTool.bind(e);
@@ -237,12 +202,10 @@ export function initEditor(): EditorHandle {
   });
 
   // active editor defaults to the first successfully created editor
-  editor = editors[0];
-
   // default tool
   editor.setTool(new PencilTool());
   editorToolConstructors.set(editor, PencilTool);
-  updateLayerInteractivity();
+  layerManager.activateLayer(0);
 
   // keyboard shortcuts
   const shortcuts = new Shortcuts(editor);
@@ -341,23 +304,6 @@ export function initEditor(): EditorHandle {
     listeners,
   );
 
-  document
-    .querySelectorAll<HTMLInputElement>('input[id$="Opacity"]')
-    .forEach((input) => {
-      const targetId = input.id.replace(/Opacity$/, "");
-      const layer = document.getElementById(targetId) as HTMLCanvasElement | null;
-      if (!layer) return;
-      listen(
-        input,
-        "input",
-        () => {
-          const value = parseFloat(input.value);
-          layer.style.opacity = isNaN(value) ? "1" : String(value / 100);
-        },
-        listeners,
-      );
-    });
-
   // layer selection
   listen(
     layerSelect,
@@ -369,27 +315,107 @@ export function initEditor(): EditorHandle {
     listeners,
   );
 
-  function activateLayer(index: number) {
-    if (index < 0 || index >= editors.length) return;
-    activeLayerIndex = index;
-    editor = editors[index];
+  const updateLayerControls = () => {
+    if (removeLayerBtn) {
+      removeLayerBtn.disabled = layerManager.length <= 1;
+    }
+    if (renameLayerBtn) {
+      renameLayerBtn.disabled = layerManager.length === 0;
+    }
+  };
+
+  const activateLayer = (index: number) => {
+    if (!layerManager.activateLayer(index)) return;
+    editor = layerManager.activeEditor;
     handle.editor = editor;
     shortcuts.switchEditor(editor);
-    updateLayerInteractivity();
     const ToolCtor = editorToolConstructors.get(editor) ?? activeToolCtor;
     editor.setTool(new ToolCtor());
     updateHistoryButtons();
     if (layerSelect) layerSelect.value = String(index);
-  }
+    updateLayerControls();
+  };
+
+  const addLayer = (name?: string) => {
+    const index = layerManager.createLayer(name);
+    const newEditor = layerManager.activeEditor;
+    editorToolConstructors.set(newEditor, activeToolCtor);
+    handle.editors = layerManager.editors;
+    activateLayer(index);
+    return index;
+  };
+
+  const removeLayer = (index = layerManager.activeLayerIndex) => {
+    const removed = layerManager.removeLayer(index);
+    if (!removed) return false;
+    handle.editors = layerManager.editors;
+    activateLayer(layerManager.activeLayerIndex);
+    return true;
+  };
+
+  const renameLayer = (index: number, newName: string) => {
+    layerManager.renameLayer(index, newName);
+    updateLayerControls();
+  };
+
+  const promptRename = () => {
+    const idx = layerManager.activeLayerIndex;
+    const currentName = layerManager.layerNames[idx];
+    const next = window.prompt("Layer name", currentName);
+    if (!next || next.trim() === "") return;
+    renameLayer(idx, next.trim());
+  };
+
+  listen(addLayerBtn, "click", () => addLayer(), listeners);
+  listen(removeLayerBtn, "click", () => removeLayer(), listeners);
+  listen(renameLayerBtn, "click", () => promptRename(), listeners);
+
+  const isTextInput = (target: EventTarget | null) => {
+    if (!(target instanceof HTMLElement)) return false;
+    const tag = target.tagName.toLowerCase();
+    return (
+      target.isContentEditable ||
+      tag === "input" ||
+      tag === "textarea" ||
+      tag === "select"
+    );
+  };
+
+  const shortcutHandler = (event: KeyboardEvent) => {
+    if (isTextInput(event.target)) return;
+    const key = event.key.toLowerCase();
+    const ctrl = event.ctrlKey || event.metaKey;
+    if (!ctrl || !event.shiftKey) return;
+
+    if (key === "n") {
+      event.preventDefault();
+      addLayer();
+    } else if (key === "d") {
+      event.preventDefault();
+      removeLayer();
+    } else if (key === "r") {
+      event.preventDefault();
+      promptRename();
+    }
+  };
+
+  document.addEventListener("keydown", shortcutHandler);
+  listeners.push(() => document.removeEventListener("keydown", shortcutHandler));
+
+  updateLayerControls();
 
   const handle: EditorHandle = {
     editor,
     editors,
     activateLayer,
+    addLayer,
+    removeLayer,
+    renameLayer,
+    getLayerNames: () => layerManager.layerNames.slice(),
     destroy() {
       listeners.forEach((fn) => fn());
       shortcuts.destroy();
-      editors.forEach((e) => e.destroy());
+      layerManager.destroy();
     },
   };
   recordColor(colorPicker.value);

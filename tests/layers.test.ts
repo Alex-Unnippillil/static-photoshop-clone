@@ -8,6 +8,9 @@ describe("layer-specific undo/redo", () => {
   let ctx2: Partial<CanvasRenderingContext2D>;
   let undoBtn: HTMLButtonElement;
   let redoBtn: HTMLButtonElement;
+  const originalGetContext = HTMLCanvasElement.prototype.getContext;
+  const originalGetBoundingClientRect =
+    HTMLCanvasElement.prototype.getBoundingClientRect;
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -28,7 +31,10 @@ describe("layer-specific undo/redo", () => {
       <button id="save"></button>
       <button id="undo"></button>
       <button id="redo"></button>
-    `;
+      <button id="addLayer"></button>
+      <button id="removeLayer"></button>
+      <button id="renameLayer"></button>
+      `;
 
     canvas1 = document.getElementById("c1") as HTMLCanvasElement;
     canvas2 = document.getElementById("c2") as HTMLCanvasElement;
@@ -75,13 +81,32 @@ describe("layer-specific undo/redo", () => {
     canvas1.getContext = jest.fn().mockReturnValue(ctx1 as any);
     canvas2.getContext = jest.fn().mockReturnValue(ctx2 as any);
     canvas1.getBoundingClientRect = canvas2.getBoundingClientRect = () => rect;
+    HTMLCanvasElement.prototype.getContext = jest
+      .fn()
+      .mockReturnValue({
+        clearRect: jest.fn(),
+        putImageData: jest.fn(),
+        getImageData: jest.fn().mockReturnValue({
+          data: new Uint8ClampedArray(),
+          width: 1,
+          height: 1,
+        } as ImageData),
+        setTransform: jest.fn(),
+        scale: jest.fn(),
+      } as Partial<CanvasRenderingContext2D> as CanvasRenderingContext2D);
+    HTMLCanvasElement.prototype.getBoundingClientRect = () => rect;
 
     handle = initEditor();
     undoBtn = document.getElementById("undo") as HTMLButtonElement;
     redoBtn = document.getElementById("redo") as HTMLButtonElement;
   });
 
-  afterEach(() => handle.destroy());
+  afterEach(() => {
+    handle.destroy();
+    HTMLCanvasElement.prototype.getContext = originalGetContext;
+    HTMLCanvasElement.prototype.getBoundingClientRect =
+      originalGetBoundingClientRect;
+  });
 
   it("targets the active layer and toggles button states", () => {
     // initially disabled
@@ -123,6 +148,23 @@ describe("layer-specific undo/redo", () => {
 
     expect(canvases[0].style.pointerEvents).toBe("none");
     expect(canvases[1].style.pointerEvents).toBe("auto");
+  });
+
+  it("supports adding, renaming and removing layers", () => {
+    const addSpy = jest.spyOn(handle, "addLayer");
+    const removeSpy = jest.spyOn(handle, "removeLayer");
+
+    const newIndex = handle.addLayer("Sketch");
+    expect(addSpy).toHaveReturnedWith(newIndex);
+    expect(handle.getLayerNames()).toContain("Sketch");
+
+    handle.renameLayer(newIndex, "Inked");
+    expect(handle.getLayerNames()).toContain("Inked");
+
+    const removed = handle.removeLayer(newIndex);
+    expect(removeSpy).toHaveReturnedWith(true);
+    expect(removed).toBe(true);
+    expect(handle.getLayerNames()).not.toContain("Inked");
   });
 });
 

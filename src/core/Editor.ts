@@ -6,6 +6,7 @@ export class Editor {
   private undoStack: ImageData[] = [];
   private redoStack: ImageData[] = [];
   private currentTool: Tool | null = null;
+  readonly scrollContainer: HTMLElement | null;
   colorPicker: HTMLInputElement;
   lineWidth: HTMLInputElement;
   fillMode: HTMLInputElement;
@@ -26,6 +27,8 @@ export class Editor {
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Unable to get 2D context");
     this.ctx = ctx;
+    this.scrollContainer =
+      canvas.parentElement instanceof HTMLElement ? canvas.parentElement : null;
     this.colorPicker = colorPicker;
     this.lineWidth = lineWidth;
     this.fillMode = fillMode;
@@ -38,12 +41,17 @@ export class Editor {
     this.canvas.addEventListener("pointerdown", this.handlePointerDown);
     this.canvas.addEventListener("pointermove", this.handlePointerMove);
     this.canvas.addEventListener("pointerup", this.handlePointerUp);
+    this.canvas.addEventListener("pointercancel", this.handlePointerCancel);
+    this.canvas.addEventListener(
+      "lostpointercapture",
+      this.handlePointerCancel,
+    );
   }
 
   setTool(tool: Tool) {
     this.currentTool?.destroy?.();
     this.currentTool = tool;
-    this.canvas.style.cursor = tool.cursor || "crosshair";
+    this.setCursor(tool.cursor);
   }
 
   private handlePointerDown = (e: PointerEvent) => {
@@ -61,6 +69,22 @@ export class Editor {
     this.currentTool?.onPointerUp(e, this);
     this.canvas.releasePointerCapture(e.pointerId);
   };
+
+  private handlePointerCancel = (e: PointerEvent) => {
+    this.currentTool?.onPointerUp(e, this);
+  };
+
+  setCursor(cursor?: string) {
+    if (cursor) {
+      this.canvas.style.cursor = cursor;
+    } else {
+      this.canvas.style.cursor = this.currentTool?.cursor || "crosshair";
+    }
+  }
+
+  get activeTool(): Tool | null {
+    return this.currentTool;
+  }
 
   private adjustForPixelRatio() {
     const dpr = window.devicePixelRatio || 1;
@@ -153,5 +177,10 @@ export class Editor {
     this.canvas.removeEventListener("pointerdown", this.handlePointerDown);
     this.canvas.removeEventListener("pointermove", this.handlePointerMove);
     this.canvas.removeEventListener("pointerup", this.handlePointerUp);
+    this.canvas.removeEventListener("pointercancel", this.handlePointerCancel);
+    this.canvas.removeEventListener(
+      "lostpointercapture",
+      this.handlePointerCancel,
+    );
   }
 }

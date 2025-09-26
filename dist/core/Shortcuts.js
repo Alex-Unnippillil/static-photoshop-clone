@@ -6,21 +6,39 @@ import { TextTool } from "../tools/TextTool.js";
 import { EraserTool } from "../tools/EraserTool.js";
 import { BucketFillTool } from "../tools/BucketFillTool.js";
 import { EyedropperTool } from "../tools/EyedropperTool.js";
+import { HandTool } from "../tools/HandTool.js";
 /**
  * Keyboard shortcuts handler for the editor.
  * Maps specific key presses to tool changes or editor actions.
  */
 export class Shortcuts {
     constructor(editor) {
+        this.spacePressed = false;
+        this.previousToolCtor = null;
         this.editor = editor;
         this.handler = (e) => this.onKeyDown(e);
+        this.keyupHandler = (e) => this.onKeyUp(e);
         document.addEventListener("keydown", this.handler);
+        document.addEventListener("keyup", this.keyupHandler);
     }
     /** Swap the editor that receives subsequent shortcut actions. */
     switchEditor(newEditor) {
         this.editor = newEditor;
+        const active = this.editor.activeTool;
+        if (this.spacePressed) {
+            if (!(active instanceof HandTool)) {
+                this.previousToolCtor = this.getToolCtor(active) ?? this.previousToolCtor;
+            }
+            this.editor.setTool(new HandTool());
+        }
+        else {
+            this.previousToolCtor = active instanceof HandTool ? null : this.getToolCtor(active);
+        }
     }
     onKeyDown(e) {
+        if (this.handleSpaceKeyDown(e)) {
+            return;
+        }
         if (e.ctrlKey || e.metaKey) {
             const key = e.key.toLowerCase();
             if (key === "z") {
@@ -73,8 +91,43 @@ export class Shortcuts {
                 break;
         }
     }
+    onKeyUp(e) {
+        if (!this.spacePressed)
+            return;
+        if (e.key !== " " && e.key !== "Spacebar")
+            return;
+        e.preventDefault();
+        this.spacePressed = false;
+        if (this.previousToolCtor) {
+            this.editor.setTool(new this.previousToolCtor());
+        }
+        this.previousToolCtor = null;
+    }
+    handleSpaceKeyDown(e) {
+        if (e.key !== " " && e.key !== "Spacebar") {
+            return false;
+        }
+        if (e.repeat) {
+            e.preventDefault();
+            return true;
+        }
+        e.preventDefault();
+        if (!this.spacePressed) {
+            const active = this.editor.activeTool;
+            if (!(active instanceof HandTool)) {
+                this.previousToolCtor = this.getToolCtor(active);
+            }
+            this.editor.setTool(new HandTool());
+            this.spacePressed = true;
+        }
+        return true;
+    }
+    getToolCtor(tool) {
+        return tool ? tool.constructor : null;
+    }
     /** Remove keyboard listeners. */
     destroy() {
         document.removeEventListener("keydown", this.handler);
+        document.removeEventListener("keyup", this.keyupHandler);
     }
 }

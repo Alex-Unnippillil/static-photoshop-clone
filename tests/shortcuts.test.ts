@@ -9,6 +9,7 @@ import { TextTool } from "../src/tools/TextTool.js";
 import { BucketFillTool } from "../src/tools/BucketFillTool.js";
 import { Shortcuts } from "../src/core/Shortcuts.js";
 import { Editor } from "../src/core/Editor.js";
+import { HandTool } from "../src/tools/HandTool.js";
 
 describe("keyboard shortcuts", () => {
   let handle: EditorHandle;
@@ -17,7 +18,7 @@ describe("keyboard shortcuts", () => {
 
   beforeEach(() => {
     document.body.innerHTML = `
-      <canvas id="canvas"></canvas>
+      <div id="canvasContainer"><canvas id="canvas"></canvas></div>
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
       <input id="fillMode" type="checkbox" />
@@ -82,6 +83,19 @@ describe("keyboard shortcuts", () => {
       expect(prevent).toHaveBeenCalled();
       expect(event.defaultPrevented).toBe(true);
     });
+  });
+
+  it("temporarily activates the hand tool while spacebar is held", () => {
+    const spy = jest.spyOn(handle.editor, "setTool");
+    const keydown = new KeyboardEvent("keydown", { key: " ", cancelable: true });
+    document.dispatchEvent(keydown);
+    expect(spy.mock.calls.at(-1)?.[0]).toBeInstanceOf(HandTool);
+    expect(keydown.defaultPrevented).toBe(true);
+
+    const keyup = new KeyboardEvent("keyup", { key: " ", cancelable: true });
+    document.dispatchEvent(keyup);
+    expect(spy.mock.calls.at(-1)?.[0]).toBeInstanceOf(PencilTool);
+    expect(keyup.defaultPrevented).toBe(true);
   });
 
   it("performs undo and redo with shortcuts", () => {

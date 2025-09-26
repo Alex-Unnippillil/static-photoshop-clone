@@ -3,6 +3,8 @@ export class Editor {
         this.undoStack = [];
         this.redoStack = [];
         this.currentTool = null;
+        this.selectionMaskValue = null;
+        this.selectionListeners = new Set();
         this.handlePointerDown = (e) => {
             // Capture the pointer once before recording canvas state
             this.canvas.setPointerCapture(e.pointerId);
@@ -98,6 +100,28 @@ export class Editor {
     get fontSizeValue() {
         return parseInt(this.fontSize?.value ?? "", 10) || 16;
     }
+    get selectionMask() {
+        return this.selectionMaskValue;
+    }
+    setSelectionMask(mask) {
+        this.selectionMaskValue = mask;
+        this.notifySelectionListeners(mask);
+    }
+    clearSelectionMask() {
+        if (this.selectionMaskValue) {
+            this.selectionMaskValue = null;
+            this.notifySelectionListeners(null);
+        }
+    }
+    onSelectionChange(listener) {
+        this.selectionListeners.add(listener);
+        return () => {
+            this.selectionListeners.delete(listener);
+        };
+    }
+    notifySelectionListeners(mask) {
+        this.selectionListeners.forEach((listener) => listener(mask));
+    }
     /**
      * Remove all event listeners registered by the editor.
      * Should be called before discarding the instance to prevent leaks.
@@ -108,5 +132,7 @@ export class Editor {
         this.canvas.removeEventListener("pointerdown", this.handlePointerDown);
         this.canvas.removeEventListener("pointermove", this.handlePointerMove);
         this.canvas.removeEventListener("pointerup", this.handlePointerUp);
+        this.selectionListeners.clear();
+        this.selectionMaskValue = null;
     }
 }

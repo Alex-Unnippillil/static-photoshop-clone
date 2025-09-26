@@ -77,6 +77,22 @@ body {
   filter: brightness(0) invert(1);
 }
 
+.selection-controls {
+  gap: 8px;
+}
+
+.selection-controls button {
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+}
+
+.selection-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 #canvasContainer {
   flex: 1;
   position: relative;

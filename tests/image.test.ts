@@ -4,7 +4,8 @@ describe("image load and save", () => {
   let canvas: HTMLCanvasElement;
   let ctx: Partial<CanvasRenderingContext2D>;
   let handle: EditorHandle;
-  let anchor: { href: string; download: string; click: jest.Mock };
+  let anchor: HTMLAnchorElement | null;
+  let anchorClickMock: jest.SpyInstance | null;
   let createElementSpy: jest.SpyInstance;
   let fileReaderSpy: jest.SpyInstance;
   let imageSpy: jest.SpyInstance;
@@ -20,6 +21,7 @@ describe("image load and save", () => {
       <button id="rectangle"></button>
       <button id="line"></button>
       <button id="circle"></button>
+      <button id="lasso"></button>
       <button id="text"></button>
       <button id="bucket"></button>
       <button id="eyedropper"></button>
@@ -58,10 +60,21 @@ describe("image load and save", () => {
       toJSON: () => {},
     });
 
-    anchor = { href: "", download: "", click: jest.fn() };
+    anchor = null;
+    anchorClickMock = null;
+    const originalCreate = document.createElement;
     createElementSpy = jest
       .spyOn(document, "createElement")
-      .mockReturnValue(anchor as any);
+      .mockImplementation(function (tag: string, options?: ElementCreationOptions) {
+        const element = originalCreate.call(this, tag, options);
+        if (String(tag).toLowerCase() === "a") {
+          anchor = element as HTMLAnchorElement;
+          anchorClickMock = jest
+            .spyOn(anchor, "click")
+            .mockImplementation(() => {});
+        }
+        return element;
+      });
 
     class MockFileReader {
       result: string | ArrayBuffer | null = null;
@@ -90,6 +103,7 @@ describe("image load and save", () => {
 
   afterEach(() => {
     handle.destroy();
+    anchorClickMock?.mockRestore();
     createElementSpy.mockRestore();
     fileReaderSpy.mockRestore();
     imageSpy.mockRestore();
@@ -159,8 +173,10 @@ describe("image load and save", () => {
     const save = document.getElementById("save") as HTMLButtonElement;
     save.click();
     expect(canvas.toDataURL).toHaveBeenCalledWith("image/png");
-    expect(anchor.href).toBe("data:image/png;base64,SAVE");
-    expect(anchor.download).toBe("canvas.png");
-    expect(anchor.click).toHaveBeenCalled();
+    expect(anchor).not.toBeNull();
+    expect(anchor?.href).toBe("data:image/png;base64,SAVE");
+    expect(anchor?.download).toBe("canvas.png");
+    expect(anchorClickMock).not.toBeNull();
+    expect(anchorClickMock).toHaveBeenCalled();
   });
 });

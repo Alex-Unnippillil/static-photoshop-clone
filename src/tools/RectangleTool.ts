@@ -7,11 +7,17 @@ export class RectangleTool extends DrawingTool {
   private imageData: ImageData | null = null;
 
   onPointerDown(e: PointerEvent, editor: Editor) {
-    this.startX = e.offsetX;
-    this.startY = e.offsetY;
+    const snapped = editor.snapPoint(e.offsetX, e.offsetY);
+    this.startX = snapped.x;
+    this.startY = snapped.y;
     this.applyStroke(editor.ctx, editor);
     const ctx = editor.ctx;
     this.imageData = ctx.getImageData(0, 0, editor.canvas.width, editor.canvas.height);
+    if (snapped.snapped) {
+      editor.showSnapGuides({ point: { x: this.startX, y: this.startY } });
+    } else {
+      editor.clearSnapGuides();
+    }
   }
 
   onPointerMove(e: PointerEvent, editor: Editor) {
@@ -20,18 +26,53 @@ export class RectangleTool extends DrawingTool {
     ctx.putImageData(this.imageData, 0, 0);
     this.applyStroke(editor.ctx, editor);
 
-    const x = e.offsetX;
-    const y = e.offsetY;
+    const snapped = editor.snapPoint(e.offsetX, e.offsetY);
+    let { x, y } = snapped;
+    const guideSnap = editor.snapToGuides(
+      { x: this.startX, y: this.startY },
+      { x, y },
+    );
+    x = guideSnap.x;
+    y = guideSnap.y;
     let width = x - this.startX;
     let height = y - this.startY;
     if (e.shiftKey) {
       const size = Math.min(Math.abs(width), Math.abs(height));
       width = size * Math.sign(width);
       height = size * Math.sign(height);
+      x = this.startX + width;
+      y = this.startY + height;
     }
     ctx.strokeRect(this.startX, this.startY, width, height);
     if (editor.fill) {
       ctx.fillRect(this.startX, this.startY, width, height);
+    }
+
+    const lines: Array<{ x1: number; y1: number; x2: number; y2: number }> = [];
+    if (guideSnap.vertical) {
+      lines.push({
+        x1: this.startX,
+        y1: 0,
+        x2: this.startX,
+        y2: editor.viewportHeight,
+      });
+    }
+    if (guideSnap.horizontal) {
+      lines.push({
+        x1: 0,
+        y1: this.startY,
+        x2: editor.viewportWidth,
+        y2: this.startY,
+      });
+    }
+    if (snapped.snapped || guideSnap.vertical || guideSnap.horizontal) {
+      editor.showSnapGuides({
+        origin: { x: this.startX, y: this.startY },
+        point: { x, y },
+        lines,
+      });
+    } else {
+      editor.clearSnapGuides();
     }
   }
 
@@ -42,19 +83,28 @@ export class RectangleTool extends DrawingTool {
     }
 
     this.applyStroke(editor.ctx, editor);
-    const x = e.offsetX;
-    const y = e.offsetY;
+    const snapped = editor.snapPoint(e.offsetX, e.offsetY);
+    let { x, y } = snapped;
+    const guideSnap = editor.snapToGuides(
+      { x: this.startX, y: this.startY },
+      { x, y },
+    );
+    x = guideSnap.x;
+    y = guideSnap.y;
     let width = x - this.startX;
     let height = y - this.startY;
     if (e.shiftKey) {
       const size = Math.min(Math.abs(width), Math.abs(height));
       width = size * Math.sign(width);
       height = size * Math.sign(height);
+      x = this.startX + width;
+      y = this.startY + height;
     }
     ctx.strokeRect(this.startX, this.startY, width, height);
     if (editor.fill) {
       ctx.fillRect(this.startX, this.startY, width, height);
     }
     this.imageData = null;
+    editor.clearSnapGuides();
   }
 }

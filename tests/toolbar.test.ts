@@ -29,6 +29,10 @@ describe("toolbar controls", () => {
       <button id="eyedropper"></button>
       <button id="bucket"></button>
 
+      <input id="snapGrid" type="checkbox" />
+      <input id="snapGuides" type="checkbox" />
+      <input id="snapAngle" type="checkbox" />
+
       <select id="formatSelect"><option value="png">PNG</option></select>
       <button id="save"></button>
 
@@ -75,6 +79,32 @@ describe("toolbar controls", () => {
   it("populates layer select", () => {
     const select = document.getElementById("layerSelect") as HTMLSelectElement;
     expect(select.options.length).toBe(2);
+  });
+
+  it("updates snapping state when toggles change", () => {
+    const grid = document.getElementById("snapGrid") as HTMLInputElement;
+    const guides = document.getElementById("snapGuides") as HTMLInputElement;
+    const angle = document.getElementById("snapAngle") as HTMLInputElement;
+
+    grid.checked = true;
+    guides.checked = true;
+    angle.checked = true;
+    grid.dispatchEvent(new Event("change"));
+    guides.dispatchEvent(new Event("change"));
+    angle.dispatchEvent(new Event("change"));
+
+    handle.editors.forEach((editor) => {
+      expect(editor.isGridSnappingEnabled).toBe(true);
+      expect(editor.isGuideSnappingEnabled).toBe(true);
+      expect(editor.isAngleSnappingEnabled).toBe(true);
+    });
+
+    angle.checked = false;
+    angle.dispatchEvent(new Event("change"));
+
+    handle.editors.forEach((editor) => {
+      expect(editor.isAngleSnappingEnabled).toBe(false);
+    });
   });
 
     it("switches tools when buttons are clicked", () => {

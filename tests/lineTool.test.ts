@@ -113,4 +113,67 @@ describe("LineTool", () => {
     expect(args[0]).toBeCloseTo(expectedX);
     expect(args[1]).toBeCloseTo(expectedY);
   });
+
+  it("snaps to grid when enabled", () => {
+    const tool = new LineTool();
+    editor.setSnapping({ grid: true });
+    tool.onPointerDown({ offsetX: 23, offsetY: 27 } as PointerEvent, editor);
+    tool.onPointerMove({
+      offsetX: 46,
+      offsetY: 54,
+      buttons: 1,
+    } as PointerEvent, editor);
+
+    expect(ctx.moveTo).toHaveBeenCalledWith(20, 30);
+    const [lineToArgs] = (ctx.lineTo as jest.Mock).mock.calls;
+    expect(lineToArgs[0]).toBe(50);
+    expect(lineToArgs[1]).toBe(50);
+  });
+
+  it("snaps to axis guides when enabled", () => {
+    const tool = new LineTool();
+    editor.setSnapping({ guides: true });
+    tool.onPointerDown({ offsetX: 10, offsetY: 10 } as PointerEvent, editor);
+    tool.onPointerMove({
+      offsetX: 12,
+      offsetY: 40,
+      buttons: 1,
+    } as PointerEvent, editor);
+
+    const [firstLine] = (ctx.lineTo as jest.Mock).mock.calls;
+    expect(firstLine[0]).toBe(10);
+    expect(firstLine[1]).toBe(40);
+
+    (ctx.lineTo as jest.Mock).mockClear();
+    tool.onPointerMove({
+      offsetX: 40,
+      offsetY: 12,
+      buttons: 1,
+    } as PointerEvent, editor);
+    const afterClear = (ctx.lineTo as jest.Mock).mock.calls[0];
+    expect(afterClear[0]).toBe(40);
+    expect(afterClear[1]).toBe(10);
+  });
+
+  it("snaps angles when toggle is enabled", () => {
+    const tool = new LineTool();
+    editor.setSnapping({ angle: true });
+    tool.onPointerDown({ offsetX: 0, offsetY: 0 } as PointerEvent, editor);
+    tool.onPointerMove({
+      offsetX: 12,
+      offsetY: 7,
+      buttons: 1,
+    } as PointerEvent, editor);
+
+    const [call] = (ctx.lineTo as jest.Mock).mock.calls;
+    const dx = 12;
+    const dy = 7;
+    const angle = Math.atan2(dy, dx);
+    const snapped = Math.round(angle / (Math.PI / 4)) * (Math.PI / 4);
+    const length = Math.sqrt(dx * dx + dy * dy);
+    const expectedX = length * Math.cos(snapped);
+    const expectedY = length * Math.sin(snapped);
+    expect(call[0]).toBeCloseTo(expectedX);
+    expect(call[1]).toBeCloseTo(expectedY);
+  });
 });

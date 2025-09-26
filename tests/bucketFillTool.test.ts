@@ -48,25 +48,30 @@ describe("BucketFillTool", () => {
     );
   });
 
-  it("fills enclosed areas with the selected color", () => {
+  it("fills enclosed areas with the selected color", async () => {
     const tool = new BucketFillTool();
     tool.onPointerDown({ offsetX: 2, offsetY: 2 } as PointerEvent, editor);
 
-    const image = (ctx.getImageData as jest.Mock).mock.results[0].value as ImageData;
-    const center = (2 * 5 + 2) * 4;
-    // blue from colorPicker (#0000ff)
-    expect(image.data[center]).toBe(0);
-    expect(image.data[center + 1]).toBe(0);
-    expect(image.data[center + 2]).toBe(255);
-    // ensure border untouched
-    const corner = 0;
-    expect(image.data[corner]).toBe(0);
-    expect(image.data[corner + 1]).toBe(0);
-    expect(image.data[corner + 2]).toBe(0);
-    expect(ctx.putImageData).toHaveBeenCalledWith(image, 0, 0);
+    await Promise.resolve();
+
+    const call = (ctx.putImageData as jest.Mock).mock.calls[0];
+    expect(call[1]).toBe(1);
+    expect(call[2]).toBe(1);
+
+    const result = call[0] as ImageData;
+    expect(result.width).toBe(3);
+    expect(result.height).toBe(3);
+    const data = result.data;
+
+    // ensure center pixel of rect is blue (#0000ff)
+    const center = ((1 * result.width + 1) * 4) | 0;
+    expect(data[center]).toBe(0);
+    expect(data[center + 1]).toBe(0);
+    expect(data[center + 2]).toBe(255);
+    expect(ctx.putImageData).toHaveBeenCalledTimes(1);
   });
 
-  it("fills large areas efficiently", () => {
+  it("fills large areas efficiently", async () => {
     const width = 100;
     const height = 100;
     const data = new Uint8ClampedArray(width * height * 4);
@@ -83,10 +88,16 @@ describe("BucketFillTool", () => {
     const tool = new BucketFillTool();
     tool.onPointerDown({ offsetX: 0, offsetY: 0 } as PointerEvent, editor);
 
-    const last = (width * height - 1) * 4;
-    expect(image.data[last]).toBe(0);
-    expect(image.data[last + 1]).toBe(0);
-    expect(image.data[last + 2]).toBe(255);
-    expect(ctx.putImageData).toHaveBeenCalledWith(image, 0, 0);
+    await Promise.resolve();
+
+    const call = (ctx.putImageData as jest.Mock).mock.calls[0];
+    const result = call[0] as ImageData;
+    expect(call[1]).toBe(0);
+    expect(call[2]).toBe(0);
+    expect(result.width * result.height).toBe(width * height);
+    const last = (result.data.length / 4 - 1) * 4;
+    expect(result.data[last]).toBe(0);
+    expect(result.data[last + 1]).toBe(0);
+    expect(result.data[last + 2]).toBe(255);
   });
 });

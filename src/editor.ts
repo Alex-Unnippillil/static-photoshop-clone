@@ -91,6 +91,16 @@ export function initEditor(): EditorHandle {
   const fillMode = document.getElementById("fillMode") as HTMLInputElement | null;
   const fontFamily = document.getElementById("fontFamily") as HTMLSelectElement | null;
   const fontSize = document.getElementById("fontSize") as HTMLInputElement | null;
+  const fontWeight = document.getElementById("fontWeight") as HTMLSelectElement | null;
+  const fontStyleControl = document.getElementById(
+    "fontStyle",
+  ) as HTMLSelectElement | null;
+  const textAlignControl = document.getElementById(
+    "textAlign",
+  ) as HTMLSelectElement | null;
+  const textMultilineToggle = document.getElementById(
+    "textMultiline",
+  ) as HTMLInputElement | null;
   const layerSelect = document.getElementById("layerSelect") as HTMLSelectElement | null;
   const toolbar = document.getElementById("toolbar") || document.body;
   const saveBtn = document.getElementById("save") as HTMLButtonElement | null;
@@ -212,6 +222,10 @@ export function initEditor(): EditorHandle {
         },
         fontFamily ?? undefined,
         fontSize ?? undefined,
+        fontWeight ?? undefined,
+        fontStyleControl ?? undefined,
+        textAlignControl ?? undefined,
+        textMultilineToggle ?? undefined,
       );
       editors.push(e);
     } catch {

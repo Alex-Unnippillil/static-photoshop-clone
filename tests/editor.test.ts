@@ -13,6 +13,12 @@ describe("editor toolbar controls", () => {
       <input id="colorPicker" value="#000000" />
       <input id="lineWidth" value="2" />
       <input id="fillMode" type="checkbox" />
+      <select id="fontFamily"><option value="sans-serif">sans-serif</option></select>
+      <input id="fontSize" value="16" />
+      <select id="fontWeight"><option value="normal">normal</option></select>
+      <select id="fontStyle"><option value="normal">normal</option></select>
+      <select id="textAlign"><option value="left">left</option></select>
+      <input id="textMultiline" type="checkbox" />
       <button id="pencil"></button>
       <button id="eraser"></button>
       <button id="rectangle"></button>
@@ -54,6 +60,13 @@ describe("editor toolbar controls", () => {
       fillText: jest.fn(),
       setTransform: jest.fn(),
       scale: jest.fn(),
+      save: jest.fn(),
+      restore: jest.fn(),
+      measureText: jest.fn().mockReturnValue({
+        width: 40,
+        actualBoundingBoxAscent: 12,
+        actualBoundingBoxDescent: 4,
+      }),
       globalCompositeOperation: "source-over" as GlobalCompositeOperation,
     };
 
@@ -160,7 +173,7 @@ describe("editor toolbar controls", () => {
     textarea.dispatchEvent(
       new KeyboardEvent("keydown", { key: "Enter", bubbles: true })
     );
-    expect(ctx.fillText).toHaveBeenCalledWith("hi", 10, 10);
+    expect(ctx.fillText).toHaveBeenCalledWith("hi", 10, 22);
     expect(document.querySelector("textarea")).toBeNull();
   });
 });

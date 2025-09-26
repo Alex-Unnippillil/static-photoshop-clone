@@ -17,6 +17,20 @@ describe("TextTool", () => {
       <input id="fillMode" type="checkbox" />
       <select id="fontFamily"><option value="serif">serif</option></select>
       <input id="fontSize" value="20" />
+      <select id="fontWeight">
+        <option value="normal" selected>normal</option>
+        <option value="bold">bold</option>
+      </select>
+      <select id="fontStyle">
+        <option value="normal" selected>normal</option>
+        <option value="italic">italic</option>
+      </select>
+      <select id="textAlign">
+        <option value="left">left</option>
+        <option value="center">center</option>
+        <option value="right">right</option>
+      </select>
+      <input id="textMultiline" type="checkbox" />
     `;
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -37,6 +51,13 @@ describe("TextTool", () => {
       putImageData: jest.fn(),
       setTransform: jest.fn(),
       scale: jest.fn(),
+      save: jest.fn(),
+      restore: jest.fn(),
+      measureText: jest.fn().mockReturnValue({
+        width: 40,
+        actualBoundingBoxAscent: 12,
+        actualBoundingBoxDescent: 4,
+      }),
     };
 
     canvas.getContext = jest
@@ -73,6 +94,10 @@ describe("TextTool", () => {
       undefined,
       document.getElementById("fontFamily") as HTMLSelectElement,
       document.getElementById("fontSize") as HTMLInputElement,
+      document.getElementById("fontWeight") as HTMLSelectElement,
+      document.getElementById("fontStyle") as HTMLSelectElement,
+      document.getElementById("textAlign") as HTMLSelectElement,
+      document.getElementById("textMultiline") as HTMLInputElement,
     );
   });
 
@@ -97,17 +122,43 @@ describe("TextTool", () => {
     expect(ta.style.color).toBe(hexToRgb(editor.strokeStyle));
     expect(ta.style.fontSize).toBe(`${editor.fontSizeValue}px`);
     expect(ta.style.fontFamily).toBe(editor.fontFamilyValue);
+    expect(ta.style.fontWeight).toBe(editor.fontWeightValue);
+    expect(ta.style.fontStyle).toBe(editor.fontStyleValue);
   });
 
   it("commits text on Enter", () => {
     const tool = new TextTool();
+    const multilineToggle = document.getElementById(
+      "textMultiline",
+    ) as HTMLInputElement;
+    multilineToggle.checked = false;
     tool.onPointerDown({ offsetX: 5, offsetY: 6 } as PointerEvent, editor);
     const ta = document.querySelector("textarea") as HTMLTextAreaElement;
     ta.value = "hello";
     ta.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
     expect(ctx.font).toBe(`${editor.fontSizeValue}px ${editor.fontFamilyValue}`);
-    expect(ctx.fillText).toHaveBeenCalledWith("hello", 5, 6);
+    expect(ctx.fillText).toHaveBeenCalledWith("hello", 5, 18);
     expect(document.querySelector("textarea")).toBeNull();
+  });
+
+  it("keeps multiline edits until commit", () => {
+    const tool = new TextTool();
+    const alignSelect = document.getElementById("textAlign") as HTMLSelectElement;
+    alignSelect.value = "center";
+    const multilineToggle = document.getElementById("textMultiline") as HTMLInputElement;
+    multilineToggle.checked = true;
+    const weightSelect = document.getElementById("fontWeight") as HTMLSelectElement;
+    weightSelect.value = "bold";
+    const styleSelect = document.getElementById("fontStyle") as HTMLSelectElement;
+    styleSelect.value = "italic";
+    tool.onPointerDown({ offsetX: 15, offsetY: 25 } as PointerEvent, editor);
+    const ta = document.querySelector("textarea") as HTMLTextAreaElement;
+    ta.value = "multi line text";
+    ta.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Enter", bubbles: true, ctrlKey: true }),
+    );
+    expect(ctx.fillText).toHaveBeenNthCalledWith(1, "multi line text", 115, 37);
+    expect(ctx.font).toBe(`italic bold ${editor.fontSizeValue}px ${editor.fontFamilyValue}`);
   });
 
   it("cancels text on Escape", () => {
@@ -129,7 +180,7 @@ describe("TextTool", () => {
     ta.dispatchEvent(
       new KeyboardEvent("keydown", { key: "Enter", bubbles: true }),
     );
-    expect(ctx.fillText).toHaveBeenCalledWith("undo", 9, 10);
+    expect(ctx.fillText).toHaveBeenCalledWith("undo", 9, 22);
     // Only one undo should revert the text addition
     editor.undo();
     expect(ctx.clearRect).toHaveBeenCalledTimes(1);

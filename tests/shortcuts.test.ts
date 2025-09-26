@@ -7,6 +7,7 @@ import { LineTool } from "../src/tools/LineTool.js";
 import { CircleTool } from "../src/tools/CircleTool.js";
 import { TextTool } from "../src/tools/TextTool.js";
 import { BucketFillTool } from "../src/tools/BucketFillTool.js";
+import { TransformTool } from "../src/tools/TransformTool.js";
 import { Shortcuts } from "../src/core/Shortcuts.js";
 import { Editor } from "../src/core/Editor.js";
 
@@ -27,18 +28,30 @@ describe("keyboard shortcuts", () => {
       <button id="line"></button>
       <button id="circle"></button>
       <button id="text"></button>
-      <button id="bucket"></button>
       <button id="eyedropper"></button>
+      <button id="transform"></button>
+      <button id="bucket"></button>
       <select id="formatSelect"><option value="png">PNG</option></select>
       <button id="save"></button>
     `;
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
     (canvas as any).setPointerCapture = jest.fn();
     (canvas as any).releasePointerCapture = jest.fn();
+    const imageFor = (sw: number, sh: number): ImageData =>
+      ({
+        data: new Uint8ClampedArray(sw * sh * 4),
+        width: sw,
+        height: sh,
+      } as ImageData);
+
     ctx = {
       setTransform: jest.fn(),
       scale: jest.fn(),
-      getImageData: jest.fn(),
+      getImageData: jest
+        .fn()
+        .mockImplementation((sx: number, sy: number, sw: number, sh: number) =>
+          imageFor(sw, sh),
+        ),
       putImageData: jest.fn(),
       clearRect: jest.fn(),
     };
@@ -72,6 +85,7 @@ describe("keyboard shortcuts", () => {
       ["c", CircleTool],
       ["t", TextTool],
       ["b", BucketFillTool],
+      ["v", TransformTool],
     ];
 
     cases.forEach(([key, ToolClass], index) => {

@@ -99,4 +99,45 @@ body {
   box-sizing: border-box;
 }
 
+.selection-overlay {
+  position: absolute;
+  border: 1px dashed #007bff;
+  box-sizing: border-box;
+  pointer-events: auto;
+  display: none;
+  z-index: 10;
+  cursor: move;
+}
+
+.selection-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border: 1px solid #007bff;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+
+.selection-handle[data-handle="n"],
+.selection-handle[data-handle="s"] {
+  cursor: ns-resize;
+}
+
+.selection-handle[data-handle="e"],
+.selection-handle[data-handle="w"] {
+  cursor: ew-resize;
+}
+
+.selection-handle[data-handle="ne"],
+.selection-handle[data-handle="sw"] {
+  cursor: nesw-resize;
+}
+
+.selection-handle[data-handle="nw"],
+.selection-handle[data-handle="se"] {
+  cursor: nwse-resize;
+}
+
 

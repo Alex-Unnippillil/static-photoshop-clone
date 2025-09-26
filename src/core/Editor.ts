@@ -1,4 +1,34 @@
 import { Tool } from "../tools/Tool.js";
+import type { FloodFillDirtyRect } from "./floodFill.js";
+import { floodFill } from "./floodFill.js";
+
+interface FloodFillWorkerRequest {
+  id: number;
+  type: "fill";
+  width: number;
+  height: number;
+  startX: number;
+  startY: number;
+  fill: [number, number, number, number];
+  maxPixels: number;
+  imageBuffer?: ArrayBuffer;
+  canvas?: OffscreenCanvas;
+}
+
+export interface FloodFillWorkerSuccess {
+  id: number;
+  type: "result";
+  dirtyRects: FloodFillDirtyRect[];
+  aborted: boolean;
+}
+
+interface FloodFillWorkerError {
+  id: number;
+  type: "error";
+  message: string;
+}
+
+type FloodFillWorkerResponse = FloodFillWorkerSuccess | FloodFillWorkerError;
 
 export class Editor {
   canvas: HTMLCanvasElement;
@@ -12,6 +42,16 @@ export class Editor {
   fontFamily: HTMLSelectElement | null;
   fontSize: HTMLInputElement | null;
   private onChange?: () => void;
+  private bucketFillWorker?: Worker;
+  private bucketFillWorkerId = 0;
+  private bucketFillResolvers = new Map<
+    number,
+    {
+      resolve: (value: FloodFillWorkerSuccess) => void;
+      reject: (reason: unknown) => void;
+    }
+  >();
+  private readonly supportsWorker: boolean;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -32,6 +72,7 @@ export class Editor {
     this.onChange = onChange;
     this.fontFamily = fontFamily ?? null;
     this.fontSize = fontSize ?? null;
+    this.supportsWorker = typeof Worker !== "undefined";
     this.adjustForPixelRatio();
     window.addEventListener("resize", this.handleResize);
 
@@ -143,6 +184,38 @@ export class Editor {
     return parseInt(this.fontSize?.value ?? "", 10) || 16;
   }
 
+  supportsBucketFillWorkers() {
+    return this.supportsWorker;
+  }
+
+  async requestBucketFill(
+    request: Omit<FloodFillWorkerRequest, "id">,
+    transferables: Transferable[],
+  ): Promise<FloodFillWorkerSuccess> {
+    const worker = this.ensureBucketFillWorker();
+    if (!worker) {
+      return this.runBucketFillFallback(request);
+    }
+
+    const id = ++this.bucketFillWorkerId;
+    const message: FloodFillWorkerRequest = { ...request, id };
+
+    return new Promise<FloodFillWorkerSuccess>((resolve, reject) => {
+      this.bucketFillResolvers.set(id, { resolve, reject });
+      try {
+        worker.postMessage(message, transferables);
+      } catch (error) {
+        this.bucketFillResolvers.delete(id);
+        this.tearDownBucketFillWorker();
+        try {
+          resolve(this.runBucketFillFallback(request));
+        } catch (fallbackError) {
+          reject(fallbackError);
+        }
+      }
+    });
+  }
+
   /**
    * Remove all event listeners registered by the editor.
    * Should be called before discarding the instance to prevent leaks.
@@ -153,5 +226,94 @@ export class Editor {
     this.canvas.removeEventListener("pointerdown", this.handlePointerDown);
     this.canvas.removeEventListener("pointermove", this.handlePointerMove);
     this.canvas.removeEventListener("pointerup", this.handlePointerUp);
+    this.bucketFillResolvers.forEach(({ reject }) => reject(new Error("Editor destroyed")));
+    this.bucketFillResolvers.clear();
+    this.tearDownBucketFillWorker();
+  }
+
+  private ensureBucketFillWorker(): Worker | null {
+    if (!this.supportsWorker) return null;
+    if (this.bucketFillWorker) return this.bucketFillWorker;
+    try {
+      this.bucketFillWorker = new Worker("dist/workers/floodFillWorker.js", {
+        type: "module",
+      });
+      this.bucketFillWorker.addEventListener(
+        "message",
+        this.handleBucketFillWorkerMessage,
+      );
+      this.bucketFillWorker.addEventListener(
+        "error",
+        this.handleBucketFillWorkerError,
+      );
+      return this.bucketFillWorker;
+    } catch (error) {
+      console.warn("Failed to initialize bucket fill worker", error);
+      this.bucketFillWorker = undefined;
+      return null;
+    }
+  }
+
+  private runBucketFillFallback(
+    request: Omit<FloodFillWorkerRequest, "id">,
+  ): FloodFillWorkerSuccess {
+    if (!request.imageBuffer) {
+      throw new Error("Bucket fill fallback requires image buffer");
+    }
+
+    const pixels = new Uint8ClampedArray(request.imageBuffer);
+    const result = floodFill(pixels, {
+      width: request.width,
+      height: request.height,
+      startX: request.startX,
+      startY: request.startY,
+      fill: request.fill,
+      maxPixels: request.maxPixels,
+    });
+
+    return {
+      id: 0,
+      type: "result",
+      dirtyRects: result.dirtyRects,
+      aborted: result.aborted,
+    };
+  }
+
+  private handleBucketFillWorkerMessage = (
+    event: MessageEvent<FloodFillWorkerResponse>,
+  ) => {
+    const message = event.data;
+    if (!message) return;
+
+    const pending = this.bucketFillResolvers.get(message.id);
+    if (!pending) return;
+
+    this.bucketFillResolvers.delete(message.id);
+
+    if (message.type === "result") {
+      pending.resolve(message);
+    } else {
+      pending.reject(new Error(message.message));
+    }
+  };
+
+  private handleBucketFillWorkerError = (event: ErrorEvent) => {
+    this.bucketFillResolvers.forEach(({ reject }) => reject(event.error));
+    this.bucketFillResolvers.clear();
+    this.tearDownBucketFillWorker();
+  };
+
+  private tearDownBucketFillWorker() {
+    if (!this.bucketFillWorker) return;
+    this.bucketFillWorker.removeEventListener(
+      "message",
+      this.handleBucketFillWorkerMessage,
+    );
+    this.bucketFillWorker.removeEventListener(
+      "error",
+      this.handleBucketFillWorkerError,
+    );
+    this.bucketFillWorker.terminate();
+    this.bucketFillWorker = undefined;
   }
 }

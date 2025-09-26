@@ -1,5 +1,6 @@
 import { Editor } from "../core/Editor.js";
 import { Tool } from "./Tool.js";
+import type { FloodFillWorkerSuccess } from "../core/Editor.js";
 
 /**
  * Tool that fills a contiguous region of pixels with the current fill color.
@@ -11,7 +12,7 @@ export class BucketFillTool implements Tool {
   onPointerDown(e: PointerEvent, editor: Editor): void {
     const ctx = editor.ctx;
     const image = ctx.getImageData(0, 0, editor.canvas.width, editor.canvas.height);
-    const { width, height, data } = image;
+    const { width, height } = image;
 
     const pixelCount = width * height;
     if (pixelCount > BucketFillTool.MAX_FILL_PIXELS) {
@@ -22,76 +23,32 @@ export class BucketFillTool implements Tool {
     const dpr = window.devicePixelRatio || 1;
     const sx = Math.max(0, Math.min(width - 1, Math.floor(e.offsetX * dpr)));
     const sy = Math.max(0, Math.min(height - 1, Math.floor(e.offsetY * dpr)));
-    const start = sy * width + sx;
-    const targetOffset = start * 4;
-    const tr = data[targetOffset];
-    const tg = data[targetOffset + 1];
-    const tb = data[targetOffset + 2];
 
-    const [fr, fg, fb] = this.hexToRgb(editor.fillStyle);
+    const fillColor = this.hexToRgba(editor.fillStyle);
 
-    // if target already the fill color, nothing to do
-    if (tr === fr && tg === fg && tb === fb) return;
+    const offscreen = this.createOffscreenCanvasCopy(image);
 
-    const queue = new Uint32Array(pixelCount);
-    const visited = new Uint8Array(pixelCount);
-    let head = 0;
-    let tail = 0;
-    let processed = 0;
+    const request = {
+      type: "fill" as const,
+      width,
+      height,
+      startX: sx,
+      startY: sy,
+      fill: fillColor,
+      maxPixels: BucketFillTool.MAX_FILL_PIXELS,
+      imageBuffer: image.data.buffer,
+      canvas: offscreen,
+    };
 
-    queue[tail++] = start;
-    visited[start] = 1;
+    const transfers: Transferable[] = [image.data.buffer];
+    if (offscreen) transfers.push(offscreen);
 
-    while (head < tail) {
-      const idx = queue[head++];
-      const offset = idx * 4;
-      if (data[offset] !== tr || data[offset + 1] !== tg || data[offset + 2] !== tb) {
-        continue;
-      }
-
-      data[offset] = fr;
-      data[offset + 1] = fg;
-      data[offset + 2] = fb;
-      data[offset + 3] = 255;
-      processed++;
-      if (processed > BucketFillTool.MAX_FILL_PIXELS) {
-        console.warn("Bucket fill aborted: exceeded pixel limit");
-        break;
-      }
-
-      const x = idx % width;
-      const y = (idx / width) | 0;
-
-      if (x > 0) {
-        const n = idx - 1;
-        if (!visited[n]) {
-          queue[tail++] = n;
-          visited[n] = 1;
-        }
-      }
-      if (x < width - 1) {
-        const n = idx + 1;
-        if (!visited[n]) {
-          queue[tail++] = n;
-          visited[n] = 1;
-        }
-      }
-      if (y > 0) {
-        const n = idx - width;
-        if (!visited[n]) {
-          queue[tail++] = n;
-          visited[n] = 1;
-        }
-      }
-      if (y < height - 1) {
-        const n = idx + width;
-        if (!visited[n]) {
-          queue[tail++] = n;
-          visited[n] = 1;
-        }
-      }
-    }
-    ctx.putImageData(image, 0, 0);
+    void editor
+      .requestBucketFill(request, transfers)
+      .then((result) => this.applyFillResult(result, editor))
+      .catch((err) => {
+        console.error("Bucket fill failed", err);
+      });
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -104,12 +61,53 @@ export class BucketFillTool implements Tool {
     // intentionally unused
   }
 
-  private hexToRgb(hex: string): [number, number, number] {
+  private hexToRgba(hex: string): [number, number, number, number] {
     let h = hex.replace(/^#/, "");
     if (h.length === 3) {
       h = h.split("").map((c) => c + c).join("");
     }
     const num = parseInt(h, 16);
-    return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
+    return [
+      (num >> 16) & 255,
+      (num >> 8) & 255,
+      num & 255,
+      255,
+    ];
+  }
+
+  private createOffscreenCanvasCopy(image: ImageData): OffscreenCanvas | undefined {
+    const scratch = document.createElement("canvas");
+    if (typeof scratch.transferControlToOffscreen !== "function") {
+      return undefined;
+    }
+    scratch.width = image.width;
+    scratch.height = image.height;
+    const scratchCtx = scratch.getContext("2d");
+    if (!scratchCtx) {
+      return undefined;
+    }
+    scratchCtx.putImageData(image, 0, 0);
+    return scratch.transferControlToOffscreen();
+  }
+
+  private applyFillResult(result: FloodFillWorkerSuccess, editor: Editor) {
+    if (result.aborted) {
+      console.warn("Bucket fill aborted: exceeded pixel limit");
+    }
+    if (!result.dirtyRects.length) return;
+
+    const ctx = editor.ctx;
+    for (const rect of result.dirtyRects) {
+      const imageData = this.createImageData(rect);
+      ctx.putImageData(imageData, rect.x, rect.y);
+    }
+  }
+
+  private createImageData(rect: FloodFillWorkerSuccess["dirtyRects"][number]): ImageData {
+    const pixels = new Uint8ClampedArray(rect.buffer);
+    if (typeof ImageData !== "undefined") {
+      return new ImageData(pixels, rect.width, rect.height);
+    }
+    return { data: pixels, width: rect.width, height: rect.height } as ImageData;
   }
 }

@@ -21,6 +21,7 @@ describe("layer-specific undo/redo", () => {
       <button id="rectangle"></button>
       <button id="line"></button>
       <button id="circle"></button>
+      <button id="lasso"></button>
       <button id="text"></button>
       <button id="bucket"></button>
       <button id="eyedropper"></button>

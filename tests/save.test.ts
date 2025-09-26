@@ -12,6 +12,7 @@ describe("save button", () => {
       <button id="rectangle"></button>
       <button id="line"></button>
       <button id="circle"></button>
+      <button id="lasso"></button>
       <button id="text"></button>
       <button id="bucket"></button>
       <button id="eyedropper"></button>
@@ -35,18 +36,32 @@ describe("save button", () => {
       toJSON: () => {},
     });
 
-    const click = jest.fn();
-    const anchor = { href: "", download: "", click } as any;
-
-    jest.spyOn(document, "createElement").mockReturnValue(anchor);
+    let createdAnchor: HTMLAnchorElement | null = null;
+    let clickMock: jest.SpyInstance | null = null;
+    const originalCreate = document.createElement;
+    const createSpy = jest
+      .spyOn(document, "createElement")
+      .mockImplementation(function (tag: string, options?: ElementCreationOptions) {
+        const element = originalCreate.call(this, tag, options);
+        if (String(tag).toLowerCase() === "a") {
+          createdAnchor = element as HTMLAnchorElement;
+          clickMock = jest
+            .spyOn(createdAnchor, "click")
+            .mockImplementation(() => {});
+        }
+        return element;
+      });
 
     const handle = initEditor();
 
     (document.getElementById("save") as HTMLButtonElement).click();
     expect(canvas.toDataURL).toHaveBeenCalledWith("image/png");
-    expect(click).toHaveBeenCalled();
+    expect(clickMock).not.toBeNull();
+    expect(clickMock).toHaveBeenCalled();
 
     handle.destroy();
+    clickMock?.mockRestore();
+    createSpy.mockRestore();
   });
 
   it("supports selecting jpeg format", () => {
@@ -60,6 +75,7 @@ describe("save button", () => {
       <button id="rectangle"></button>
       <button id="line"></button>
       <button id="circle"></button>
+      <button id="lasso"></button>
       <button id="text"></button>
       <button id="bucket"></button>
       <button id="eyedropper"></button>
@@ -83,17 +99,32 @@ describe("save button", () => {
       toJSON: () => {},
     });
 
-    const click = jest.fn();
-    const anchor = { href: "", download: "", click } as any;
-    jest.spyOn(document, "createElement").mockReturnValue(anchor);
+    let createdAnchor: HTMLAnchorElement | null = null;
+    let clickMock: jest.SpyInstance | null = null;
+    const originalCreate = document.createElement;
+    const createSpy = jest
+      .spyOn(document, "createElement")
+      .mockImplementation(function (tag: string, options?: ElementCreationOptions) {
+        const element = originalCreate.call(this, tag, options);
+        if (String(tag).toLowerCase() === "a") {
+          createdAnchor = element as HTMLAnchorElement;
+          clickMock = jest
+            .spyOn(createdAnchor, "click")
+            .mockImplementation(() => {});
+        }
+        return element;
+      });
 
     const handle = initEditor();
 
     (document.getElementById("save") as HTMLButtonElement).click();
     expect(canvas.toDataURL).toHaveBeenCalledWith("image/jpeg", 0.9);
-    expect(anchor.download).toBe("canvas.jpg");
-    expect(click).toHaveBeenCalled();
+    expect(createdAnchor?.download).toBe("canvas.jpg");
+    expect(clickMock).not.toBeNull();
+    expect(clickMock).toHaveBeenCalled();
 
     handle.destroy();
+    clickMock?.mockRestore();
+    createSpy.mockRestore();
   });
 });

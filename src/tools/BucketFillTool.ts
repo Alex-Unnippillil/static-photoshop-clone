@@ -1,4 +1,5 @@
 import { Editor } from "../core/Editor.js";
+import { floodFill, type FloodFillOptions } from "../core/floodFill.js";
 import { Tool } from "./Tool.js";
 
 /**
@@ -7,6 +8,8 @@ import { Tool } from "./Tool.js";
  */
 export class BucketFillTool implements Tool {
   private static readonly MAX_FILL_PIXELS = 1_000_000;
+
+  constructor(private readonly options: Partial<FloodFillOptions> = {}) {}
 
   onPointerDown(e: PointerEvent, editor: Editor): void {
     const ctx = editor.ctx;
@@ -22,76 +25,23 @@ export class BucketFillTool implements Tool {
     const dpr = window.devicePixelRatio || 1;
     const sx = Math.max(0, Math.min(width - 1, Math.floor(e.offsetX * dpr)));
     const sy = Math.max(0, Math.min(height - 1, Math.floor(e.offsetY * dpr)));
-    const start = sy * width + sx;
-    const targetOffset = start * 4;
-    const tr = data[targetOffset];
-    const tg = data[targetOffset + 1];
-    const tb = data[targetOffset + 2];
-
     const [fr, fg, fb] = this.hexToRgb(editor.fillStyle);
 
-    // if target already the fill color, nothing to do
-    if (tr === fr && tg === fg && tb === fb) return;
+    const { filledPixels, aborted } = floodFill(
+      image,
+      sx,
+      sy,
+      [fr, fg, fb, 255],
+      { ...this.options, maxPixels: BucketFillTool.MAX_FILL_PIXELS },
+    );
 
-    const queue = new Uint32Array(pixelCount);
-    const visited = new Uint8Array(pixelCount);
-    let head = 0;
-    let tail = 0;
-    let processed = 0;
-
-    queue[tail++] = start;
-    visited[start] = 1;
-
-    while (head < tail) {
-      const idx = queue[head++];
-      const offset = idx * 4;
-      if (data[offset] !== tr || data[offset + 1] !== tg || data[offset + 2] !== tb) {
-        continue;
-      }
-
-      data[offset] = fr;
-      data[offset + 1] = fg;
-      data[offset + 2] = fb;
-      data[offset + 3] = 255;
-      processed++;
-      if (processed > BucketFillTool.MAX_FILL_PIXELS) {
-        console.warn("Bucket fill aborted: exceeded pixel limit");
-        break;
-      }
-
-      const x = idx % width;
-      const y = (idx / width) | 0;
-
-      if (x > 0) {
-        const n = idx - 1;
-        if (!visited[n]) {
-          queue[tail++] = n;
-          visited[n] = 1;
-        }
-      }
-      if (x < width - 1) {
-        const n = idx + 1;
-        if (!visited[n]) {
-          queue[tail++] = n;
-          visited[n] = 1;
-        }
-      }
-      if (y > 0) {
-        const n = idx - width;
-        if (!visited[n]) {
-          queue[tail++] = n;
-          visited[n] = 1;
-        }
-      }
-      if (y < height - 1) {
-        const n = idx + width;
-        if (!visited[n]) {
-          queue[tail++] = n;
-          visited[n] = 1;
-        }
-      }
+    if (aborted) {
+      console.warn("Bucket fill aborted: exceeded pixel limit");
     }
-    ctx.putImageData(image, 0, 0);
+
+    if (filledPixels > 0) {
+      ctx.putImageData(image, 0, 0);
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

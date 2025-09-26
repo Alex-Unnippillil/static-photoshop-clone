@@ -8,6 +8,7 @@ describe("editor toolbar controls", () => {
   let handle: EditorHandle;
 
   beforeEach(() => {
+    window.localStorage.clear();
     document.body.innerHTML = `
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
@@ -21,7 +22,18 @@ describe("editor toolbar controls", () => {
       <button id="text"></button>
       <button id="bucket"></button>
       <button id="eyedropper"></button>
-      <select id="formatSelect"><option value="png">PNG</option></select>
+      <select id="formatSelect"></select>
+      <div id="jpegQualityGroup" hidden>
+        <input
+          id="jpegQuality"
+          type="range"
+          min="10"
+          max="100"
+          step="5"
+          value="90"
+        />
+        <output id="jpegQualityValue">90%</output>
+      </div>
       <input id="imageLoader" type="file" />
       <button id="undo"></button>
       <button id="redo"></button>

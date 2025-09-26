@@ -8,6 +8,7 @@ describe("EyedropperTool", () => {
   let ctx: Partial<CanvasRenderingContext2D>;
 
   beforeEach(() => {
+    window.localStorage.clear();
     document.body.innerHTML = `
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
@@ -91,6 +92,7 @@ describe("EyedropperTool color history", () => {
   let ctx: Partial<CanvasRenderingContext2D>;
 
   beforeEach(() => {
+    window.localStorage.clear();
     document.body.innerHTML = `
       <canvas id="canvas"></canvas>
       <input id="colorPicker" value="#000000" />
@@ -106,7 +108,18 @@ describe("EyedropperTool color history", () => {
       <button id="bucket"></button>
       <button id="eyedropper"></button>
 
-      <select id="formatSelect"><option value="png">PNG</option></select>
+      <select id="formatSelect"></select>
+      <div id="jpegQualityGroup" hidden>
+        <input
+          id="jpegQuality"
+          type="range"
+          min="10"
+          max="100"
+          step="5"
+          value="90"
+        />
+        <output id="jpegQualityValue">90%</output>
+      </div>
       <button id="save"></button>
       <div id="colorHistory"></div>
     `;

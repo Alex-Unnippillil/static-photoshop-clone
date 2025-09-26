@@ -4,6 +4,7 @@ describe("layer opacity", () => {
   let handle: EditorHandle;
 
   beforeEach(() => {
+    window.localStorage.clear();
     document.body.innerHTML = `
       <div id="canvasContainer">
         <canvas id="canvas"></canvas>
@@ -21,7 +22,18 @@ describe("layer opacity", () => {
       <button id="text"></button>
       <button id="bucket"></button>
       <button id="eyedropper"></button>
-      <select id="formatSelect"><option value="png">PNG</option></select>
+      <select id="formatSelect"></select>
+      <div id="jpegQualityGroup" hidden>
+        <input
+          id="jpegQuality"
+          type="range"
+          min="10"
+          max="100"
+          step="5"
+          value="90"
+        />
+        <output id="jpegQualityValue">90%</output>
+      </div>
       <button id="save"></button>
     `;
 

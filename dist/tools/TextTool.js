@@ -56,6 +56,9 @@ export class TextTool {
             this.cleanup();
         }
     }
+    onDeactivate(_editor) {
+        this.cleanup();
+    }
     destroy() {
         this.cleanup();
     }

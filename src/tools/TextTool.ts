@@ -67,6 +67,10 @@ export class TextTool implements Tool {
     }
   }
 
+  onDeactivate(_editor: Editor): void {
+    this.cleanup();
+  }
+
   destroy(): void {
     this.cleanup();
   }

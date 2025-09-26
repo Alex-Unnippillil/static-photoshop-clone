@@ -9,7 +9,7 @@ export class DrawingTool {
      * drawing operations.
      */
     applyStroke(ctx, editor) {
-        ctx.lineWidth = editor.lineWidthValue;
+        ctx.lineWidth = editor.lineWidthOnCanvas;
         ctx.strokeStyle = editor.strokeStyle;
         ctx.fillStyle = editor.fillStyle;
     }

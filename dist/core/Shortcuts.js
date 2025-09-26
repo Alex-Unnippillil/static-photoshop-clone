@@ -11,8 +11,9 @@ import { EyedropperTool } from "../tools/EyedropperTool.js";
  * Maps specific key presses to tool changes or editor actions.
  */
 export class Shortcuts {
-    constructor(editor) {
+    constructor(editor, options) {
         this.editor = editor;
+        this.onGridToggle = options?.onGridToggle;
         this.handler = (e) => this.onKeyDown(e);
         document.addEventListener("keydown", this.handler);
     }
@@ -34,6 +35,11 @@ export class Shortcuts {
             }
             else if (key === "y" && e.ctrlKey && !e.metaKey) {
                 this.editor.redo();
+                e.preventDefault();
+            }
+            else if (key === "'" || key === ";") {
+                const visible = this.editor.toggleGrid();
+                this.onGridToggle?.(visible);
                 e.preventDefault();
             }
             return;
@@ -71,7 +77,15 @@ export class Shortcuts {
                 e.preventDefault();
                 this.editor.setTool(new EyedropperTool());
                 break;
+            case "g":
+                e.preventDefault();
+                this.handleGridToggle();
+                break;
         }
+    }
+    handleGridToggle() {
+        const visible = this.editor.toggleGrid();
+        this.onGridToggle?.(visible);
     }
     /** Remove keyboard listeners. */
     destroy() {

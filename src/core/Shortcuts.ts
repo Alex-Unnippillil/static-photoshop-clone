@@ -16,9 +16,11 @@ import { EyedropperTool } from "../tools/EyedropperTool.js";
 export class Shortcuts {
   private readonly handler: (e: KeyboardEvent) => void;
   private editor: Editor;
+  private readonly onGridToggle?: (visible: boolean) => void;
 
-  constructor(editor: Editor) {
+  constructor(editor: Editor, options?: { onGridToggle?: (visible: boolean) => void }) {
     this.editor = editor;
+    this.onGridToggle = options?.onGridToggle;
     this.handler = (e: KeyboardEvent) => this.onKeyDown(e);
     document.addEventListener("keydown", this.handler);
   }
@@ -41,6 +43,10 @@ export class Shortcuts {
         e.preventDefault();
       } else if (key === "y" && e.ctrlKey && !e.metaKey) {
         this.editor.redo();
+        e.preventDefault();
+      } else if (key === "'" || key === ";") {
+        const visible = this.editor.toggleGrid();
+        this.onGridToggle?.(visible);
         e.preventDefault();
       }
       return;
@@ -79,7 +85,16 @@ export class Shortcuts {
         e.preventDefault();
         this.editor.setTool(new EyedropperTool());
         break;
+      case "g":
+        e.preventDefault();
+        this.handleGridToggle();
+        break;
     }
+  }
+
+  private handleGridToggle() {
+    const visible = this.editor.toggleGrid();
+    this.onGridToggle?.(visible);
   }
 
   /** Remove keyboard listeners. */

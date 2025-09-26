@@ -21,7 +21,8 @@ function listen(el, type, handler, list) {
  * {@link EditorHandle} that allows tests or callers to tear down the editor.
  */
 export function initEditor() {
-    const canvases = Array.from(document.querySelectorAll("canvas"));
+    const canvases = Array.from(document.querySelectorAll("canvas")).filter((canvas) => !canvas.classList.contains("grid-overlay") &&
+        !canvas.classList.contains("ruler"));
     const toolConstructors = {
         pencil: PencilTool,
         eraser: EraserTool,
@@ -73,6 +74,10 @@ export function initEditor() {
     const fontSize = document.getElementById("fontSize");
     const layerSelect = document.getElementById("layerSelect");
     const toolbar = document.getElementById("toolbar") || document.body;
+    const showGridToggle = document.getElementById("showGrid");
+    const horizontalRuler = document.getElementById("horizontalRuler");
+    const verticalRuler = document.getElementById("verticalRuler");
+    const gridOverlay = document.getElementById("gridOverlay");
     const saveBtn = document.getElementById("save");
     const formatSelect = document.getElementById("formatSelect");
     const colorHistory = document.getElementById("colorHistory");
@@ -123,6 +128,39 @@ export function initEditor() {
     const undoBtn = document.getElementById("undo");
     const redoBtn = document.getElementById("redo");
     const listeners = [];
+    const editors = [];
+    const GRID_STORAGE_KEY = "static-photoshop-clone:gridVisible";
+    const readGridPreference = () => {
+        try {
+            const stored = window.localStorage.getItem(GRID_STORAGE_KEY);
+            if (stored === null)
+                return true;
+            return stored === "true";
+        }
+        catch {
+            return true;
+        }
+    };
+    const persistGridPreference = (visible) => {
+        try {
+            window.localStorage.setItem(GRID_STORAGE_KEY, visible ? "true" : "false");
+        }
+        catch {
+            /* ignore storage errors */
+        }
+    };
+    let gridVisible = readGridPreference();
+    if (showGridToggle) {
+        showGridToggle.checked = gridVisible;
+    }
+    const applyGridVisibility = (visible, { persist = true } = {}) => {
+        gridVisible = visible;
+        editors.forEach((e) => e.setGridVisible(visible));
+        if (persist)
+            persistGridPreference(visible);
+        if (showGridToggle)
+            showGridToggle.checked = visible;
+    };
     const recentColors = [];
     const maxRecentColors = 10;
     const renderColorHistory = () => {
@@ -154,6 +192,11 @@ export function initEditor() {
     listen(colorPicker, "input", () => {
         recordColor(colorPicker.value);
     }, listeners);
+    listen(showGridToggle, "change", () => {
+        if (!showGridToggle)
+            return;
+        applyGridVisibility(showGridToggle.checked);
+    }, listeners);
     let editor; // set after editors created
     const updateHistoryButtons = () => {
         if (undoBtn)
@@ -161,12 +204,16 @@ export function initEditor() {
         if (redoBtn)
             redoBtn.disabled = !editor?.canRedo;
     };
-    const editors = [];
-    canvases.forEach((c) => {
+    canvases.forEach((c, index) => {
         try {
             const e = new Editor(c, colorPicker, lineWidth, fillMode, () => {
                 updateHistoryButtons();
-            }, fontFamily ?? undefined, fontSize ?? undefined);
+            }, fontFamily ?? undefined, fontSize ?? undefined, {
+                gridOverlay: index === 0 ? gridOverlay ?? undefined : undefined,
+                horizontalRuler: index === 0 ? horizontalRuler ?? undefined : undefined,
+                verticalRuler: index === 0 ? verticalRuler ?? undefined : undefined,
+                initialGridVisible: gridVisible,
+            });
             editors.push(e);
         }
         catch {
@@ -192,8 +239,11 @@ export function initEditor() {
     editor.setTool(new PencilTool());
     editorToolConstructors.set(editor, PencilTool);
     updateLayerInteractivity();
+    applyGridVisibility(gridVisible, { persist: false });
     // keyboard shortcuts
-    const shortcuts = new Shortcuts(editor);
+    const shortcuts = new Shortcuts(editor, {
+        onGridToggle: (visible) => applyGridVisibility(visible),
+    });
     // map button id to tool constructor
     Object.entries(toolConstructors).forEach(([id, ToolCtor]) => listen(toolButtons[id], "click", () => editor.setTool(new ToolCtor()), listeners));
     listen(undoBtn, "click", () => {

@@ -1,5 +1,13 @@
 import { Tool } from "../tools/Tool.js";
 
+interface EditorOptions {
+  gridOverlay?: HTMLCanvasElement;
+  horizontalRuler?: HTMLCanvasElement;
+  verticalRuler?: HTMLCanvasElement;
+  initialGridVisible?: boolean;
+  initialZoom?: number;
+}
+
 export class Editor {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
@@ -12,6 +20,15 @@ export class Editor {
   fontFamily: HTMLSelectElement | null;
   fontSize: HTMLInputElement | null;
   private onChange?: () => void;
+  private gridOverlay: HTMLCanvasElement | null;
+  private gridCtx: CanvasRenderingContext2D | null;
+  private horizontalRuler: HTMLCanvasElement | null;
+  private verticalRuler: HTMLCanvasElement | null;
+  private gridVisible: boolean;
+  private zoom: number;
+  private readonly baseGridSpacing = 50;
+  private readonly minGridSpacingPx = 25;
+  private readonly majorLineFrequency = 4;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -21,6 +38,7 @@ export class Editor {
     onChange?: () => void,
     fontFamily?: HTMLSelectElement | null,
     fontSize?: HTMLInputElement | null,
+    options: EditorOptions = {},
   ) {
     this.canvas = canvas;
     const ctx = canvas.getContext("2d");
@@ -32,7 +50,14 @@ export class Editor {
     this.onChange = onChange;
     this.fontFamily = fontFamily ?? null;
     this.fontSize = fontSize ?? null;
+    this.gridOverlay = options.gridOverlay ?? null;
+    this.gridCtx = this.gridOverlay ? this.gridOverlay.getContext("2d") : null;
+    this.horizontalRuler = options.horizontalRuler ?? null;
+    this.verticalRuler = options.verticalRuler ?? null;
+    this.gridVisible = options.initialGridVisible ?? true;
+    this.zoom = options.initialZoom ?? 1;
     this.adjustForPixelRatio();
+    this.setGridVisible(this.gridVisible);
     window.addEventListener("resize", this.handleResize);
 
     this.canvas.addEventListener("pointerdown", this.handlePointerDown);
@@ -63,13 +88,14 @@ export class Editor {
   };
 
   private adjustForPixelRatio() {
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = this.devicePixelRatio;
     const rect = this.canvas.getBoundingClientRect();
     this.canvas.width = rect.width * dpr;
     this.canvas.height = rect.height * dpr;
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     // Reset any existing transforms
     this.ctx.scale(1, 1);
+    this.updateOverlays();
   }
 
   private handleResize = () => {
@@ -81,6 +107,7 @@ export class Editor {
     );
     this.adjustForPixelRatio();
     this.ctx.putImageData(data, 0, 0);
+    this.updateOverlays();
   };
 
   saveState() {
@@ -141,6 +168,261 @@ export class Editor {
 
   get fontSizeValue() {
     return parseInt(this.fontSize?.value ?? "", 10) || 16;
+  }
+
+  setGridVisible(visible: boolean) {
+    this.gridVisible = visible;
+    if (this.gridOverlay) {
+      this.gridOverlay.style.visibility = visible ? "visible" : "hidden";
+    }
+    this.renderGrid();
+  }
+
+  toggleGrid(): boolean {
+    const next = !this.gridVisible;
+    this.setGridVisible(next);
+    return next;
+  }
+
+  isGridVisible() {
+    return this.gridVisible;
+  }
+
+  setZoom(zoom: number) {
+    if (!Number.isFinite(zoom) || zoom <= 0) return;
+    this.zoom = zoom;
+    this.updateOverlays();
+  }
+
+  get zoomLevel() {
+    return this.zoom;
+  }
+
+  private get devicePixelRatio() {
+    return window.devicePixelRatio || 1;
+  }
+
+  private updateOverlays() {
+    this.renderGrid();
+    this.renderRulers();
+  }
+
+  private renderGrid() {
+    if (!this.gridOverlay || !this.gridCtx) return;
+    const rect = this.canvas.getBoundingClientRect();
+    const dpr = this.devicePixelRatio;
+    const width = Math.max(0, rect.width);
+    const height = Math.max(0, rect.height);
+    this.gridOverlay.width = Math.max(1, Math.round(width * dpr));
+    this.gridOverlay.height = Math.max(1, Math.round(height * dpr));
+
+    const ctx = this.gridCtx;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, this.gridOverlay.width, this.gridOverlay.height);
+
+    if (!this.gridVisible) {
+      return;
+    }
+
+    ctx.scale(dpr, dpr);
+    ctx.lineWidth = 1 / dpr;
+
+    const { spacing, majorFrequency } = this.getGridMetrics();
+    if (!isFinite(spacing) || spacing <= 0) {
+      return;
+    }
+
+    const limitX = width;
+    const limitY = height;
+    const maxColumns = Math.ceil(limitX / spacing) + 1;
+    const maxRows = Math.ceil(limitY / spacing) + 1;
+
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.08)";
+    ctx.beginPath();
+    for (let i = 0; i <= maxColumns; i++) {
+      if (i % majorFrequency === 0) continue;
+      const x = i * spacing;
+      if (x > limitX + 1) break;
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, limitY);
+    }
+    for (let i = 0; i <= maxRows; i++) {
+      if (i % majorFrequency === 0) continue;
+      const y = i * spacing;
+      if (y > limitY + 1) break;
+      ctx.moveTo(0, y);
+      ctx.lineTo(limitX, y);
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.18)";
+    ctx.beginPath();
+    for (let i = 0; i <= maxColumns; i++) {
+      if (i % majorFrequency !== 0) continue;
+      const x = i * spacing;
+      if (x > limitX + 1) break;
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, limitY);
+    }
+    for (let i = 0; i <= maxRows; i++) {
+      if (i % majorFrequency !== 0) continue;
+      const y = i * spacing;
+      if (y > limitY + 1) break;
+      ctx.moveTo(0, y);
+      ctx.lineTo(limitX, y);
+    }
+    ctx.stroke();
+  }
+
+  private renderRulers() {
+    const hasHorizontal = Boolean(this.horizontalRuler);
+    const hasVertical = Boolean(this.verticalRuler);
+    if (!hasHorizontal && !hasVertical) return;
+
+    const canvasRect = this.canvas.getBoundingClientRect();
+    const dpr = this.devicePixelRatio;
+
+    if (this.horizontalRuler) {
+      const rect = this.horizontalRuler.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        this.horizontalRuler.width = Math.max(
+          1,
+          Math.round(rect.width * dpr),
+        );
+        this.horizontalRuler.height = Math.max(
+          1,
+          Math.round(rect.height * dpr),
+        );
+        const ctx = this.horizontalRuler.getContext("2d");
+        if (ctx) {
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.clearRect(0, 0, this.horizontalRuler.width, this.horizontalRuler.height);
+          ctx.scale(dpr, dpr);
+          this.drawRuler(ctx, canvasRect.width, rect.height, "horizontal");
+        }
+      }
+    }
+
+    if (this.verticalRuler) {
+      const rect = this.verticalRuler.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        this.verticalRuler.width = Math.max(
+          1,
+          Math.round(rect.width * dpr),
+        );
+        this.verticalRuler.height = Math.max(
+          1,
+          Math.round(rect.height * dpr),
+        );
+        const ctx = this.verticalRuler.getContext("2d");
+        if (ctx) {
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.clearRect(0, 0, this.verticalRuler.width, this.verticalRuler.height);
+          ctx.scale(dpr, dpr);
+          this.drawRuler(ctx, canvasRect.height, rect.width, "vertical");
+        }
+      }
+    }
+  }
+
+  private drawRuler(
+    ctx: CanvasRenderingContext2D,
+    length: number,
+    thickness: number,
+    orientation: "horizontal" | "vertical",
+  ) {
+    const dpr = this.devicePixelRatio;
+    ctx.save();
+    ctx.lineWidth = 1 / dpr;
+    const width = orientation === "horizontal" ? length : thickness;
+    const height = orientation === "horizontal" ? thickness : length;
+    ctx.fillStyle = "#f8f8f8";
+    ctx.fillRect(0, 0, width, height);
+    ctx.strokeStyle = "#d0d0d0";
+    ctx.beginPath();
+    if (orientation === "horizontal") {
+      ctx.moveTo(0, thickness - 0.5);
+      ctx.lineTo(length, thickness - 0.5);
+    } else {
+      ctx.moveTo(thickness - 0.5, 0);
+      ctx.lineTo(thickness - 0.5, length);
+    }
+    ctx.stroke();
+
+    const { spacing, majorFrequency, unit } = this.getGridMetrics();
+    if (!isFinite(spacing) || spacing <= 0) {
+      ctx.restore();
+      return;
+    }
+
+    const tickLong = thickness * 0.65;
+    const tickShort = thickness * 0.4;
+    const maxTicks = Math.ceil(length / spacing) + 1;
+
+    ctx.strokeStyle = "#999";
+    ctx.beginPath();
+    for (let i = 0; i <= maxTicks; i++) {
+      const pos = i * spacing;
+      if (pos > length + 1) break;
+      const isMajor = i % majorFrequency === 0;
+      const tick = isMajor ? tickLong : tickShort;
+      if (orientation === "horizontal") {
+        ctx.moveTo(pos, thickness);
+        ctx.lineTo(pos, thickness - tick);
+      } else {
+        ctx.moveTo(thickness, pos);
+        ctx.lineTo(thickness - tick, pos);
+      }
+    }
+    ctx.stroke();
+
+    ctx.fillStyle = "#555";
+    ctx.font = "10px sans-serif";
+    const labelOffset = thickness - tickLong - 4;
+    for (let i = 0; i <= maxTicks; i++) {
+      if (i % majorFrequency !== 0) continue;
+      const pos = i * spacing;
+      if (pos > length + 1) break;
+      const value = Math.round(i * unit);
+      const label = String(value);
+      if (orientation === "horizontal") {
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.fillText(label, pos, labelOffset);
+      } else {
+        ctx.save();
+        ctx.translate(labelOffset, pos);
+        ctx.rotate(-Math.PI / 2);
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(label, 0, 0);
+        ctx.restore();
+      }
+    }
+
+    ctx.restore();
+  }
+
+  private getGridMetrics() {
+    let spacing = this.baseGridSpacing * this.zoom;
+    let unit = this.baseGridSpacing;
+    if (!isFinite(spacing) || spacing <= 0) {
+      spacing = this.baseGridSpacing;
+      unit = this.baseGridSpacing;
+    }
+
+    while (spacing < this.minGridSpacingPx) {
+      spacing *= 2;
+      unit *= 2;
+    }
+    while (spacing > this.minGridSpacingPx * 4) {
+      spacing /= 2;
+      unit /= 2;
+    }
+
+    const majorFrequency = Math.max(1, this.majorLineFrequency);
+
+    return { spacing, unit, majorFrequency };
   }
 
   /**

@@ -1,10 +1,15 @@
 import { Tool } from "../tools/Tool.js";
 
+type CanvasState = {
+  imageData: ImageData;
+  visible: boolean;
+};
+
 export class Editor {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
-  private undoStack: ImageData[] = [];
-  private redoStack: ImageData[] = [];
+  private undoStack: CanvasState[] = [];
+  private redoStack: CanvasState[] = [];
   private currentTool: Tool | null = null;
   colorPicker: HTMLInputElement;
   lineWidth: HTMLInputElement;
@@ -12,6 +17,7 @@ export class Editor {
   fontFamily: HTMLSelectElement | null;
   fontSize: HTMLInputElement | null;
   private onChange?: () => void;
+  private _visible = true;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -32,6 +38,8 @@ export class Editor {
     this.onChange = onChange;
     this.fontFamily = fontFamily ?? null;
     this.fontSize = fontSize ?? null;
+    this._visible = this.canvas.style.visibility !== "hidden";
+    this.applyVisibility();
     this.adjustForPixelRatio();
     window.addEventListener("resize", this.handleResize);
 
@@ -40,10 +48,35 @@ export class Editor {
     this.canvas.addEventListener("pointerup", this.handlePointerUp);
   }
 
+  private snapshot(): CanvasState {
+    return {
+      imageData: this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height),
+      visible: this._visible,
+    };
+  }
+
   setTool(tool: Tool) {
     this.currentTool?.destroy?.();
     this.currentTool = tool;
     this.canvas.style.cursor = tool.cursor || "crosshair";
+  }
+
+  private applyVisibility() {
+    this.canvas.style.visibility = this._visible ? "visible" : "hidden";
+  }
+
+  setVisible(visible: boolean, recordHistory = false) {
+    if (this._visible === visible) return;
+    if (recordHistory) {
+      this.saveState();
+    }
+    this._visible = visible;
+    this.applyVisibility();
+    this.onChange?.();
+  }
+
+  get visible() {
+    return this._visible;
   }
 
   private handlePointerDown = (e: PointerEvent) => {
@@ -84,22 +117,20 @@ export class Editor {
   };
 
   saveState() {
-    this.undoStack.push(
-      this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height),
-    );
+    this.undoStack.push(this.snapshot());
     if (this.undoStack.length > 50) this.undoStack.shift();
     this.redoStack.length = 0;
     this.onChange?.();
   }
 
-  private restoreState(stack: ImageData[], opposite: ImageData[]) {
+  private restoreState(stack: CanvasState[], opposite: CanvasState[]) {
     if (!stack.length) return;
-    opposite.push(
-      this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height),
-    );
-    const imageData = stack.pop()!;
+    opposite.push(this.snapshot());
+    const state = stack.pop()!;
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.ctx.putImageData(imageData, 0, 0);
+    this.ctx.putImageData(state.imageData, 0, 0);
+    this._visible = state.visible;
+    this.applyVisibility();
     this.onChange?.();
   }
 

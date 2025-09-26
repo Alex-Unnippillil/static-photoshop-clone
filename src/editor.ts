@@ -64,10 +64,42 @@ export function initEditor(): EditorHandle {
     constructorToId.set(Ctor, id);
   });
 
+  const toolbarElement = document.getElementById("toolbar");
+  const toolbar = toolbarElement ?? document.body;
+  const rovingButtonCandidates = toolbarElement
+    ? Array.from(
+        toolbarElement.querySelectorAll<HTMLButtonElement>(".tool-button"),
+      )
+    : [];
+  const rovingButtons = (rovingButtonCandidates.length
+    ? rovingButtonCandidates
+    : Object.values(toolButtons)
+  ).filter((btn) => btn.id in toolButtons);
+
+  let rovingButton: HTMLButtonElement | null = null;
+  const setRovingButton = (
+    btn: HTMLButtonElement | null,
+    { shouldFocus = false }: { shouldFocus?: boolean } = {},
+  ) => {
+    if (!btn) return;
+    rovingButtons.forEach((toolBtn) => {
+      toolBtn.tabIndex = toolBtn === btn ? 0 : -1;
+    });
+    rovingButton = btn;
+    if (shouldFocus) {
+      btn.focus();
+    }
+  };
+
   let activeButton: HTMLButtonElement | null = null;
   const setActiveButton = (btn: HTMLButtonElement | null) => {
-    if (activeButton) activeButton.classList.remove("active");
-    if (btn) btn.classList.add("active");
+    if (activeButton) {
+      activeButton.classList.remove("active");
+    }
+    if (btn) {
+      btn.classList.add("active");
+      setRovingButton(btn);
+    }
     activeButton = btn;
   };
   const buttonForTool = (tool: Tool): HTMLButtonElement | null => {
@@ -92,13 +124,22 @@ export function initEditor(): EditorHandle {
   const fontFamily = document.getElementById("fontFamily") as HTMLSelectElement | null;
   const fontSize = document.getElementById("fontSize") as HTMLInputElement | null;
   const layerSelect = document.getElementById("layerSelect") as HTMLSelectElement | null;
-  const toolbar = document.getElementById("toolbar") || document.body;
+  if (toolbarElement) {
+    toolbarElement.setAttribute("role", "toolbar");
+  }
   const saveBtn = document.getElementById("save") as HTMLButtonElement | null;
   const formatSelect =
     document.getElementById("formatSelect") as HTMLSelectElement | null;
   const colorHistory = document.getElementById(
     "colorHistory",
   ) as HTMLDivElement | null;
+
+  if (rovingButtons.length > 0) {
+    rovingButtons.forEach((btn, index) => {
+      btn.tabIndex = index === 0 ? 0 : -1;
+    });
+    rovingButton = rovingButtons[0];
+  }
 
   if (!colorPicker) {
     throw new Error("Missing #colorPicker input");
@@ -246,6 +287,36 @@ export function initEditor(): EditorHandle {
 
   // keyboard shortcuts
   const shortcuts = new Shortcuts(editor);
+
+  listen<KeyboardEvent>(
+    toolbar,
+    "keydown",
+    (event) => {
+      const target = event.target as HTMLButtonElement | null;
+      if (!target) return;
+      const currentIndex = rovingButtons.indexOf(target);
+      if (currentIndex === -1) return;
+      let nextIndex: number | null = null;
+      if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+        nextIndex = (currentIndex + 1) % rovingButtons.length;
+      } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+        nextIndex = (currentIndex - 1 + rovingButtons.length) % rovingButtons.length;
+      } else if (event.key === "Home") {
+        nextIndex = 0;
+      } else if (event.key === "End") {
+        nextIndex = rovingButtons.length - 1;
+      }
+
+      if (nextIndex === null || rovingButtons.length === 0) {
+        return;
+      }
+
+      event.preventDefault();
+      const nextButton = rovingButtons[nextIndex];
+      setRovingButton(nextButton, { shouldFocus: true });
+    },
+    listeners,
+  );
 
   // map button id to tool constructor
   Object.entries(toolConstructors).forEach(([id, ToolCtor]) =>

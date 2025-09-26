@@ -14,27 +14,29 @@ describe("toolbar controls", () => {
 
   beforeEach(() => {
     document.body.innerHTML = `
+      <div id="toolbar">
+        <input id="colorPicker" value="#000000" />
+        <input id="lineWidth" value="2" />
+        <input id="fillMode" type="checkbox" />
+
+        <button id="pencil" class="tool-button"></button>
+        <button id="eraser" class="tool-button"></button>
+        <button id="rectangle" class="tool-button"></button>
+        <button id="line" class="tool-button"></button>
+        <button id="circle" class="tool-button"></button>
+        <button id="text" class="tool-button"></button>
+        <button id="eyedropper" class="tool-button"></button>
+        <button id="bucket" class="tool-button"></button>
+
+        <select id="formatSelect"><option value="png">PNG</option></select>
+        <button id="save" class="tool-button"></button>
+
+        <button id="undo" class="tool-button"></button>
+        <button id="redo" class="tool-button"></button>
+        <select id="layerSelect"></select>
+      </div>
       <canvas id="canvas"></canvas>
       <canvas id="canvas2"></canvas>
-      <input id="colorPicker" value="#000000" />
-      <input id="lineWidth" value="2" />
-      <input id="fillMode" type="checkbox" />
-
-      <button id="pencil"></button>
-      <button id="eraser"></button>
-      <button id="rectangle"></button>
-      <button id="line"></button>
-      <button id="circle"></button>
-      <button id="text"></button>
-      <button id="eyedropper"></button>
-      <button id="bucket"></button>
-
-      <select id="formatSelect"><option value="png">PNG</option></select>
-      <button id="save"></button>
-
-      <button id="undo"></button>
-      <button id="redo"></button>
-      <select id="layerSelect"></select>
     `;
 
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -75,6 +77,63 @@ describe("toolbar controls", () => {
   it("populates layer select", () => {
     const select = document.getElementById("layerSelect") as HTMLSelectElement;
     expect(select.options.length).toBe(2);
+  });
+
+  it("marks toolbar as a toolbar and sets roving tabindex", () => {
+    const toolbar = document.getElementById("toolbar");
+    expect(toolbar?.getAttribute("role")).toBe("toolbar");
+
+    const pencil = document.getElementById("pencil") as HTMLButtonElement;
+    const eraser = document.getElementById("eraser") as HTMLButtonElement;
+    const bucket = document.getElementById("bucket") as HTMLButtonElement;
+
+    expect(pencil.tabIndex).toBe(0);
+    expect(eraser.tabIndex).toBe(-1);
+    expect(bucket.tabIndex).toBe(-1);
+  });
+
+  it("moves focus between tool buttons with arrow keys", () => {
+    const pencil = document.getElementById("pencil") as HTMLButtonElement;
+    const eraser = document.getElementById("eraser") as HTMLButtonElement;
+    const bucket = document.getElementById("bucket") as HTMLButtonElement;
+
+    pencil.focus();
+
+    pencil.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }),
+    );
+    expect(document.activeElement).toBe(eraser);
+    expect(eraser.tabIndex).toBe(0);
+    expect(pencil.tabIndex).toBe(-1);
+
+    eraser.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }),
+    );
+    expect(document.activeElement).toBe(pencil);
+
+    pencil.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }),
+    );
+    expect(document.activeElement).toBe(bucket);
+    expect(bucket.tabIndex).toBe(0);
+  });
+
+  it("supports Home and End keys for focus movement", () => {
+    const textBtn = document.getElementById("text") as HTMLButtonElement;
+    const pencil = document.getElementById("pencil") as HTMLButtonElement;
+    const bucket = document.getElementById("bucket") as HTMLButtonElement;
+
+    textBtn.focus();
+
+    textBtn.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Home", bubbles: true }),
+    );
+    expect(document.activeElement).toBe(pencil);
+
+    (document.activeElement as HTMLButtonElement).dispatchEvent(
+      new KeyboardEvent("keydown", { key: "End", bubbles: true }),
+    );
+    expect(document.activeElement).toBe(bucket);
   });
 
     it("switches tools when buttons are clicked", () => {

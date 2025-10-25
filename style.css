@@ -69,11 +69,11 @@ body {
   background: #f0f0f0;
 }
 
-.tool-button.active {
+.tool-button.active-tool {
   background: #007bff;
 }
 
-.tool-button.active img {
+.tool-button.active-tool img {
   filter: brightness(0) invert(1);
 }
 

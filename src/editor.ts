@@ -35,6 +35,7 @@ export interface EditorHandle {
  * {@link EditorHandle} that allows tests or callers to tear down the editor.
  */
 export function initEditor(): EditorHandle {
+  const createdDynamicNodes: HTMLElement[] = [];
   const canvases = Array.from(
     document.querySelectorAll<HTMLCanvasElement>("canvas"),
   );
@@ -131,24 +132,58 @@ export function initEditor(): EditorHandle {
       layerSelect.appendChild(opt);
     }
 
-    if (!document.getElementById(`${canvasId}Opacity`) && i > 0) {
+    if (i > 0) {
+      const opacityInputId = `${canvasId}Opacity`;
+      const existingInputs = Array.from(
+        document.querySelectorAll<HTMLInputElement>(`input[id='${opacityInputId}']`),
+      );
+      const existingGeneratedInput = existingInputs.find(
+        (input) => input.dataset.generatedOpacityInput === "true",
+      );
+
+      existingInputs
+        .filter((input) => input !== existingGeneratedInput)
+        .forEach((input) => {
+          const parent = input.closest<HTMLElement>(".group");
+          if (parent?.dataset.generatedOpacityGroup === "true") {
+            parent.remove();
+          }
+        });
+
+      if (existingGeneratedInput) {
+        const group = existingGeneratedInput.closest<HTMLElement>(".group");
+        if (group && group.dataset.generatedOpacityGroup === "true") {
+          const label = group.querySelector<HTMLLabelElement>("label");
+          if (label) {
+            label.htmlFor = opacityInputId;
+            label.textContent = `${name} Opacity`;
+          }
+          existingGeneratedInput.id = opacityInputId;
+          if (!existingGeneratedInput.value) existingGeneratedInput.value = "100";
+          return;
+        }
+      }
+
       const group = document.createElement("div");
       group.className = "group";
+      group.dataset.generatedOpacityGroup = "true";
 
       const label = document.createElement("label");
-      label.htmlFor = `${canvasId}Opacity`;
+      label.htmlFor = opacityInputId;
       label.textContent = `${name} Opacity`;
 
       const input = document.createElement("input");
-      input.id = `${canvasId}Opacity`;
+      input.id = opacityInputId;
       input.type = "number";
       input.min = "0";
       input.max = "100";
       input.value = "100";
+      input.dataset.generatedOpacityInput = "true";
 
       group.appendChild(label);
       group.appendChild(input);
       toolbar.appendChild(group);
+      createdDynamicNodes.push(group);
     }
   });
 
@@ -390,6 +425,7 @@ export function initEditor(): EditorHandle {
       listeners.forEach((fn) => fn());
       shortcuts.destroy();
       editors.forEach((e) => e.destroy());
+      createdDynamicNodes.forEach((node) => node.remove());
     },
   };
   recordColor(colorPicker.value);

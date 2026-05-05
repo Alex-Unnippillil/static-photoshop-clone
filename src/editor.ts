@@ -120,6 +120,13 @@ export function initEditor(): EditorHandle {
     layerSelect.innerHTML = "";
   }
 
+  canvases.forEach((canvas) => {
+    const parent = canvas.parentElement;
+    if (parent && window.getComputedStyle(parent).position === "static") {
+      parent.style.position = "relative";
+    }
+  });
+
   canvases.forEach((c, i) => {
     const canvasId = c.id || `layer${i + 1}`;
     const name = c.id || `Layer ${i + 1}`;

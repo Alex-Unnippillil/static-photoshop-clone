@@ -143,6 +143,27 @@ export class Editor {
     return parseInt(this.fontSize?.value ?? "", 10) || 16;
   }
 
+  getCanvasPoint(e: PointerEvent): {
+    x: number;
+    y: number;
+    pixelX: number;
+    pixelY: number;
+  } {
+    const rect = this.canvas.getBoundingClientRect();
+    const hasOffsetCoordinates =
+      Number.isFinite(e.offsetX) && Number.isFinite(e.offsetY);
+    const x = hasOffsetCoordinates ? e.offsetX : e.clientX - rect.left;
+    const y = hasOffsetCoordinates ? e.offsetY : e.clientY - rect.top;
+    const scaleX = rect.width ? this.canvas.width / rect.width : 1;
+    const scaleY = rect.height ? this.canvas.height / rect.height : 1;
+    return {
+      x,
+      y,
+      pixelX: Math.max(0, Math.min(this.canvas.width - 1, Math.floor(x * scaleX))),
+      pixelY: Math.max(0, Math.min(this.canvas.height - 1, Math.floor(y * scaleY))),
+    };
+  }
+
   /**
    * Remove all event listeners registered by the editor.
    * Should be called before discarding the instance to prevent leaks.

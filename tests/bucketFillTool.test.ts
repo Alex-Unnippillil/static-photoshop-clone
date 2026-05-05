@@ -14,6 +14,13 @@ describe("BucketFillTool", () => {
       <input id="fillMode" type="checkbox" />
     `;
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
+    canvas.getBoundingClientRect = () =>
+      ({
+        width: 5,
+        height: 5,
+        left: 0,
+        top: 0,
+      }) as DOMRect;
     (canvas as any).setPointerCapture = jest.fn();
     (canvas as any).releasePointerCapture = jest.fn();
 
@@ -50,7 +57,7 @@ describe("BucketFillTool", () => {
 
   it("fills enclosed areas with the selected color", () => {
     const tool = new BucketFillTool();
-    tool.onPointerDown({ offsetX: 2, offsetY: 2 } as PointerEvent, editor);
+    tool.onPointerDown({ clientX: 2, clientY: 2 } as PointerEvent, editor);
 
     const image = (ctx.getImageData as jest.Mock).mock.results[0].value as ImageData;
     const center = (2 * 5 + 2) * 4;
@@ -81,12 +88,28 @@ describe("BucketFillTool", () => {
     (ctx.getImageData as jest.Mock).mockReturnValueOnce(image);
 
     const tool = new BucketFillTool();
-    tool.onPointerDown({ offsetX: 0, offsetY: 0 } as PointerEvent, editor);
+    tool.onPointerDown({ clientX: 0, clientY: 0 } as PointerEvent, editor);
 
     const last = (width * height - 1) * 4;
     expect(image.data[last]).toBe(0);
     expect(image.data[last + 1]).toBe(0);
     expect(image.data[last + 2]).toBe(255);
     expect(ctx.putImageData).toHaveBeenCalledWith(image, 0, 0);
+  });
+
+  it("maps high-DPI pointer positions accurately", () => {
+    Object.defineProperty(window, "devicePixelRatio", { value: 2, configurable: true });
+    canvas.getBoundingClientRect = () =>
+      ({
+        width: 2.5,
+        height: 2.5,
+        left: 0,
+        top: 0,
+      }) as DOMRect;
+    const tool = new BucketFillTool();
+    tool.onPointerDown({ clientX: 1, clientY: 1 } as PointerEvent, editor);
+    const image = (ctx.getImageData as jest.Mock).mock.results[0].value as ImageData;
+    const center = (2 * 5 + 2) * 4;
+    expect(image.data[center + 2]).toBe(255);
   });
 });

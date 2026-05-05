@@ -7,8 +7,9 @@ export class CircleTool extends DrawingTool {
   private imageData: ImageData | null = null;
 
   onPointerDown(e: PointerEvent, editor: Editor): void {
-    this.startX = e.offsetX;
-    this.startY = e.offsetY;
+    const point = editor.getCanvasPoint(e);
+    this.startX = point.x;
+    this.startY = point.y;
     const ctx = editor.ctx;
     this.applyStroke(ctx, editor);
     if (typeof ctx.getImageData === "function") {
@@ -20,11 +21,12 @@ export class CircleTool extends DrawingTool {
 
   onPointerMove(e: PointerEvent, editor: Editor): void {
     if (e.buttons !== 1 || !this.imageData) return;
+    const point = editor.getCanvasPoint(e);
     const ctx = editor.ctx;
     ctx.putImageData(this.imageData, 0, 0);
     this.applyStroke(ctx, editor);
-    const dx = e.offsetX - this.startX;
-    const dy = e.offsetY - this.startY;
+    const dx = point.x - this.startX;
+    const dy = point.y - this.startY;
     let radiusX = Math.abs(dx);
     let radiusY = Math.abs(dy);
     if (e.shiftKey) {
@@ -42,13 +44,14 @@ export class CircleTool extends DrawingTool {
   }
 
   onPointerUp(e: PointerEvent, editor: Editor): void {
+    const point = editor.getCanvasPoint(e);
     const ctx = editor.ctx;
     if (this.imageData) {
       ctx.putImageData(this.imageData, 0, 0);
     }
     this.applyStroke(ctx, editor);
-    const dx = e.offsetX - this.startX;
-    const dy = e.offsetY - this.startY;
+    const dx = point.x - this.startX;
+    const dy = point.y - this.startY;
     let radiusX = Math.abs(dx);
     let radiusY = Math.abs(dy);
     if (e.shiftKey) {

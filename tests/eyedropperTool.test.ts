@@ -24,8 +24,8 @@ describe("EyedropperTool", () => {
     };
     canvas.getContext = jest.fn().mockReturnValue(ctx as CanvasRenderingContext2D);
     canvas.getBoundingClientRect = () => ({
-      width: 0,
-      height: 0,
+      width: 1,
+      height: 1,
       left: 0,
       top: 0,
       right: 0,
@@ -44,7 +44,7 @@ describe("EyedropperTool", () => {
 
   it("updates the color picker based on canvas pixel", () => {
     const tool = new EyedropperTool();
-    tool.onPointerDown({ offsetX: 0, offsetY: 0 } as PointerEvent, editor);
+    tool.onPointerDown({ clientX: 0, clientY: 0 } as PointerEvent, editor);
     expect(editor.colorPicker.value).toBe("#0c2238");
   });
 
@@ -76,12 +76,28 @@ describe("EyedropperTool", () => {
       recordColor(colorPicker.value);
     });
 
-    tool.onPointerDown({ offsetX: 0, offsetY: 0 } as PointerEvent, editor);
+    tool.onPointerDown({ clientX: 0, clientY: 0 } as PointerEvent, editor);
 
     expect(recentColors[0]).toBe("#0c2238");
     expect(colorHistory.children).toHaveLength(1);
     const swatch = colorHistory.children[0] as HTMLElement;
     expect(swatch.style.backgroundColor).toBe("rgb(12, 34, 56)");
+  });
+
+  it("samples the correct pixel under high DPI", () => {
+    Object.defineProperty(window, "devicePixelRatio", { value: 2, configurable: true });
+    canvas.width = 4;
+    canvas.height = 4;
+    canvas.getBoundingClientRect = () =>
+      ({
+        width: 2,
+        height: 2,
+        left: 0,
+        top: 0,
+      }) as DOMRect;
+    const tool = new EyedropperTool();
+    tool.onPointerDown({ clientX: 1, clientY: 1 } as PointerEvent, editor);
+    expect(ctx.getImageData).toHaveBeenCalledWith(2, 2, 1, 1);
   });
 });
 
@@ -140,10 +156,9 @@ describe("EyedropperTool color history", () => {
     const history = document.getElementById("colorHistory") as HTMLDivElement;
     expect(history.children).toHaveLength(1);
     const tool = new EyedropperTool();
-    tool.onPointerDown({ offsetX: 0, offsetY: 0 } as PointerEvent, handle.editor);
+    tool.onPointerDown({ clientX: 0, clientY: 0 } as PointerEvent, handle.editor);
     expect(history.children).toHaveLength(2);
     const swatch = history.children[0] as HTMLButtonElement;
     expect(swatch.style.backgroundColor).toBe("rgb(12, 34, 56)");
   });
 });
-

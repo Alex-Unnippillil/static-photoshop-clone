@@ -7,8 +7,9 @@ export class RectangleTool extends DrawingTool {
   private imageData: ImageData | null = null;
 
   onPointerDown(e: PointerEvent, editor: Editor) {
-    this.startX = e.offsetX;
-    this.startY = e.offsetY;
+    const point = editor.getCanvasPoint(e);
+    this.startX = point.x;
+    this.startY = point.y;
     this.applyStroke(editor.ctx, editor);
     const ctx = editor.ctx;
     this.imageData = ctx.getImageData(0, 0, editor.canvas.width, editor.canvas.height);
@@ -16,12 +17,13 @@ export class RectangleTool extends DrawingTool {
 
   onPointerMove(e: PointerEvent, editor: Editor) {
     if (e.buttons !== 1 || !this.imageData) return;
+    const point = editor.getCanvasPoint(e);
     const ctx = editor.ctx;
     ctx.putImageData(this.imageData, 0, 0);
     this.applyStroke(editor.ctx, editor);
 
-    const x = e.offsetX;
-    const y = e.offsetY;
+    const x = point.x;
+    const y = point.y;
     let width = x - this.startX;
     let height = y - this.startY;
     if (e.shiftKey) {
@@ -36,14 +38,15 @@ export class RectangleTool extends DrawingTool {
   }
 
   onPointerUp(e: PointerEvent, editor: Editor) {
+    const point = editor.getCanvasPoint(e);
     const ctx = editor.ctx;
     if (this.imageData) {
       ctx.putImageData(this.imageData, 0, 0);
     }
 
     this.applyStroke(editor.ctx, editor);
-    const x = e.offsetX;
-    const y = e.offsetY;
+    const x = point.x;
+    const y = point.y;
     let width = x - this.startX;
     let height = y - this.startY;
     if (e.shiftKey) {

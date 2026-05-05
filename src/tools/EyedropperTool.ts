@@ -9,11 +9,8 @@ export class EyedropperTool implements Tool {
   cursor = "crosshair";
 
   onPointerDown(e: PointerEvent, editor: Editor): void {
-    const { width, height } = editor.canvas;
-    const dpr = window.devicePixelRatio || 1;
-    const x = Math.max(0, Math.min(width - 1, Math.floor(e.offsetX * dpr)));
-    const y = Math.max(0, Math.min(height - 1, Math.floor(e.offsetY * dpr)));
-    const { data } = editor.ctx.getImageData(x, y, 1, 1);
+    const point = editor.getCanvasPoint(e);
+    const { data } = editor.ctx.getImageData(point.pixelX, point.pixelY, 1, 1);
     const [r, g, b] = data;
     const toHex = (v: number) => v.toString(16).padStart(2, "0");
     editor.colorPicker.value = `#${toHex(r)}${toHex(g)}${toHex(b)}`;

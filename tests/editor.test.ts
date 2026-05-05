@@ -163,4 +163,56 @@ describe("editor toolbar controls", () => {
     expect(ctx.fillText).toHaveBeenCalledWith("hi", 10, 10);
     expect(document.querySelector("textarea")).toBeNull();
   });
+
+  it("does not duplicate generated opacity controls across init/destroy cycles", () => {
+    handle.destroy();
+
+    document.body.innerHTML = `
+      <div id="toolbar"></div>
+      <canvas id="layer1"></canvas>
+      <canvas id="layer2"></canvas>
+      <input id="colorPicker" value="#000000" />
+      <input id="lineWidth" value="2" />
+      <input id="fillMode" type="checkbox" />
+      <button id="pencil"></button>
+      <button id="eraser"></button>
+      <button id="rectangle"></button>
+      <button id="line"></button>
+      <button id="circle"></button>
+      <button id="text"></button>
+      <button id="bucket"></button>
+      <button id="eyedropper"></button>
+      <select id="formatSelect"><option value="png">PNG</option></select>
+      <input id="imageLoader" type="file" />
+      <button id="undo"></button>
+      <button id="redo"></button>
+      <button id="save"></button>
+    `;
+
+    document.querySelectorAll("canvas").forEach((layerCanvas) => {
+      (layerCanvas as any).setPointerCapture = jest.fn();
+      (layerCanvas as any).releasePointerCapture = jest.fn();
+      layerCanvas.getContext = jest.fn().mockReturnValue(ctx as CanvasRenderingContext2D);
+      layerCanvas.toDataURL = jest.fn().mockReturnValue("data:image/png;base64,TEST");
+      layerCanvas.getBoundingClientRect = () => ({
+        width: 100,
+        height: 100,
+        top: 0,
+        left: 0,
+        bottom: 100,
+        right: 100,
+        x: 0,
+        y: 0,
+        toJSON: () => {},
+      });
+    });
+
+    for (let i = 0; i < 3; i += 1) {
+      const cycleHandle = initEditor();
+      expect(document.querySelectorAll("input[id$='Opacity']")).toHaveLength(1);
+      cycleHandle.destroy();
+    }
+
+    handle = initEditor();
+  });
 });

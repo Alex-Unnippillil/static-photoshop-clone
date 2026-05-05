@@ -73,14 +73,56 @@ export class Editor {
   }
 
   private handleResize = () => {
-    const data = this.ctx.getImageData(
-      0,
-      0,
-      this.canvas.width,
-      this.canvas.height,
-    );
+    const previousWidth = this.canvas.width;
+    const previousHeight = this.canvas.height;
+    const offscreen = document.createElement("canvas");
+    offscreen.width = previousWidth;
+    offscreen.height = previousHeight;
+    const offscreenCtx = offscreen.getContext("2d");
+    if (!offscreenCtx) return;
+    offscreenCtx.drawImage(this.canvas, 0, 0);
+
+    const previousState = {
+      lineJoin: this.ctx.lineJoin,
+      lineCap: this.ctx.lineCap,
+      miterLimit: this.ctx.miterLimit,
+      lineDashOffset: this.ctx.lineDashOffset,
+      globalCompositeOperation: this.ctx.globalCompositeOperation,
+      globalAlpha: this.ctx.globalAlpha,
+      imageSmoothingEnabled: this.ctx.imageSmoothingEnabled,
+      filter: this.ctx.filter,
+      lineDash: this.ctx.getLineDash(),
+    };
+
     this.adjustForPixelRatio();
-    this.ctx.putImageData(data, 0, 0);
+    const nextWidth = this.canvas.width;
+    const nextHeight = this.canvas.height;
+    /**
+     * Resize policy: top-left preserve.
+     * - Enlarging keeps existing content at the top-left and leaves new area blank.
+     * - Shrinking keeps only the top-left region (content outside new bounds is clipped).
+     */
+    this.ctx.drawImage(
+      offscreen,
+      0,
+      0,
+      Math.min(previousWidth, nextWidth),
+      Math.min(previousHeight, nextHeight),
+      0,
+      0,
+      Math.min(previousWidth, nextWidth),
+      Math.min(previousHeight, nextHeight),
+    );
+
+    this.ctx.lineJoin = previousState.lineJoin;
+    this.ctx.lineCap = previousState.lineCap;
+    this.ctx.miterLimit = previousState.miterLimit;
+    this.ctx.lineDashOffset = previousState.lineDashOffset;
+    this.ctx.globalCompositeOperation = previousState.globalCompositeOperation;
+    this.ctx.globalAlpha = previousState.globalAlpha;
+    this.ctx.imageSmoothingEnabled = previousState.imageSmoothingEnabled;
+    this.ctx.filter = previousState.filter;
+    this.ctx.setLineDash(previousState.lineDash);
   };
 
   saveState() {

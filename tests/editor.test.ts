@@ -54,6 +54,8 @@ describe("editor toolbar controls", () => {
       fillText: jest.fn(),
       setTransform: jest.fn(),
       scale: jest.fn(),
+      setLineDash: jest.fn(),
+      getLineDash: jest.fn(() => []),
       globalCompositeOperation: "source-over" as GlobalCompositeOperation,
     };
 
@@ -78,6 +80,7 @@ describe("editor toolbar controls", () => {
 
   afterEach(() => {
     handle.destroy();
+    jest.restoreAllMocks();
   });
 
   function dispatch(type: string, x: number, y: number, buttons = 0) {
@@ -162,5 +165,86 @@ describe("editor toolbar controls", () => {
     );
     expect(ctx.fillText).toHaveBeenCalledWith("hi", 10, 10);
     expect(document.querySelector("textarea")).toBeNull();
+  });
+
+  it("preserves content at top-left when canvas enlarges on resize", () => {
+    const originalCreate = document.createElement.bind(document);
+    const offscreenCtx = { drawImage: jest.fn() } as Partial<CanvasRenderingContext2D>;
+    jest.spyOn(document, "createElement").mockImplementation((tagName: string) => {
+      if (tagName === "canvas") {
+        return {
+          width: 0,
+          height: 0,
+          getContext: jest.fn(() => offscreenCtx),
+        } as unknown as HTMLCanvasElement;
+      }
+      return originalCreate(tagName);
+    });
+
+    canvas.getBoundingClientRect = () => ({
+      width: 150,
+      height: 140,
+      top: 0,
+      left: 0,
+      bottom: 140,
+      right: 150,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    });
+    window.dispatchEvent(new Event("resize"));
+
+    expect(offscreenCtx.drawImage).toHaveBeenCalledWith(canvas, 0, 0);
+    expect(ctx.drawImage).toHaveBeenCalledWith(
+      expect.anything(),
+      0,
+      0,
+      100,
+      100,
+      0,
+      0,
+      100,
+      100,
+    );
+  });
+
+  it("clips to top-left region when canvas shrinks on resize", () => {
+    const originalCreate = document.createElement.bind(document);
+    const offscreenCtx = { drawImage: jest.fn() } as Partial<CanvasRenderingContext2D>;
+    jest.spyOn(document, "createElement").mockImplementation((tagName: string) => {
+      if (tagName === "canvas") {
+        return {
+          width: 0,
+          height: 0,
+          getContext: jest.fn(() => offscreenCtx),
+        } as unknown as HTMLCanvasElement;
+      }
+      return originalCreate(tagName);
+    });
+
+    canvas.getBoundingClientRect = () => ({
+      width: 60,
+      height: 80,
+      top: 0,
+      left: 0,
+      bottom: 80,
+      right: 60,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    });
+    window.dispatchEvent(new Event("resize"));
+
+    expect(ctx.drawImage).toHaveBeenCalledWith(
+      expect.anything(),
+      0,
+      0,
+      60,
+      80,
+      0,
+      0,
+      60,
+      80,
+    );
   });
 });

@@ -92,6 +92,12 @@ export class Editor {
     this.onChange?.();
   }
 
+  discardLastState() {
+    if (!this.undoStack.length) return;
+    this.undoStack.pop();
+    this.onChange?.();
+  }
+
   private restoreState(stack: ImageData[], opposite: ImageData[]) {
     if (!stack.length) return;
     opposite.push(

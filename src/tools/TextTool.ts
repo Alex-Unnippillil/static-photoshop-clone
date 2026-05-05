@@ -12,9 +12,27 @@ export class TextTool implements Tool {
     this.cleanup();
     const textarea = document.createElement("textarea");
     textarea.style.position = "absolute";
+
+    const canvasRect = editor.canvas.getBoundingClientRect();
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+    const x = e.clientX ? e.clientX - canvasRect.left : e.offsetX;
+    const y = e.clientY ? e.clientY - canvasRect.top : e.offsetY;
+
     const parent = editor.canvas.parentElement || document.body;
-    textarea.style.left = `${e.offsetX}px`;
-    textarea.style.top = `${e.offsetY}px`;
+    const parentStyle = window.getComputedStyle(parent);
+    if (parentStyle.position === "static") {
+      parent.style.position = "relative";
+    }
+
+    const parentRect = parent.getBoundingClientRect();
+    const absoluteLeft = canvasRect.left + scrollX + x;
+    const absoluteTop = canvasRect.top + scrollY + y;
+    const parentLeft = parentRect.left + scrollX;
+    const parentTop = parentRect.top + scrollY;
+
+    textarea.style.left = `${absoluteLeft - parentLeft}px`;
+    textarea.style.top = `${absoluteTop - parentTop}px`;
     textarea.style.color = editor.strokeStyle;
     textarea.style.fontSize = `${editor.fontSizeValue}px`;
     textarea.style.fontFamily = editor.fontFamilyValue;
@@ -24,25 +42,31 @@ export class TextTool implements Tool {
     parent.appendChild(textarea);
     textarea.focus();
 
+    const initialText = textarea.value;
     const commit = () => {
       const text = textarea.value;
+      const hasContent = text.trim().length > 0;
+      const changed = text !== initialText;
       this.cleanup();
-      if (text) {
+      if (hasContent && changed) {
         editor.ctx.fillStyle = editor.strokeStyle;
         editor.ctx.font = `${editor.fontSizeValue}px ${editor.fontFamilyValue}`;
-        editor.ctx.fillText(text, e.offsetX, e.offsetY);
+        editor.ctx.fillText(text, x, y);
+        return;
       }
+      editor.discardLastState();
     };
 
     const cancel = () => {
       this.cleanup();
+      editor.discardLastState();
     };
 
     this.blurListener = cancel;
     textarea.addEventListener("blur", this.blurListener);
 
     this.keydownListener = (ev: KeyboardEvent) => {
-      if (ev.key === "Enter") {
+      if (ev.key === "Enter" && !ev.shiftKey) {
         ev.preventDefault();
         commit();
       } else if (ev.key === "Escape") {
